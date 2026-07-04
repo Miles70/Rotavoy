@@ -1,27 +1,5 @@
+import categories from "../../data/categories";
 import "./FeaturedCategories.css";
-
-const categories = [
-  {
-    title: "Electronics",
-    icon: "💻",
-    description: "Phones, laptops, gadgets and smart devices.",
-  },
-  {
-    title: "Fashion",
-    icon: "👕",
-    description: "Trending outfits and premium brands.",
-  },
-  {
-    title: "Home",
-    icon: "🏠",
-    description: "Furniture, decoration and daily essentials.",
-  },
-  {
-    title: "Gaming",
-    icon: "🎮",
-    description: "Consoles, accessories and gaming gear.",
-  },
-];
 
 function FeaturedCategories() {
   return (
@@ -35,9 +13,7 @@ function FeaturedCategories() {
           {categories.map((category) => (
             <article className="categoryCard" key={category.title}>
               <span className="categoryIcon">{category.icon}</span>
-
               <h3>{category.title}</h3>
-
               <p>{category.description}</p>
             </article>
           ))}

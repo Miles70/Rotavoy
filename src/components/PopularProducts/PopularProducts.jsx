@@ -1,32 +1,6 @@
+import products from "../../data/products";
 import ProductCard from "../ProductCard/ProductCard";
 import "./PopularProducts.css";
-
-const products = [
-  {
-    title: "MacBook Pro",
-    category: "Electronics",
-    price: 1999,
-    image: "💻",
-  },
-  {
-    title: "Gaming Headset",
-    category: "Gaming",
-    price: 149,
-    image: "🎧",
-  },
-  {
-    title: "Smart Watch",
-    category: "Wearables",
-    price: 299,
-    image: "⌚",
-  },
-  {
-    title: "Running Shoes",
-    category: "Sports",
-    price: 119,
-    image: "👟",
-  },
-];
 
 function PopularProducts() {
   return (
@@ -38,10 +12,7 @@ function PopularProducts() {
 
         <div className="productsGrid">
           {products.map((product) => (
-            <ProductCard
-              key={product.title}
-              product={product}
-            />
+            <ProductCard key={product.title} product={product} />
           ))}
         </div>
       </div>
