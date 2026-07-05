@@ -1,29 +1,29 @@
 import { Link } from "react-router-dom";
+import { useLanguage } from "../../i18n/LanguageContext";
 import "./Hero.css";
 
 function Hero() {
+  const { t } = useLanguage();
+
   return (
     <section className="hero">
       <div className="heroContent">
-        <p className="eyebrow">Global commerce, reis edition.</p>
+        <p className="eyebrow">{t("hero.eyebrow")}</p>
 
         <h1>
-          Shop smarter. <br />
-          Discover better.
+          {t("hero.titleFirst")} <br />
+          {t("hero.titleSecond")}
         </h1>
 
-        <p className="heroText">
-          KemalReis is being built as a premium e-commerce experience for
-          products, deals, categories and smart recommendations.
-        </p>
+        <p className="heroText">{t("hero.text")}</p>
 
         <div className="heroActions">
           <Link to="/products" className="primaryButton">
-            Explore Products
+            {t("hero.exploreProducts")}
           </Link>
 
           <Link to="/categories" className="ghostButton">
-            View Categories
+            {t("hero.viewCategories")}
           </Link>
         </div>
       </div>

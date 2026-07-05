@@ -1,23 +1,19 @@
 const categories = [
   {
-    title: "Electronics",
+    key: "electronics",
     icon: "💻",
-    description: "Phones, laptops, gadgets and smart devices.",
   },
   {
-    title: "Fashion",
+    key: "fashion",
     icon: "👕",
-    description: "Trending outfits and premium brands.",
   },
   {
-    title: "Home",
+    key: "home",
     icon: "🏠",
-    description: "Furniture, decoration and daily essentials.",
   },
   {
-    title: "Gaming",
+    key: "gaming",
     icon: "🎮",
-    description: "Consoles, accessories and gaming gear.",
   },
 ];
 

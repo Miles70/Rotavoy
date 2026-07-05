@@ -1,25 +1,25 @@
 const products = [
   {
-    title: "MacBook Pro",
-    category: "Electronics",
+    key: "macbookPro",
+    categoryKey: "electronics",
     price: 1999,
     image: "💻",
   },
   {
-    title: "Gaming Headset",
-    category: "Gaming",
+    key: "gamingHeadset",
+    categoryKey: "gaming",
     price: 149,
     image: "🎧",
   },
   {
-    title: "Smart Watch",
-    category: "Wearables",
+    key: "smartWatch",
+    categoryKey: "wearables",
     price: 299,
     image: "⌚",
   },
   {
-    title: "Running Shoes",
-    category: "Sports",
+    key: "runningShoes",
+    categoryKey: "sports",
     price: 119,
     image: "👟",
   },

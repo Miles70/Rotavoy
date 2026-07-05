@@ -1,6 +1,9 @@
+import { useLanguage } from "../../i18n/LanguageContext";
 import "./ProductCard.css";
 
 function ProductCard({ product }) {
+  const { t } = useLanguage();
+
   return (
     <article className="productCard">
       <div className="productImage">
@@ -8,14 +11,16 @@ function ProductCard({ product }) {
       </div>
 
       <div className="productContent">
-        <p className="productCategory">{product.category}</p>
+        <p className="productCategory">
+          {t(`products.${product.key}.category`)}
+        </p>
 
-        <h3>{product.title}</h3>
+        <h3>{t(`products.${product.key}.title`)}</h3>
 
         <div className="productBottom">
           <strong>${product.price}</strong>
 
-          <button>Add</button>
+          <button>{t("productCard.add")}</button>
         </div>
       </div>
     </article>
