@@ -104,9 +104,9 @@ function Cart() {
               <strong>${cartTotal}</strong>
             </div>
 
-            <button type="button" className="checkoutButton">
+            <Link to="/checkout" className="checkoutButton">
               {t("cartPage.checkout")}
-            </button>
+            </Link>
 
             <button type="button" className="clearCartButton" onClick={clearCart}>
               {t("cartPage.clearCart")}
