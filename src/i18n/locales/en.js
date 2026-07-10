@@ -6,7 +6,10 @@ const en = {
     products: "Products",
     cart: "Cart",
   },
-  header: { cart: "Cart" },
+  header: {
+    cart: "Cart",
+    connectWallet: "Connect Wallet",
+  },
   search: {
     placeholder: "Search products...",
     button: "Search",

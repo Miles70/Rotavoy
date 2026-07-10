@@ -6,7 +6,10 @@ const ar = {
     products: "المنتجات",
     cart: "السلة",
   },
-  header: { cart: "السلة" },
+  header: {
+    cart: "السلة",
+    connectWallet: "ربط المحفظة",
+  },
   search: {
     placeholder: "ابحث عن المنتجات...",
     button: "بحث",

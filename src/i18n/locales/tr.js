@@ -6,7 +6,10 @@ const tr = {
     products: "Ürünler",
     cart: "Sepet",
   },
-  header: { cart: "Sepet" },
+  header: {
+    cart: "Sepet",
+    connectWallet: "Cüzdanı Bağla",
+  },
   search: {
     placeholder: "Ürün ara...",
     button: "Ara",

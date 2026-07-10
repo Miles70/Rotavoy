@@ -6,7 +6,10 @@ const zh = {
     products: "产品",
     cart: "购物车",
   },
-  header: { cart: "购物车" },
+  header: {
+    cart: "购物车",
+    connectWallet: "连接钱包",
+  },
   search: {
     placeholder: "搜索产品...",
     button: "搜索",

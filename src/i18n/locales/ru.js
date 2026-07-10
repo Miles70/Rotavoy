@@ -6,7 +6,10 @@ const ru = {
     products: "Товары",
     cart: "Корзина",
   },
-  header: { cart: "Корзина" },
+  header: {
+    cart: "Корзина",
+    connectWallet: "Подключить кошелёк",
+  },
   search: {
     placeholder: "Искать товары...",
     button: "Поиск",
