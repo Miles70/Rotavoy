@@ -2,11 +2,21 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
+  Briefcase,
+  Car,
+  Dumbbell,
+  Gamepad2,
+  Heart,
+  House,
   Package,
   PackageCheck,
   PawPrint,
-  ShoppingBasket,
+  Plug,
+  Puzzle,
+  Shirt,
+  Smartphone,
   Sparkles,
+  Wrench,
 } from "lucide-react";
 import ProductCard from "../components/ProductCard/ProductCard";
 import { useLanguage } from "../i18n/LanguageContext";
@@ -24,12 +34,7 @@ const pageTranslations = {
     ready: "Ready to explore",
     loading: "Loading categories...",
     error: "Categories could not be loaded.",
-    descriptions: {
-      marketplace: "Everyday products collected from the global open catalog.",
-      groceries: "Food, drinks and pantry products from around the world.",
-      beauty: "Cosmetics, personal care and beauty essentials.",
-      "pet-supplies": "Food and everyday essentials for pets.",
-    },
+    description: "Selected products, detailed information and multiple product images.",
   },
   tr: {
     collections: "Koleksiyon",
@@ -41,12 +46,7 @@ const pageTranslations = {
     ready: "Keşfetmeye hazır",
     loading: "Kategoriler yükleniyor...",
     error: "Kategoriler yüklenemedi.",
-    descriptions: {
-      marketplace: "Global açık katalogdan seçilen günlük ürünler.",
-      groceries: "Dünyanın farklı yerlerinden yiyecek, içecek ve market ürünleri.",
-      beauty: "Kozmetik, kişisel bakım ve güzellik ürünleri.",
-      "pet-supplies": "Evcil hayvanlar için mama ve günlük ihtiyaçlar.",
-    },
+    description: "Seçilmiş ürünler, detaylı bilgiler ve çoklu ürün görselleri.",
   },
   ru: {
     collections: "Коллекции",
@@ -58,12 +58,7 @@ const pageTranslations = {
     ready: "Готово к просмотру",
     loading: "Загрузка категорий...",
     error: "Не удалось загрузить категории.",
-    descriptions: {
-      marketplace: "Повседневные товары из глобального открытого каталога.",
-      groceries: "Еда, напитки и продукты со всего мира.",
-      beauty: "Косметика, уход и товары для красоты.",
-      "pet-supplies": "Корм и повседневные товары для питомцев.",
-    },
+    description: "Выбранные товары, подробные характеристики и несколько изображений.",
   },
   ar: {
     collections: "المجموعات",
@@ -75,12 +70,7 @@ const pageTranslations = {
     ready: "جاهز للاستكشاف",
     loading: "جارٍ تحميل الفئات...",
     error: "تعذر تحميل الفئات.",
-    descriptions: {
-      marketplace: "منتجات يومية من الكتالوج العالمي المفتوح.",
-      groceries: "أطعمة ومشروبات ومنتجات بقالة من أنحاء العالم.",
-      beauty: "مستحضرات تجميل وعناية شخصية ومنتجات جمال.",
-      "pet-supplies": "أغذية واحتياجات يومية للحيوانات الأليفة.",
-    },
+    description: "منتجات مختارة ومعلومات تفصيلية وصور متعددة لكل منتج.",
   },
   zh: {
     collections: "系列",
@@ -92,20 +82,29 @@ const pageTranslations = {
     ready: "随时探索",
     loading: "正在加载分类...",
     error: "无法加载分类。",
-    descriptions: {
-      marketplace: "来自全球开放目录的日常商品。",
-      groceries: "来自世界各地的食品、饮料和杂货。",
-      beauty: "化妆品、个人护理和美容用品。",
-      "pet-supplies": "宠物食品和日常用品。",
-    },
+    description: "精选商品、详细信息和多张商品图片。",
   },
 };
 
 function CategoryIcon({ categoryKey, size = 26 }) {
-  if (categoryKey === "groceries") return <ShoppingBasket size={size} />;
-  if (categoryKey === "beauty") return <Sparkles size={size} />;
-  if (categoryKey === "pet-supplies") return <PawPrint size={size} />;
-  return <Package size={size} />;
+  const icons = {
+    electronics: Package,
+    mobile: Smartphone,
+    home: House,
+    fashion: Shirt,
+    beauty: Sparkles,
+    sports: Dumbbell,
+    toys: Puzzle,
+    gaming: Gamepad2,
+    office: Briefcase,
+    tools: Wrench,
+    appliances: Plug,
+    pets: PawPrint,
+    automotive: Car,
+    baby: Heart,
+  };
+  const Icon = icons[categoryKey] || Package;
+  return <Icon size={size} />;
 }
 
 function Categories() {
@@ -209,9 +208,6 @@ function Categories() {
             {categories.map((category) => {
               const previewProducts = category.previewProducts || [];
               const categoryTitle = category.title || category.key;
-              const categoryDescription =
-                copy.descriptions[category.key] ||
-                copy.descriptions.marketplace;
 
               return (
                 <article
@@ -228,7 +224,7 @@ function Categories() {
 
                       <div>
                         <span>{categoryTitle}</span>
-                        <h2>{categoryDescription}</h2>
+                        <h2>{copy.description}</h2>
                       </div>
                     </div>
 
@@ -248,7 +244,7 @@ function Categories() {
                     <div className="categoryShowcaseContent">
                       <span>{copy.featured}</span>
                       <h3>{categoryTitle}</h3>
-                      <p>{categoryDescription}</p>
+                      <p>{copy.description}</p>
 
                       <Link to={`/products?category=${category.key}`}>
                         {copy.viewAll}
