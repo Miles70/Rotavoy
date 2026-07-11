@@ -1,11 +1,13 @@
 import { Router } from "express";
 import { Product } from "../models/Product.js";
 import {
-  applyCachedCatalogTranslation,
   localizeCatalogProduct,
   normalizeCatalogLanguage,
 } from "../services/catalogTranslation.js";
-import { localizeCatalogProductSummaries } from "../services/catalogSummaryTranslation.js";
+import {
+  applyCachedCatalogSummaryTranslation,
+  localizeCatalogProductSummaries,
+} from "../services/catalogSummaryTranslation.js";
 
 export const productsRouter = Router();
 
@@ -59,12 +61,17 @@ productsRouter.get("/categories", async (request, response, next) => {
       { $sort: { count: -1, key: 1 } },
     ]);
 
-    const localizedCategories = categories.map((category) => ({
-      ...category,
-      previewProducts: category.previewProducts.map((product) =>
-        applyCachedCatalogTranslation(product, language)
-      ),
-    }));
+    const localizedCategories = categories.map((category) => {
+      const previewProducts = category.previewProducts.map((product) =>
+        applyCachedCatalogSummaryTranslation(product, language)
+      );
+
+      return {
+        ...category,
+        title: previewProducts[0]?.categoryLabel || category.title,
+        previewProducts,
+      };
+    });
 
     response.json({ categories: localizedCategories });
   } catch (error) {
