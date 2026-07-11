@@ -8,14 +8,27 @@ function Products() {
   const { t } = useLanguage();
   const [searchParams] = useSearchParams();
 
-  const searchQuery = searchParams.get("search")?.trim().toLowerCase() || "";
+  const searchQuery =
+    searchParams.get("search")?.trim().toLowerCase() || "";
+
+  const categoryQuery =
+    searchParams.get("category")?.trim().toLowerCase() || "";
 
   const filteredProducts = products.filter((product) => {
+    const matchesCategory =
+      !categoryQuery || product.categoryKey === categoryQuery;
+
+    if (!matchesCategory) {
+      return false;
+    }
+
     if (!searchQuery) {
       return true;
     }
 
-    const categoryTitle = t(`categories.${product.categoryKey}.title`);
+    const categoryTitle = t(
+      `categories.${product.categoryKey}.title`
+    );
 
     const searchableText = [
       product.title,
@@ -29,6 +42,10 @@ function Products() {
     return searchableText.includes(searchQuery);
   });
 
+  const selectedCategoryTitle = categoryQuery
+    ? t(`categories.${categoryQuery}.title`)
+    : "";
+
   return (
     <main className="productsPage">
       <section className="productsHero">
@@ -41,11 +58,16 @@ function Products() {
         <div className="productsListHeader">
           <div>
             <span>{t("productsPage.listTag")}</span>
-            <h2>{t("productsPage.listTitle")}</h2>
+
+            <h2>
+              {selectedCategoryTitle ||
+                t("productsPage.listTitle")}
+            </h2>
 
             {searchQuery && (
               <p className="productsSearchInfo">
-                Search: <strong>{searchParams.get("search")}</strong>
+                Search:{" "}
+                <strong>{searchParams.get("search")}</strong>
               </p>
             )}
           </div>
@@ -58,13 +80,18 @@ function Products() {
         {filteredProducts.length > 0 ? (
           <div className="productsGrid">
             {filteredProducts.map((product) => (
-              <ProductCard key={product.key} product={product} />
+              <ProductCard
+                key={product.key}
+                product={product}
+              />
             ))}
           </div>
         ) : (
           <div className="emptyProducts">
             <h3>No products found</h3>
-            <p>Try another keyword or browse the full product list.</p>
+            <p>
+              Try another keyword or browse the full product list.
+            </p>
           </div>
         )}
       </section>
