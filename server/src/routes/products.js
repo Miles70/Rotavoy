@@ -1,13 +1,10 @@
 import { Router } from "express";
 import { Product } from "../models/Product.js";
 import {
+  applyCachedCatalogTranslation,
   localizeCatalogProduct,
   normalizeCatalogLanguage,
 } from "../services/catalogTranslation.js";
-import {
-  applyCachedCatalogSummaryTranslation,
-  localizeCatalogProductSummaries,
-} from "../services/catalogSummaryTranslation.js";
 
 export const productsRouter = Router();
 
@@ -33,28 +30,6 @@ function buildSort(sortValue) {
     default:
       return { popularity: -1, rating: -1, _id: 1 };
   }
-}
-
-function wait(milliseconds) {
-  return new Promise((resolve) => setTimeout(resolve, milliseconds));
-}
-
-async function localizeProductDetail(productDocument, language) {
-  let product = await localizeCatalogProduct(productDocument, language);
-
-  if (language === "en" || product.translationLanguage === language) {
-    return product;
-  }
-
-  await wait(700);
-  product = await localizeCatalogProduct(productDocument, language);
-
-  if (product.translationLanguage === language) return product;
-
-  return {
-    ...applyCachedCatalogSummaryTranslation(product, language),
-    translationPending: true,
-  };
 }
 
 productsRouter.get("/categories", async (request, response, next) => {
@@ -83,17 +58,12 @@ productsRouter.get("/categories", async (request, response, next) => {
       { $sort: { count: -1, key: 1 } },
     ]);
 
-    const localizedCategories = categories.map((category) => {
-      const previewProducts = category.previewProducts.map((product) =>
-        applyCachedCatalogSummaryTranslation(product, language)
-      );
-
-      return {
-        ...category,
-        title: previewProducts[0]?.categoryLabel || category.title,
-        previewProducts,
-      };
-    });
+    const localizedCategories = categories.map((category) => ({
+      ...category,
+      previewProducts: category.previewProducts.map((product) =>
+        applyCachedCatalogTranslation(product, language)
+      ),
+    }));
 
     response.json({ categories: localizedCategories });
   } catch (error) {
@@ -134,9 +104,8 @@ productsRouter.get("/", async (request, response, next) => {
     ]);
 
     const totalPages = Math.max(1, Math.ceil(total / limit));
-    const localizedProducts = await localizeCatalogProductSummaries(
-      products,
-      language
+    const localizedProducts = products.map((product) =>
+      applyCachedCatalogTranslation(product, language)
     );
 
     response.json({
@@ -167,7 +136,7 @@ productsRouter.get("/:productKey", async (request, response, next) => {
       return response.status(404).json({ message: "Product not found." });
     }
 
-    const product = await localizeProductDetail(productDocument, language);
+    const product = await localizeCatalogProduct(productDocument, language);
     return response.json({ product });
   } catch (error) {
     return next(error);
