@@ -1,0 +1,9 @@
+.categoryPreviewImage {
+  background: #fff;
+}
+
+.categoryPreviewImage img {
+  padding: 10px;
+  object-fit: contain;
+  object-position: center;
+}
