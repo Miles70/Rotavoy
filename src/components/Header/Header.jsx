@@ -1,10 +1,17 @@
-import { Link } from "react-router-dom";
-import { ShoppingBag } from "lucide-react";
+import { Link, NavLink } from "react-router-dom";
+import {
+  ArrowRight,
+  ShoppingBag,
+  Sparkles,
+  WalletCards,
+} from "lucide-react";
 import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
+
 import { useLanguage } from "../../i18n/LanguageContext";
 import { useCart } from "../../context/CartContext";
 import LanguageSwitcher from "../LanguageSwitcher";
 import siteConfig from "../../config/site";
+
 import "./Header.css";
 
 function shortenAddress(address) {
@@ -29,37 +36,95 @@ function Header() {
 
   return (
     <header className="headerWrapper">
-      <div className="siteHeader">
-        <Link to="/" className="logo">
-          {siteConfig.brandName}
-        </Link>
+      <div className="promoBar">
+        <div className="promoBarContent">
+          <span className="promoBadge">
+            <Sparkles size={13} />
+            {t("deals.tag")}
+          </span>
 
-        <nav className="navLinks">
-          <Link to="/">{t("nav.home")}</Link>
-          <Link to="/categories">{t("nav.categories")}</Link>
-          <Link to="/products">{t("nav.products")}</Link>
-          <Link to="/cart">{t("nav.cart")}</Link>
-        </nav>
+          <span className="promoText">{t("deals.text")}</span>
 
-        <div className="headerActions">
-          <button
-            type="button"
-            className="walletConnectButton"
-            onClick={handleWalletClick}
+          <Link className="promoLink" to="/products">
+            {t("deals.button")}
+            <ArrowRight size={15} />
+          </Link>
+        </div>
+      </div>
+
+      <div className="mainHeader">
+        <div className="siteHeader">
+          <Link
+            to="/"
+            className="logo"
+            aria-label={`${siteConfig.brandName} home`}
           >
-            {isConnected ? shortenAddress(address) : t("header.connectWallet")}
-          </button>
-
-          <Link to="/cart" className="cartButton">
-            <ShoppingBag size={18} />
-            <span>{t("header.cart")}</span>
-
-            {cartCount > 0 && (
-              <strong className="cartCount">{cartCount}</strong>
-            )}
+            <span className="logoMark">K</span>
+            <span className="logoText">{siteConfig.brandName}</span>
           </Link>
 
-          <LanguageSwitcher />
+          <nav className="navLinks" aria-label="Main navigation">
+            <NavLink
+              to="/"
+              end
+              className={({ isActive }) => (isActive ? "active" : "")}
+            >
+              {t("nav.home")}
+            </NavLink>
+
+            <NavLink
+              to="/categories"
+              className={({ isActive }) => (isActive ? "active" : "")}
+            >
+              {t("nav.categories")}
+            </NavLink>
+
+            <NavLink
+              to="/products"
+              className={({ isActive }) => (isActive ? "active" : "")}
+            >
+              {t("nav.products")}
+            </NavLink>
+
+            <NavLink
+              to="/cart"
+              className={({ isActive }) => (isActive ? "active" : "")}
+            >
+              {t("nav.cart")}
+            </NavLink>
+          </nav>
+
+          <div className="headerActions">
+            <button
+              type="button"
+              className="walletConnectButton"
+              onClick={handleWalletClick}
+            >
+              <WalletCards size={17} />
+
+              <span>
+                {isConnected
+                  ? shortenAddress(address)
+                  : t("header.connectWallet")}
+              </span>
+            </button>
+
+            <Link
+              to="/cart"
+              className="cartButton"
+              aria-label={t("header.cart")}
+            >
+              <ShoppingBag size={18} />
+
+              <span className="cartButtonText">{t("header.cart")}</span>
+
+              {cartCount > 0 && (
+                <strong className="cartCount">{cartCount}</strong>
+              )}
+            </Link>
+
+            <LanguageSwitcher />
+          </div>
         </div>
       </div>
     </header>

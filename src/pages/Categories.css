@@ -1,60 +1,59 @@
 .categoriesPage {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 90px 28px 120px;
+  width: min(var(--container-width), calc(100% - 48px));
+  margin-inline: auto;
+  padding: 48px 0 110px;
 }
 
 .categoriesHero {
-  padding: 70px 0 55px;
+  max-width: 900px;
+  padding: 64px 0 54px;
 }
 
-.categoriesHero span {
+.categoriesHero > span {
   display: inline-block;
-  color: #ffbe55;
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   margin-bottom: 12px;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .categoriesHero h1 {
-  max-width: 900px;
   margin: 0 0 18px;
-  font-size: clamp(52px, 8vw, 108px);
-  line-height: 0.92;
-  letter-spacing: -0.08em;
-  color: #ffffff;
+  color: var(--color-text);
+  font-size: clamp(48px, 7vw, 86px);
+  line-height: 0.97;
+  letter-spacing: -0.07em;
 }
 
 .categoriesHero p {
-  max-width: 660px;
+  max-width: 680px;
   margin: 0;
-  color: rgba(255, 255, 255, 0.68);
-  font-size: 20px;
-  line-height: 1.6;
+  color: var(--color-text-secondary);
+  font-size: 18px;
+  line-height: 1.7;
 }
 
 .categoryGroups {
   display: flex;
   flex-direction: column;
-  gap: 34px;
+  gap: 26px;
 }
 
 .categoryGroup {
   padding: 26px;
-  border-radius: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.045);
-  backdrop-filter: blur(18px);
+  border: 1px solid var(--color-border);
+  border-radius: 28px;
+  background: #f7f8fb;
 }
 
 .categoryGroupHeader {
+  margin-bottom: 24px;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 24px;
-  margin-bottom: 24px;
 }
 
 .categoryTitleBox {
@@ -63,51 +62,49 @@
   gap: 16px;
 }
 
-.categoryIcon {
+.categoriesPage .categoryIcon {
   width: 58px;
   height: 58px;
   display: grid;
   place-items: center;
   flex: 0 0 auto;
-  border-radius: 20px;
+  border: 1px solid var(--color-primary-border);
+  border-radius: 18px;
+  background: var(--color-primary-soft);
   font-size: 28px;
-  background:
-    radial-gradient(circle at center, rgba(255, 190, 85, 0.2), transparent 60%),
-    rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .categoryGroupHeader span {
   display: inline-block;
-  color: #ffbe55;
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   margin-bottom: 8px;
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .categoryGroupHeader h2 {
   max-width: 620px;
   margin: 0;
-  color: #ffffff;
-  font-size: clamp(24px, 3vw, 36px);
-  line-height: 1.05;
+  color: var(--color-text);
+  font-size: clamp(23px, 3vw, 34px);
+  line-height: 1.08;
   letter-spacing: -0.05em;
 }
 
-.categoryGroupHeader p {
+.categoryGroupHeader > p {
   margin: 8px 0 0;
-  white-space: nowrap;
-  color: rgba(255, 255, 255, 0.58);
-  font-size: 15px;
+  color: var(--color-text-muted);
+  font-size: 14px;
   font-weight: 800;
+  white-space: nowrap;
 }
 
 .categoryProductsGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 18px;
+  gap: 17px;
 }
 
 @media (max-width: 1000px) {
@@ -118,24 +115,21 @@
   .categoryGroupHeader {
     flex-direction: column;
   }
-
-  .categoryGroupHeader p {
-    margin: 0;
-  }
 }
 
 @media (max-width: 620px) {
   .categoriesPage {
-    padding: 60px 16px 90px;
+    width: calc(100% - 32px);
+    padding-top: 24px;
   }
 
   .categoriesHero {
-    padding: 45px 0 35px;
+    padding: 42px 0 35px;
   }
 
   .categoryGroup {
     padding: 18px;
-    border-radius: 26px;
+    border-radius: 24px;
   }
 
   .categoryTitleBox {

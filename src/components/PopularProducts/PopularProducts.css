@@ -1,37 +1,38 @@
 .popularProducts {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 90px 28px;
+  width: min(var(--container-width), calc(100% - 48px));
+  margin-inline: auto;
+  padding: 88px 0;
 }
 
 .popularProductsHeader {
-  max-width: 640px;
+  max-width: 680px;
   margin-bottom: 34px;
 }
 
-.popularProductsHeader span {
+.popularProductsHeader > span {
   display: inline-block;
-  color: #ffbe55;
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   margin-bottom: 12px;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .popularProductsHeader h2 {
-  margin: 0 0 12px;
-  font-size: clamp(36px, 5vw, 64px);
-  line-height: 0.96;
+  margin: 0 0 13px;
+  color: var(--color-text);
+  font-size: clamp(38px, 5vw, 58px);
+  line-height: 1;
   letter-spacing: -0.06em;
-  color: #ffffff;
 }
 
 .popularProductsHeader p {
-  max-width: 560px;
-  color: rgba(255, 255, 255, 0.68);
-  font-size: 18px;
-  line-height: 1.6;
+  max-width: 580px;
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 17px;
+  line-height: 1.7;
 }
 
 .popularProductsGrid {
@@ -48,7 +49,8 @@
 
 @media (max-width: 620px) {
   .popularProducts {
-    padding: 60px 16px;
+    width: calc(100% - 32px);
+    padding: 68px 0;
   }
 
   .popularProductsGrid {
