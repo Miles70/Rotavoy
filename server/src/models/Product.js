@@ -14,11 +14,32 @@ const productSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    description: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    brand: {
+      type: String,
+      trim: true,
+      default: "",
+      index: true,
+    },
+    quantity: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     categoryKey: {
       type: String,
       required: true,
       trim: true,
       index: true,
+    },
+    categoryLabel: {
+      type: String,
+      trim: true,
+      default: "",
     },
     price: {
       type: Number,
@@ -52,6 +73,45 @@ const productSchema = new mongoose.Schema(
       min: 0,
       default: 100,
     },
+    rating: {
+      type: Number,
+      min: 0,
+      max: 5,
+      default: 4.5,
+    },
+    reviewCount: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+    popularity: {
+      type: Number,
+      min: 0,
+      default: 0,
+      index: true,
+    },
+    source: {
+      type: String,
+      trim: true,
+      default: "manual",
+      index: true,
+    },
+    sourceType: {
+      type: String,
+      trim: true,
+      default: "",
+      index: true,
+    },
+    sourceCode: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    sourceUrl: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     isActive: {
       type: Boolean,
       default: true,
@@ -63,5 +123,12 @@ const productSchema = new mongoose.Schema(
     versionKey: false,
   }
 );
+
+productSchema.index({
+  title: "text",
+  brand: "text",
+  categoryLabel: "text",
+  description: "text",
+});
 
 export const Product = mongoose.model("Product", productSchema);
