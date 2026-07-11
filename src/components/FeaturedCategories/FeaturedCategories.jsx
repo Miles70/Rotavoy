@@ -1,48 +1,82 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Package, PawPrint, ShoppingBasket, Sparkles } from "lucide-react";
+import {
+  Briefcase,
+  Car,
+  Dumbbell,
+  Gamepad2,
+  Heart,
+  House,
+  Package,
+  PawPrint,
+  Plug,
+  Puzzle,
+  Shirt,
+  Smartphone,
+  Sparkles,
+  Wrench,
+} from "lucide-react";
 import { useLanguage } from "../../i18n/LanguageContext";
 import { getProductCategories } from "../../services/productsApi";
 import "./FeaturedCategories.css";
 
 const descriptions = {
   en: {
-    marketplace: "Everyday products from the global open catalog.",
-    groceries: "Food, drinks and pantry essentials.",
-    beauty: "Cosmetics and personal care essentials.",
-    "pet-supplies": "Food and essentials for pets.",
+    electronics: "Devices, accessories and everyday technology.",
+    mobile: "Phones, cases, chargers and mobile essentials.",
+    home: "Useful products for every room in your home.",
+    fashion: "Clothing, shoes, jewelry and accessories.",
+    fallback: "Selected products from the shopping catalog.",
   },
   tr: {
-    marketplace: "Global açık katalogdan günlük ürünler.",
-    groceries: "Yiyecek, içecek ve market ihtiyaçları.",
-    beauty: "Kozmetik ve kişisel bakım ürünleri.",
-    "pet-supplies": "Evcil hayvan mama ve ihtiyaçları.",
+    electronics: "Cihazlar, aksesuarlar ve günlük teknoloji ürünleri.",
+    mobile: "Telefonlar, kılıflar, şarj cihazları ve aksesuarlar.",
+    home: "Evin her alanı için kullanışlı ürünler.",
+    fashion: "Giyim, ayakkabı, takı ve aksesuarlar.",
+    fallback: "Alışveriş kataloğundan seçilmiş ürünler.",
   },
   ru: {
-    marketplace: "Повседневные товары из открытого каталога.",
-    groceries: "Еда, напитки и продукты.",
-    beauty: "Косметика и личный уход.",
-    "pet-supplies": "Корм и товары для питомцев.",
+    electronics: "Устройства, аксессуары и техника.",
+    mobile: "Телефоны, чехлы, зарядные устройства и аксессуары.",
+    home: "Полезные товары для каждой комнаты.",
+    fashion: "Одежда, обувь, украшения и аксессуары.",
+    fallback: "Подборка товаров из каталога.",
   },
   ar: {
-    marketplace: "منتجات يومية من الكتالوج المفتوح.",
-    groceries: "أطعمة ومشروبات واحتياجات البقالة.",
-    beauty: "مستحضرات التجميل والعناية الشخصية.",
-    "pet-supplies": "أغذية واحتياجات الحيوانات الأليفة.",
+    electronics: "أجهزة وإكسسوارات وتقنيات للاستخدام اليومي.",
+    mobile: "هواتف وأغطية وشواحن وإكسسوارات.",
+    home: "منتجات مفيدة لكل غرفة في المنزل.",
+    fashion: "ملابس وأحذية ومجوهرات وإكسسوارات.",
+    fallback: "منتجات مختارة من كتالوج التسوق.",
   },
   zh: {
-    marketplace: "来自全球开放目录的日常商品。",
-    groceries: "食品、饮料和杂货用品。",
-    beauty: "化妆品和个人护理用品。",
-    "pet-supplies": "宠物食品和日常用品。",
+    electronics: "设备、配件和日常科技产品。",
+    mobile: "手机、保护壳、充电器和配件。",
+    home: "适合家中各个空间的实用商品。",
+    fashion: "服装、鞋履、珠宝和配饰。",
+    fallback: "购物目录中的精选商品。",
   },
 };
 
 function CategoryIcon({ categoryKey }) {
-  if (categoryKey === "groceries") return <ShoppingBasket />;
-  if (categoryKey === "beauty") return <Sparkles />;
-  if (categoryKey === "pet-supplies") return <PawPrint />;
-  return <Package />;
+  const icons = {
+    electronics: Package,
+    mobile: Smartphone,
+    home: House,
+    fashion: Shirt,
+    beauty: Sparkles,
+    sports: Dumbbell,
+    toys: Puzzle,
+    gaming: Gamepad2,
+    office: Briefcase,
+    tools: Wrench,
+    appliances: Plug,
+    pets: PawPrint,
+    automotive: Car,
+    baby: Heart,
+  };
+  const Icon = icons[categoryKey] || Package;
+  return <Icon />;
 }
 
 function FeaturedCategories() {
@@ -81,27 +115,12 @@ function FeaturedCategories() {
               </div>
 
               <h3>{category.title || category.key}</h3>
-              <p>{copy[category.key] || copy.marketplace}</p>
+              <p>{copy[category.key] || copy.fallback}</p>
 
               <span className="categoryArrow" aria-hidden="true">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M5 12H19"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M13 6L19 12L13 18"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M13 6L19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </span>
             </Link>
