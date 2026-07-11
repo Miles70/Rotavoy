@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import ProductCard from "../components/ProductCard/ProductCard";
 import { useCart } from "../context/CartContext";
@@ -19,6 +19,7 @@ const detailTranslations = {
     total: "Total",
     save: "You save",
     highlights: "Product highlights",
+    details: "Product details",
     delivery: "Fast delivery",
     deliveryText: "Prepared quickly and shipped with tracking.",
     payment: "Secure payment",
@@ -31,10 +32,10 @@ const detailTranslations = {
     notFoundText: "This product may have been removed or the address may be incorrect.",
     browse: "Browse all products",
     loading: "Loading product...",
-    catalog: "Open catalog product",
+    catalog: "Detailed product information",
     brand: "Brand",
-    pack: "Package",
-    source: "Catalog verified",
+    reviews: "reviews",
+    image: "Product image",
   },
   tr: {
     back: "Ürünlere dön",
@@ -48,6 +49,7 @@ const detailTranslations = {
     total: "Toplam",
     save: "Kazancın",
     highlights: "Ürün özellikleri",
+    details: "Ürün detayları",
     delivery: "Hızlı teslimat",
     deliveryText: "Hızla hazırlanır ve takipli olarak gönderilir.",
     payment: "Güvenli ödeme",
@@ -60,10 +62,10 @@ const detailTranslations = {
     notFoundText: "Bu ürün kaldırılmış veya bağlantı hatalı olabilir.",
     browse: "Tüm ürünleri gör",
     loading: "Ürün yükleniyor...",
-    catalog: "Açık katalog ürünü",
+    catalog: "Detaylı ürün bilgisi",
     brand: "Marka",
-    pack: "Paket",
-    source: "Katalog doğrulandı",
+    reviews: "değerlendirme",
+    image: "Ürün görseli",
   },
   ru: {
     back: "Назад к товарам",
@@ -77,6 +79,7 @@ const detailTranslations = {
     total: "Итого",
     save: "Ваша экономия",
     highlights: "Особенности товара",
+    details: "Характеристики",
     delivery: "Быстрая доставка",
     deliveryText: "Быстрая подготовка и отправка с отслеживанием.",
     payment: "Безопасная оплата",
@@ -89,10 +92,10 @@ const detailTranslations = {
     notFoundText: "Товар мог быть удалён или адрес указан неверно.",
     browse: "Смотреть все товары",
     loading: "Загрузка товара...",
-    catalog: "Товар из открытого каталога",
+    catalog: "Подробная информация о товаре",
     brand: "Бренд",
-    pack: "Упаковка",
-    source: "Каталог подтверждён",
+    reviews: "отзывов",
+    image: "Изображение товара",
   },
   ar: {
     back: "العودة إلى المنتجات",
@@ -106,6 +109,7 @@ const detailTranslations = {
     total: "الإجمالي",
     save: "قيمة التوفير",
     highlights: "مميزات المنتج",
+    details: "تفاصيل المنتج",
     delivery: "توصيل سريع",
     deliveryText: "تجهيز سريع وشحن مع إمكانية التتبع.",
     payment: "دفع آمن",
@@ -118,10 +122,10 @@ const detailTranslations = {
     notFoundText: "ربما تمت إزالة المنتج أو أن الرابط غير صحيح.",
     browse: "تصفح كل المنتجات",
     loading: "جارٍ تحميل المنتج...",
-    catalog: "منتج من كتالوج مفتوح",
+    catalog: "معلومات تفصيلية عن المنتج",
     brand: "العلامة التجارية",
-    pack: "العبوة",
-    source: "تم التحقق من الكتالوج",
+    reviews: "تقييم",
+    image: "صورة المنتج",
   },
   zh: {
     back: "返回产品列表",
@@ -135,6 +139,7 @@ const detailTranslations = {
     total: "总计",
     save: "节省",
     highlights: "产品亮点",
+    details: "产品详情",
     delivery: "快速配送",
     deliveryText: "快速备货并提供物流追踪。",
     payment: "安全支付",
@@ -147,10 +152,10 @@ const detailTranslations = {
     notFoundText: "该产品可能已下架，或链接地址不正确。",
     browse: "浏览所有产品",
     loading: "正在加载商品...",
-    catalog: "开放目录商品",
+    catalog: "详细商品信息",
     brand: "品牌",
-    pack: "包装",
-    source: "目录已验证",
+    reviews: "条评价",
+    image: "商品图片",
   },
 };
 
@@ -163,6 +168,7 @@ function ProductDetails() {
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
   const [status, setStatus] = useState("loading");
+  const [selectedImage, setSelectedImage] = useState("");
   const labels = detailTranslations[language] || detailTranslations.en;
 
   useEffect(() => {
@@ -177,7 +183,12 @@ function ProductDetails() {
           signal: controller.signal,
         });
         const loadedProduct = payload.product;
+        const loadedImages = Array.isArray(loadedProduct.images)
+          ? loadedProduct.images.filter(Boolean)
+          : [];
+
         setProduct(loadedProduct);
+        setSelectedImage(loadedImages[0] || loadedProduct.imageUrl || "");
         setStatus("success");
 
         const relatedPayload = await getProducts(
@@ -200,6 +211,7 @@ function ProductDetails() {
         console.error(error);
         setProduct(null);
         setRelatedProducts([]);
+        setSelectedImage("");
         setStatus(error.status === 404 ? "not-found" : "error");
       }
     }
@@ -243,6 +255,18 @@ function ProductDetails() {
     return "";
   }
 
+  const galleryImages = useMemo(() => {
+    if (!product) return [];
+
+    return [
+      ...(Array.isArray(product.images) ? product.images : []),
+      product.imageUrl,
+    ]
+      .filter(Boolean)
+      .filter((url, index, array) => array.indexOf(url) === index)
+      .slice(0, 6);
+  }, [product]);
+
   if (status === "loading") {
     return (
       <main className="productDetailsPage">
@@ -274,11 +298,12 @@ function ProductDetails() {
   const badgeLabel = getBadgeLabel();
   const fallbackLetter = product.title?.charAt(0)?.toUpperCase() || "K";
   const maximumQuantity = Math.max(1, Math.min(10, Number(product.stock) || 1));
-  const features = [
-    product.brand ? `${labels.brand}: ${product.brand}` : labels.catalog,
-    product.quantity ? `${labels.pack}: ${product.quantity}` : categoryTitle,
-    labels.source,
-  ];
+  const features = Array.isArray(product.features) && product.features.length > 0
+    ? product.features.slice(0, 8)
+    : [product.brand ? `${labels.brand}: ${product.brand}` : labels.catalog];
+  const detailEntries = product.details && typeof product.details === "object"
+    ? Object.entries(product.details).slice(0, 10)
+    : [];
 
   return (
     <main className="productDetailsPage">
@@ -296,32 +321,57 @@ function ProductDetails() {
       </Link>
 
       <section className="productDetailsHero">
-        <div className="productDetailsVisual">
-          <span className="productDetailsFallback" aria-hidden="true">
-            {fallbackLetter}
-          </span>
-
-          {product.imageUrl && (
-            <img
-              src={product.imageUrl}
-              alt={product.title}
-              onError={handleImageError}
-            />
-          )}
-
-          {badgeLabel && (
-            <span className={`productDetailsBadge ${product.badge}`}>
-              {product.badge === "stock" && (
-                <span className="productDetailsBadgeDot" aria-hidden="true" />
-              )}
-              {badgeLabel}
+        <div className="productDetailsMedia">
+          <div className="productDetailsVisual">
+            <span className="productDetailsFallback" aria-hidden="true">
+              {fallbackLetter}
             </span>
+
+            {selectedImage && (
+              <img
+                src={selectedImage}
+                alt={product.title}
+                onError={handleImageError}
+              />
+            )}
+
+            {badgeLabel && (
+              <span className={`productDetailsBadge ${product.badge}`}>
+                {product.badge === "stock" && (
+                  <span className="productDetailsBadgeDot" aria-hidden="true" />
+                )}
+                {badgeLabel}
+              </span>
+            )}
+          </div>
+
+          {galleryImages.length > 1 && (
+            <div className="productDetailsThumbnails" aria-label={labels.image}>
+              {galleryImages.map((imageUrl, index) => (
+                <button
+                  type="button"
+                  className={selectedImage === imageUrl ? "active" : ""}
+                  key={imageUrl}
+                  onClick={() => setSelectedImage(imageUrl)}
+                  aria-label={`${labels.image} ${index + 1}`}
+                >
+                  <img src={imageUrl} alt="" loading="lazy" />
+                </button>
+              ))}
+            </div>
           )}
         </div>
 
         <div className="productDetailsContent">
           <p className="productDetailsCategory">{categoryTitle}</p>
           <h1>{product.title}</h1>
+
+          <div className="productDetailsRating">
+            <span aria-hidden="true">★</span>
+            <strong>{Number(product.rating || 0).toFixed(1)}</strong>
+            <small>{Number(product.reviewCount || 0).toLocaleString("en-US")} {labels.reviews}</small>
+          </div>
+
           <p className="productDetailsDescription">
             {product.description || labels.catalog}
           </p>
@@ -402,6 +452,20 @@ function ProductDetails() {
           </button>
         </div>
       </section>
+
+      {detailEntries.length > 0 && (
+        <section className="productDetailsSpecs">
+          <h2>{labels.details}</h2>
+          <dl>
+            {detailEntries.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{String(value)}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      )}
 
       <section className="productDetailsBenefits">
         <article>
