@@ -78,7 +78,9 @@ function isTranslationReady(product, language, sourceHash) {
 
 async function showStatus(languages) {
   const products = await Product.find({ isActive: true })
-    .select("title sourceHash translations translationMeta")
+    .select(
+      "sourceLanguage sourceHash title description categoryLabel brand features details translations translationMeta"
+    )
     .lean();
 
   console.log(`Active products: ${products.length}`);
