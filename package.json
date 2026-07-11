@@ -7,7 +7,11 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "server:install": "npm --prefix server install",
+    "server:dev": "npm --prefix server run dev",
+    "server:start": "npm --prefix server start",
+    "server:seed": "npm --prefix server run seed"
   },
   "dependencies": {
     "@reown/appkit": "^1.8.22",
