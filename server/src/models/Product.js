@@ -9,6 +9,17 @@ const productSchema = new mongoose.Schema(
       trim: true,
       index: true,
     },
+    sourceLanguage: {
+      type: String,
+      trim: true,
+      default: "en",
+    },
+    sourceHash: {
+      type: String,
+      trim: true,
+      default: "",
+      index: true,
+    },
     title: {
       type: String,
       required: true,
@@ -28,6 +39,10 @@ const productSchema = new mongoose.Schema(
       default: {},
     },
     translations: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
+    translationMeta: {
       type: mongoose.Schema.Types.Mixed,
       default: {},
     },
