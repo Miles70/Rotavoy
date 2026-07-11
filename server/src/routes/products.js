@@ -2,7 +2,6 @@ import { Router } from "express";
 import { Product } from "../models/Product.js";
 import {
   applyCachedCatalogTranslation,
-  localizeCatalogProduct,
   normalizeCatalogLanguage,
 } from "../services/catalogTranslation.js";
 
@@ -58,12 +57,21 @@ productsRouter.get("/categories", async (request, response, next) => {
       { $sort: { count: -1, key: 1 } },
     ]);
 
-    const localizedCategories = categories.map((category) => ({
-      ...category,
-      previewProducts: category.previewProducts.map((product) =>
+    const localizedCategories = categories.map((category) => {
+      const previewProducts = category.previewProducts.map((product) =>
         applyCachedCatalogTranslation(product, language)
-      ),
-    }));
+      );
+      const translatedCategoryTitle =
+        previewProducts.find(
+          (product) => product.translationLanguage === language
+        )?.categoryLabel || category.title;
+
+      return {
+        ...category,
+        title: translatedCategoryTitle,
+        previewProducts,
+      };
+    });
 
     response.json({ categories: localizedCategories });
   } catch (error) {
@@ -90,6 +98,8 @@ productsRouter.get("/", async (request, response, next) => {
         { brand: pattern },
         { categoryLabel: pattern },
         { description: pattern },
+        { [`translations.${language}.title`]: pattern },
+        { [`translations.${language}.description`]: pattern },
       ];
     }
 
@@ -127,17 +137,18 @@ productsRouter.get("/", async (request, response, next) => {
 productsRouter.get("/:productKey", async (request, response, next) => {
   try {
     const language = normalizeCatalogLanguage(request.query.lang);
-    const productDocument = await Product.findOne({
+    const product = await Product.findOne({
       key: request.params.productKey,
       isActive: true,
-    });
+    }).lean();
 
-    if (!productDocument) {
+    if (!product) {
       return response.status(404).json({ message: "Product not found." });
     }
 
-    const product = await localizeCatalogProduct(productDocument, language);
-    return response.json({ product });
+    return response.json({
+      product: applyCachedCatalogTranslation(product, language),
+    });
   } catch (error) {
     return next(error);
   }
