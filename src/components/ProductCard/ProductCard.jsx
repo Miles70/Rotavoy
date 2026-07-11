@@ -49,7 +49,7 @@ function ProductCard({ product }) {
     addToCart(product);
     setIsAdded(true);
 
-    setTimeout(() => {
+    window.setTimeout(() => {
       setIsAdded(false);
     }, 900);
   }
@@ -59,7 +59,10 @@ function ProductCard({ product }) {
   }
 
   function formatPrice(price) {
-    return `$${Number(price || 0).toLocaleString("en-US")}`;
+    return `$${Number(price || 0).toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
   }
 
   function getBadgeLabel() {
@@ -69,7 +72,7 @@ function ProductCard({ product }) {
       product.oldPrice > product.price
     ) {
       const discount = Math.round(
-        ((product.oldPrice - product.price) / product.oldPrice) * 100,
+        ((product.oldPrice - product.price) / product.oldPrice) * 100
       );
 
       return `-${discount}%`;
@@ -78,6 +81,13 @@ function ProductCard({ product }) {
     return labels[product.badge] || "";
   }
 
+  const translatedCategory = t(`categories.${product.categoryKey}.title`);
+  const categoryLabel =
+    product.categoryLabel ||
+    (translatedCategory?.startsWith?.("categories.")
+      ? product.categoryKey
+      : translatedCategory) ||
+    product.categoryKey;
   const buttonLabel = isAdded ? labels.added : labels.add;
   const fallbackLetter = product.title?.charAt(0)?.toUpperCase() || "K";
   const badgeLabel = getBadgeLabel();
@@ -123,10 +133,7 @@ function ProductCard({ product }) {
           className="productTitleLink"
           style={{ display: "block" }}
         >
-          <p className="productCategory">
-            {t(`categories.${product.categoryKey}.title`)}
-          </p>
-
+          <p className="productCategory">{categoryLabel}</p>
           <h3>{product.title}</h3>
         </Link>
 
@@ -175,9 +182,7 @@ function ProductCard({ product }) {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
-
                 <circle cx="9" cy="20" r="1.4" fill="currentColor" />
-
                 <circle cx="18" cy="20" r="1.4" fill="currentColor" />
               </svg>
             )}
