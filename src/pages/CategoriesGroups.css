@@ -1,0 +1,41 @@
+.categoryQuickNav {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.categoryGroup[data-category="homeLivingOffice"] .categoryShowcase {
+  background:
+    radial-gradient(circle at 12% 30%, rgba(244, 184, 96, 0.18), transparent 34%),
+    linear-gradient(135deg, #0d0e0e, #1f1c18);
+}
+
+.categoryGroup[data-category="autoGardenTools"] .categoryShowcase,
+.categoryGroup[data-category="sportsOutdoor"] .categoryShowcase {
+  background:
+    radial-gradient(circle at 12% 30%, rgba(52, 211, 153, 0.2), transparent 34%),
+    linear-gradient(135deg, #09110e, #15251d);
+}
+
+.categoryGroup[data-category="motherBabyToys"] .categoryShowcase,
+.categoryGroup[data-category="beautyCare"] .categoryShowcase {
+  background:
+    radial-gradient(circle at 12% 30%, rgba(240, 24, 96, 0.24), transparent 34%),
+    linear-gradient(135deg, #130b10, #24141c);
+}
+
+.categoryGroup[data-category="booksMusicFilmHobby"] .categoryShowcase {
+  background:
+    radial-gradient(circle at 12% 30%, rgba(107, 92, 255, 0.25), transparent 34%),
+    linear-gradient(135deg, #090a12, #14152a);
+}
+
+@media (max-width: 900px) {
+  .categoryQuickNav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .categoryQuickNav {
+    grid-template-columns: 1fr;
+  }
+}
