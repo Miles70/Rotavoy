@@ -19,7 +19,7 @@ if (!projectId) {
 export const networks = [mainnet, bsc, polygon, arbitrum, base];
 
 const metadata = {
-  name: "Gabaloo",
+  name: "Kemalreis",
   description: "Global commerce powered by Web3.",
   url: window.location.origin,
   icons: [],
