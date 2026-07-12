@@ -24,20 +24,16 @@ function trimTrailingJoiners(value) {
 
 function shortenTitle(originalTitle) {
   const title = normalizeWhitespace(originalTitle);
-  const segments = title
-    .split(/\s+(?:\||•|–|—|;|\/{2,})\s+/)
-    .map((segment) => trimTrailingJoiners(segment))
-    .filter(Boolean);
-
-  const cleanSegment = segments.find(
-    (segment) => segment.length >= 18 && segment.length <= TARGET_MAX_CHARS,
+  const firstSegment = trimTrailingJoiners(
+    title.split(/\s+(?:\||•|–|—|;|\/{2,})\s+/)[0] || title,
   );
 
-  if (cleanSegment) {
-    return cleanSegment;
+  if (firstSegment.length >= 18 && firstSegment.length <= TARGET_MAX_CHARS) {
+    return firstSegment;
   }
 
-  const words = title.split(" ").filter(Boolean);
+  const source = firstSegment.length >= 18 ? firstSegment : title;
+  const words = source.split(" ").filter(Boolean);
   const selectedWords = [];
 
   for (const word of words) {
@@ -52,7 +48,7 @@ function shortenTitle(originalTitle) {
   let shortened = trimTrailingJoiners(selectedWords.join(" "));
 
   if (shortened.length < 18) {
-    shortened = trimTrailingJoiners(title.slice(0, TARGET_MAX_CHARS).replace(/\s+\S*$/, ""));
+    shortened = trimTrailingJoiners(source.slice(0, TARGET_MAX_CHARS).replace(/\s+\S*$/, ""));
   }
 
   return shortened || title;
