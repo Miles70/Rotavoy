@@ -50,7 +50,21 @@ function getCategoryLabel(categoryKey, t) {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-function ProductCard({ product }) {
+function createShowcaseOldPrice(product) {
+  const currentPrice = Number(product.price || 0);
+  const storedOldPrice = Number(product.oldPrice || 0);
+
+  if (storedOldPrice > currentPrice) return storedOldPrice;
+  if (currentPrice <= 0) return null;
+
+  const fingerprint = Array.from(String(product.key || product.title || "kemalreis"))
+    .reduce((total, character) => total + character.charCodeAt(0), 0);
+  const discountPercent = 18 + (fingerprint % 13);
+
+  return Number((currentPrice / (1 - discountPercent / 100)).toFixed(2));
+}
+
+function ProductCard({ product, showComparePrice = false }) {
   const { t, language } = useLanguage();
   const { addToCart } = useCart();
   const [isAdded, setIsAdded] = useState(false);
@@ -72,7 +86,10 @@ function ProductCard({ product }) {
   }
 
   function formatPrice(price) {
-    return `$${Number(price || 0).toLocaleString("en-US")}`;
+    return `$${Number(price || 0).toLocaleString("en-US", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    })}`;
   }
 
   function getBadgeLabel() {
@@ -95,6 +112,11 @@ function ProductCard({ product }) {
   const fallbackLetter = product.title?.charAt(0)?.toUpperCase() || "K";
   const badgeLabel = getBadgeLabel();
   const categoryLabel = getCategoryLabel(product.categoryKey, t);
+  const displayOldPrice = showComparePrice
+    ? createShowcaseOldPrice(product)
+    : Number(product.oldPrice || 0) > Number(product.price || 0)
+      ? Number(product.oldPrice)
+      : null;
 
   return (
     <article className={isAdded ? "productCard added" : "productCard"}>
@@ -145,9 +167,7 @@ function ProductCard({ product }) {
           <Link to={productPath} className="productPriceBlock">
             <strong>{formatPrice(product.price)}</strong>
 
-            {product.oldPrice && product.oldPrice > product.price && (
-              <del>{formatPrice(product.oldPrice)}</del>
-            )}
+            {displayOldPrice ? <del>{formatPrice(displayOldPrice)}</del> : null}
           </Link>
 
           <button
