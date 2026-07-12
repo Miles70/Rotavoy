@@ -37,6 +37,19 @@ const badgeTranslations = {
   },
 };
 
+function getCategoryLabel(categoryKey, t) {
+  if (!categoryKey) return "General";
+
+  const translationKey = `categories.${categoryKey}.title`;
+  const translated = t(translationKey);
+
+  if (translated !== translationKey) return translated;
+
+  return categoryKey
+    .replace(/[-_]+/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
 function ProductCard({ product }) {
   const { t, language } = useLanguage();
   const { addToCart } = useCart();
@@ -81,6 +94,7 @@ function ProductCard({ product }) {
   const buttonLabel = isAdded ? labels.added : labels.add;
   const fallbackLetter = product.title?.charAt(0)?.toUpperCase() || "K";
   const badgeLabel = getBadgeLabel();
+  const categoryLabel = getCategoryLabel(product.categoryKey, t);
 
   return (
     <article className={isAdded ? "productCard added" : "productCard"}>
@@ -123,10 +137,7 @@ function ProductCard({ product }) {
           className="productTitleLink"
           style={{ display: "block" }}
         >
-          <p className="productCategory">
-            {t(`categories.${product.categoryKey}.title`)}
-          </p>
-
+          <p className="productCategory">{categoryLabel}</p>
           <h3>{product.title}</h3>
         </Link>
 
@@ -177,7 +188,6 @@ function ProductCard({ product }) {
                 />
 
                 <circle cx="9" cy="20" r="1.4" fill="currentColor" />
-
                 <circle cx="18" cy="20" r="1.4" fill="currentColor" />
               </svg>
             )}
