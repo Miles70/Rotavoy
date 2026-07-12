@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { RefreshCw, Search, ShoppingCart } from "lucide-react";
+import { Eye, RefreshCw, Search, ShoppingCart } from "lucide-react";
+import OrderDetailsModal from "../../components/admin/OrderDetailsModal";
 import { useAdminAuth } from "../../context/AdminAuthContext";
 import { getAdminOrders, updateAdminOrder } from "../../services/adminApi";
 
@@ -27,6 +28,7 @@ function AdminOrders() {
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [updatingOrder, setUpdatingOrder] = useState("");
+  const [selectedOrder, setSelectedOrder] = useState(null);
   const [error, setError] = useState("");
 
   const loadOrders = useCallback(async () => {
@@ -36,6 +38,10 @@ function AdminOrders() {
     try {
       const data = await getAdminOrders(token, statusFilter);
       setOrders(data.orders || []);
+      setSelectedOrder((current) => {
+        if (!current) return null;
+        return (data.orders || []).find((order) => order.orderNumber === current.orderNumber) || null;
+      });
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -71,6 +77,9 @@ function AdminOrders() {
       const data = await updateAdminOrder(token, orderNumber, { [field]: value });
       setOrders((current) =>
         current.map((order) => (order.orderNumber === orderNumber ? data.order : order))
+      );
+      setSelectedOrder((current) =>
+        current?.orderNumber === orderNumber ? data.order : current
       );
     } catch (requestError) {
       setError(requestError.message);
@@ -130,6 +139,7 @@ function AdminOrders() {
                 <th>Sipariş durumu</th>
                 <th>Ödeme</th>
                 <th>Tarih</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -171,11 +181,21 @@ function AdminOrders() {
                       </select>
                     </td>
                     <td>{formatDate(order.createdAt)}</td>
+                    <td>
+                      <button
+                        className="admin-detail-button"
+                        type="button"
+                        onClick={() => setSelectedOrder(order)}
+                        aria-label={`#${order.orderNumber} siparişini aç`}
+                      >
+                        <Eye size={16} /> Detay
+                      </button>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="7">
+                  <td colSpan="8">
                     <div className="admin-empty-state">
                       <ShoppingCart size={24} />
                       {isLoading ? "Siparişler yükleniyor..." : "Bu filtrede sipariş bulunamadı."}
@@ -187,6 +207,10 @@ function AdminOrders() {
           </table>
         </div>
       </section>
+
+      {selectedOrder ? (
+        <OrderDetailsModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />
+      ) : null}
     </div>
   );
 }
