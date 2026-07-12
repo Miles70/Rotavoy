@@ -59,6 +59,10 @@ export async function getAdminDashboard(token) {
   return adminRequest("/dashboard", { token });
 }
 
+export async function getAdminAnalytics(token) {
+  return adminRequest("/analytics", { token });
+}
+
 export async function getAdminOrders(token, status = "") {
   const query = status ? `?status=${encodeURIComponent(status)}` : "";
   return adminRequest(`/orders${query}`, { token });
@@ -74,6 +78,14 @@ export async function updateAdminOrder(token, orderNumber, updates) {
 
 export async function getAdminProducts(token) {
   return adminRequest("/products", { token });
+}
+
+export async function createAdminProduct(token, product) {
+  return adminRequest("/products", {
+    token,
+    method: "POST",
+    body: product,
+  });
 }
 
 export async function updateAdminProduct(token, productKey, updates) {
