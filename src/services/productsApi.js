@@ -20,10 +20,17 @@ async function storeRequest(path) {
   return data;
 }
 
-export async function getStoreProducts({ page = 1, limit = 24, search = "", category = "" } = {}) {
+export async function getStoreProducts({
+  page = 1,
+  limit = 24,
+  search = "",
+  category = "",
+  sort = "popular",
+} = {}) {
   const query = new URLSearchParams({
     page: String(page),
     limit: String(limit),
+    sort,
   });
 
   if (search) query.set("search", search);
