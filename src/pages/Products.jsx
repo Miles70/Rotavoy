@@ -4,11 +4,19 @@ import { useSearchParams } from "react-router-dom";
 import ProductCard from "../components/ProductCard/ProductCard";
 import SearchBar from "../components/SearchBar/SearchBar";
 import categories from "../data/categories";
+import { getCategoryGroupText } from "../i18n/categoryGroups";
 import { useLanguage } from "../i18n/LanguageContext";
 import { getStoreProducts } from "../services/productsApi";
 import "./Products.css";
 
 const PAGE_SIZE = 24;
+const productsPageDescriptions = {
+  en: "Explore the full marketplace across nine clear product collections.",
+  tr: "Dokuz ana koleksiyondaki ürünleri keşfet, ara ve sayfa sayfa gez.",
+  ru: "Изучайте товары маркетплейса в девяти понятных коллекциях.",
+  ar: "استكشف منتجات السوق ضمن تسع مجموعات واضحة.",
+  zh: "浏览九个清晰商品集合中的完整市场产品。",
+};
 
 function getPageItems(currentPage, totalPages) {
   if (totalPages <= 9) {
@@ -39,13 +47,13 @@ function categoryLabel(categoryKey, t) {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-function groupLabel(groupKey, t) {
+function groupLabel(groupKey, language) {
   if (!categories.some((category) => category.key === groupKey)) return "";
-  return t(`categoryGroups.${groupKey}.title`);
+  return getCategoryGroupText(language, groupKey, "title");
 }
 
 function Products() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [pagination, setPagination] = useState({
@@ -110,7 +118,7 @@ function Products() {
   );
 
   const selectedCategoryTitle =
-    groupLabel(groupQuery, t) || categoryLabel(categoryQuery, t);
+    groupLabel(groupQuery, language) || categoryLabel(categoryQuery, t);
 
   function changePage(nextPage) {
     if (nextPage < 1 || nextPage > pagination.totalPages || nextPage === pagination.page) return;
@@ -126,7 +134,7 @@ function Products() {
       <section className="productsHero">
         <span>{t("productsPage.tag")}</span>
         <h1>{t("productsPage.title")}</h1>
-        <p>{t("productsPage.text")}</p>
+        <p>{productsPageDescriptions[language] || productsPageDescriptions.en}</p>
 
         <div className="productsPageSearch">
           <SearchBar initialValue={searchQuery} />
