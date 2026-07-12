@@ -16,7 +16,11 @@ function PopularProducts() {
   useEffect(() => {
     let isCancelled = false;
 
-    getStoreProducts({ page: 1, limit: HOME_PRODUCT_LIMIT })
+    getStoreProducts({
+      page: 1,
+      limit: HOME_PRODUCT_LIMIT,
+      sort: "popular",
+    })
       .then((data) => {
         if (!isCancelled) {
           setProducts(data.products || []);
