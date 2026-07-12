@@ -1,8 +1,17 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle, Boxes, CircleDollarSign, Clock3, PackageCheck, ShoppingCart } from "lucide-react";
+import {
+  Activity,
+  AlertTriangle,
+  BarChart3,
+  Boxes,
+  CircleDollarSign,
+  Clock3,
+  PackageCheck,
+  ShoppingCart,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAdminAuth } from "../../context/AdminAuthContext";
-import { getAdminDashboard } from "../../services/adminApi";
+import { getAdminAnalytics, getAdminDashboard } from "../../services/adminApi";
 
 function formatMoney(value, currency = "USD") {
   return new Intl.NumberFormat("en-US", {
@@ -19,6 +28,12 @@ function formatDate(value) {
   }).format(new Date(value));
 }
 
+function formatDay(value) {
+  return new Intl.DateTimeFormat("tr-TR", {
+    weekday: "short",
+  }).format(new Date(`${value}T12:00:00Z`));
+}
+
 function AdminDashboard() {
   const { token } = useAdminAuth();
   const [data, setData] = useState(null);
@@ -29,10 +44,10 @@ function AdminDashboard() {
     let isCancelled = false;
 
     setIsLoading(true);
-    getAdminDashboard(token)
-      .then((result) => {
+    Promise.all([getAdminDashboard(token), getAdminAnalytics(token)])
+      .then(([dashboard, analytics]) => {
         if (!isCancelled) {
-          setData(result);
+          setData({ ...dashboard, analytics });
           setError("");
         }
       })
@@ -54,6 +69,10 @@ function AdminDashboard() {
 
   const summary = data?.summary;
   const primaryRevenue = summary?.revenueByCurrency?.[0];
+  const orderTrend = data?.analytics?.orderTrend || [];
+  const statusBreakdown = data?.analytics?.statusBreakdown || [];
+  const maxOrders = Math.max(1, ...orderTrend.map((item) => item.orders));
+  const maxStatusCount = Math.max(1, ...statusBreakdown.map((item) => item.count));
   const cards = [
     {
       label: "Toplam sipariş",
@@ -110,6 +129,61 @@ function AdminDashboard() {
             <small>{detail}</small>
           </article>
         ))}
+      </section>
+
+      <section className="admin-chart-grid" aria-busy={isLoading}>
+        <article className="admin-panel admin-chart-card">
+          <div className="admin-panel-header">
+            <div>
+              <p className="admin-eyebrow">7 GÜNLÜK TREND</p>
+              <h2>Sipariş hareketi</h2>
+            </div>
+            <BarChart3 size={20} />
+          </div>
+
+          <div className="admin-bar-chart">
+            {orderTrend.map((item) => {
+              const height = item.orders ? Math.max(12, (item.orders / maxOrders) * 100) : 4;
+              return (
+                <div className="admin-bar-column" key={item.date}>
+                  <strong>{item.orders}</strong>
+                  <div className="admin-bar-track" title={`${item.orders} sipariş`}>
+                    <span style={{ height: `${height}%` }} />
+                  </div>
+                  <b>{formatDay(item.date)}</b>
+                  <small>{formatMoney(item.paidRevenue)}</small>
+                </div>
+              );
+            })}
+          </div>
+        </article>
+
+        <article className="admin-panel admin-chart-card">
+          <div className="admin-panel-header">
+            <div>
+              <p className="admin-eyebrow">DAĞILIM</p>
+              <h2>Sipariş durumları</h2>
+            </div>
+            <Activity size={20} />
+          </div>
+
+          <div className="admin-status-chart">
+            {statusBreakdown.map((item) => (
+              <div className="admin-status-chart-row" key={item.status}>
+                <div>
+                  <span className={`admin-status admin-status-${item.status}`}>{item.status}</span>
+                  <strong>{item.count}</strong>
+                </div>
+                <div className="admin-status-chart-track">
+                  <span
+                    className={`admin-status-chart-fill admin-status-chart-fill-${item.status}`}
+                    style={{ width: `${(item.count / maxStatusCount) * 100}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </article>
       </section>
 
       <section className="admin-panel">
