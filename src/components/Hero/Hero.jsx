@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
@@ -9,15 +10,46 @@ import {
 } from "lucide-react";
 
 import { useLanguage } from "../../i18n/LanguageContext";
+import { getStoreProducts } from "../../services/productsApi";
 
 import "./Hero.css";
 
+function formatProductCount(count) {
+  const total = Number(count || 0);
+
+  if (total >= 1000) {
+    const thousands = Math.floor(total / 1000);
+    return `${thousands}K+`;
+  }
+
+  return total > 0 ? String(total) : "—";
+}
+
 function Hero() {
   const { t } = useLanguage();
+  const [productCount, setProductCount] = useState(0);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    getStoreProducts({ page: 1, limit: 8, sort: "popular" })
+      .then((data) => {
+        if (!isCancelled) {
+          setProductCount(Number(data.pagination?.total || 0));
+        }
+      })
+      .catch(() => {
+        if (!isCancelled) setProductCount(0);
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
 
   const stats = [
     {
-      value: "8+",
+      value: formatProductCount(productCount),
       label: t("productsPage.items"),
     },
     {
