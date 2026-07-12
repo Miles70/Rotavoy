@@ -7,6 +7,7 @@ import { adminAnalyticsRouter } from "./routes/adminAnalytics.js";
 import { adminProductCreateRouter } from "./routes/adminProductCreate.js";
 import { adminProductListRouter } from "./routes/adminProductList.js";
 import { ordersRouter } from "./routes/orders.js";
+import { productListRouter } from "./routes/productList.js";
 import { productsRouter } from "./routes/products.js";
 
 function getAllowedOrigins() {
@@ -61,6 +62,7 @@ export function createApp() {
   app.use("/api/admin/products", adminProductListRouter);
   app.use("/api/admin/products", adminProductCreateRouter);
   app.use("/api/admin", adminRouter);
+  app.use("/api/products", productListRouter);
   app.use("/api/products", productsRouter);
   app.use("/api/orders", ordersRouter);
 
