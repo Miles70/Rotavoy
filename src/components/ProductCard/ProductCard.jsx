@@ -50,21 +50,7 @@ function getCategoryLabel(categoryKey, t) {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-function createShowcaseOldPrice(product) {
-  const currentPrice = Number(product.price || 0);
-  const storedOldPrice = Number(product.oldPrice || 0);
-
-  if (storedOldPrice > currentPrice) return storedOldPrice;
-  if (currentPrice <= 0) return null;
-
-  const fingerprint = Array.from(String(product.key || product.title || "kemalreis"))
-    .reduce((total, character) => total + character.charCodeAt(0), 0);
-  const discountPercent = 18 + (fingerprint % 13);
-
-  return Number((currentPrice / (1 - discountPercent / 100)).toFixed(2));
-}
-
-function ProductCard({ product, showComparePrice = false }) {
+function ProductCard({ product }) {
   const { t, language } = useLanguage();
   const { addToCart } = useCart();
   const [isAdded, setIsAdded] = useState(false);
@@ -112,9 +98,8 @@ function ProductCard({ product, showComparePrice = false }) {
   const fallbackLetter = product.title?.charAt(0)?.toUpperCase() || "K";
   const badgeLabel = getBadgeLabel();
   const categoryLabel = getCategoryLabel(product.categoryKey, t);
-  const displayOldPrice = showComparePrice
-    ? createShowcaseOldPrice(product)
-    : Number(product.oldPrice || 0) > Number(product.price || 0)
+  const displayOldPrice =
+    Number(product.oldPrice || 0) > Number(product.price || 0)
       ? Number(product.oldPrice)
       : null;
 
@@ -166,7 +151,6 @@ function ProductCard({ product, showComparePrice = false }) {
         <div className="productBottom">
           <Link to={productPath} className="productPriceBlock">
             <strong>{formatPrice(product.price)}</strong>
-
             {displayOldPrice ? <del>{formatPrice(displayOldPrice)}</del> : null}
           </Link>
 
