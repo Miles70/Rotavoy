@@ -1,6 +1,7 @@
 import { Product } from "../models/Product.js";
 
 const QUALITY_SOURCE = "amazon-reviews-2023";
+const PRESERVED_SOURCES = [QUALITY_SOURCE, "manual"];
 const MIN_QUALITY_PRODUCT_COUNT = 500;
 
 function normalizeWhitespace(value) {
@@ -88,7 +89,7 @@ export async function cleanCatalogQuality() {
 
   const restoreResult = await restorePreviouslyShortenedAmazonTitles();
   const deleteResult = await Product.deleteMany({
-    source: { $ne: QUALITY_SOURCE },
+    source: { $nin: PRESERVED_SOURCES },
   });
 
   return {
