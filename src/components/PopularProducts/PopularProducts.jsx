@@ -16,7 +16,7 @@ function PopularProducts() {
   useEffect(() => {
     let isCancelled = false;
 
-    getStoreProducts({ page: 1, limit: HOME_PRODUCT_LIMIT, sort: "popular" })
+    getStoreProducts({ page: 1, limit: HOME_PRODUCT_LIMIT, sort: "showcase" })
       .then((data) => {
         if (!isCancelled) {
           setProducts(data.products || []);
@@ -57,11 +57,7 @@ function PopularProducts() {
       {!isLoading && !error ? (
         <div className="popularProductsGrid">
           {products.map((product) => (
-            <ProductCard
-              key={product.key}
-              product={product}
-              showComparePrice
-            />
+            <ProductCard key={product.key} product={product} />
           ))}
         </div>
       ) : null}
