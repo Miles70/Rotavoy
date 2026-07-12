@@ -3,8 +3,6 @@ import {
   ArrowRight,
   Baby,
   BookOpen,
-  ChevronLeft,
-  ChevronRight,
   Cpu,
   Dumbbell,
   House,
@@ -21,7 +19,6 @@ import { getCategoryGroupText } from "../i18n/categoryGroups";
 import { useLanguage } from "../i18n/LanguageContext";
 import { getStoreProducts } from "../services/productsApi";
 import "./Categories.css";
-import "./CategoryCarousel.css";
 
 const pageTranslations = {
   en: {
@@ -36,9 +33,6 @@ const pageTranslations = {
     viewAll: "View All",
     ready: "Ready to explore",
     loading: "Loading categories...",
-    previous: "Previous category",
-    next: "Next category",
-    goTo: "Show category",
   },
   tr: {
     tag: "Kategoriler",
@@ -52,9 +46,6 @@ const pageTranslations = {
     viewAll: "Tümünü Gör",
     ready: "Keşfetmeye hazır",
     loading: "Kategoriler yükleniyor...",
-    previous: "Önceki kategori",
-    next: "Sonraki kategori",
-    goTo: "Kategoriyi göster",
   },
   ru: {
     tag: "Категории",
@@ -68,9 +59,6 @@ const pageTranslations = {
     viewAll: "Посмотреть все",
     ready: "Готово к просмотру",
     loading: "Категории загружаются...",
-    previous: "Предыдущая категория",
-    next: "Следующая категория",
-    goTo: "Показать категорию",
   },
   ar: {
     tag: "الفئات",
@@ -84,9 +72,6 @@ const pageTranslations = {
     viewAll: "عرض الكل",
     ready: "جاهز للاستكشاف",
     loading: "جارٍ تحميل الفئات...",
-    previous: "الفئة السابقة",
-    next: "الفئة التالية",
-    goTo: "عرض الفئة",
   },
   zh: {
     tag: "分类",
@@ -100,9 +85,6 @@ const pageTranslations = {
     viewAll: "查看全部",
     ready: "随时探索",
     loading: "正在加载分类...",
-    previous: "上一个分类",
-    next: "下一个分类",
-    goTo: "显示分类",
   },
 };
 
@@ -123,8 +105,6 @@ function Categories() {
   const copy = pageTranslations[language] || pageTranslations.en;
   const [categoryData, setCategoryData] = useState({});
   const [isLoading, setIsLoading] = useState(true);
-  const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
-  const [isCarouselPaused, setIsCarouselPaused] = useState(false);
 
   useEffect(() => {
     let isCancelled = false;
@@ -165,34 +145,10 @@ function Categories() {
     };
   }, []);
 
-  useEffect(() => {
-    if (isCarouselPaused || categories.length < 2) return undefined;
-
-    const timer = window.setTimeout(() => {
-      setActiveCategoryIndex((currentIndex) => (currentIndex + 1) % categories.length);
-    }, 5200);
-
-    return () => window.clearTimeout(timer);
-  }, [activeCategoryIndex, isCarouselPaused]);
-
   const totalProducts = useMemo(
     () => categories.reduce((sum, category) => sum + Number(categoryData[category.key]?.total || 0), 0),
     [categoryData],
   );
-
-  const activeCategory = categories[activeCategoryIndex] || categories[0];
-  const ActiveCategoryIcon = categoryIcons[activeCategory.key] || Sparkles;
-  const activeGroupData = categoryData[activeCategory.key] || { products: [], total: 0 };
-  const activePreviewProducts = activeGroupData.products.slice(0, 3);
-  const activeCategoryTitle = getCategoryGroupText(language, activeCategory.key, "title");
-  const activeCategoryDescription = getCategoryGroupText(language, activeCategory.key, "description");
-  const activeProductsPath = `/products?group=${activeCategory.key}&page=1`;
-
-  function changeCarousel(direction) {
-    setActiveCategoryIndex(
-      (currentIndex) => (currentIndex + direction + categories.length) % categories.length,
-    );
-  }
 
   return (
     <main className="categoriesPage">
@@ -229,123 +185,30 @@ function Categories() {
         </div>
 
         <nav className="categoryQuickNav">
-          {categories.map((category, index) => {
+          {categories.map((category) => {
             const CategoryIcon = categoryIcons[category.key] || Sparkles;
 
             return (
-              <button
-                type="button"
+              <a
                 key={category.key}
-                className={index === activeCategoryIndex ? "categoryQuickLink is-active" : "categoryQuickLink"}
-                onClick={() => setActiveCategoryIndex(index)}
+                href={`#category-${category.key}`}
+                className="categoryQuickLink"
               >
                 <span>
                   <CategoryIcon aria-hidden="true" />
                 </span>
                 {getCategoryGroupText(language, category.key, "title")}
-              </button>
+              </a>
             );
           })}
         </nav>
-      </section>
-
-      <section
-        className="categoryCarouselSection"
-        aria-roledescription="carousel"
-        aria-label={activeCategoryTitle}
-        onMouseEnter={() => setIsCarouselPaused(true)}
-        onMouseLeave={() => setIsCarouselPaused(false)}
-        onFocusCapture={() => setIsCarouselPaused(true)}
-        onBlurCapture={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget)) {
-            setIsCarouselPaused(false);
-          }
-        }}
-      >
-        <article
-          className="categoryCarouselCard"
-          data-category={activeCategory.key}
-          key={activeCategory.key}
-        >
-          <div className="categoryCarouselContent">
-            <div className="categoryCarouselIcon">
-              <ActiveCategoryIcon aria-hidden="true" />
-            </div>
-            <span>{copy.featured}</span>
-            <h2>{activeCategoryTitle}</h2>
-            <p>{activeCategoryDescription}</p>
-            <div className="categoryCarouselMeta">
-              <strong>{isLoading ? "—" : activeGroupData.total.toLocaleString("en-US")}</strong>
-              <span>{t("categoriesPage.items")}</span>
-            </div>
-            <Link to={activeProductsPath}>
-              {copy.viewAll}
-              <ArrowRight size={17} />
-            </Link>
-          </div>
-
-          <div className="categoryCarouselVisual" aria-hidden={activePreviewProducts.length === 0}>
-            {[0, 1, 2].map((slotIndex) => {
-              const product = activePreviewProducts[slotIndex];
-
-              if (!product) {
-                return (
-                  <div
-                    className={`categoryCarouselProduct categoryCarouselProduct${slotIndex + 1} is-placeholder`}
-                    key={`placeholder-${slotIndex}`}
-                  >
-                    <ActiveCategoryIcon aria-hidden="true" />
-                  </div>
-                );
-              }
-
-              return (
-                <Link
-                  to={`/products/${encodeURIComponent(product.key)}`}
-                  className={`categoryCarouselProduct categoryCarouselProduct${slotIndex + 1}`}
-                  key={product.key}
-                  aria-label={product.title}
-                >
-                  <img src={product.imageUrl || product.images?.[0] || ""} alt="" loading="lazy" />
-                  <span>{product.title}</span>
-                </Link>
-              );
-            })}
-          </div>
-        </article>
-
-        <div className="categoryCarouselControls">
-          <button type="button" onClick={() => changeCarousel(-1)} aria-label={copy.previous}>
-            <ChevronLeft size={19} />
-          </button>
-
-          <div className="categoryCarouselDots">
-            {categories.map((category, index) => (
-              <button
-                type="button"
-                key={category.key}
-                className={index === activeCategoryIndex ? "is-active" : ""}
-                onClick={() => setActiveCategoryIndex(index)}
-                aria-label={`${copy.goTo}: ${getCategoryGroupText(language, category.key, "title")}`}
-                aria-current={index === activeCategoryIndex ? "true" : undefined}
-              />
-            ))}
-          </div>
-
-          <span className="categoryCarouselCounter">
-            {String(activeCategoryIndex + 1).padStart(2, "0")} / {String(categories.length).padStart(2, "0")}
-          </span>
-
-          <button type="button" onClick={() => changeCarousel(1)} aria-label={copy.next}>
-            <ChevronRight size={19} />
-          </button>
-        </div>
       </section>
 
       <section className="categoryGroups">
         {categories.map((category) => {
           const CategoryIcon = categoryIcons[category.key] || Sparkles;
           const groupData = categoryData[category.key] || { products: [], total: 0 };
+          const previewProducts = groupData.products.slice(0, 3);
           const categoryTitle = getCategoryGroupText(language, category.key, "title");
           const categoryDescription = getCategoryGroupText(language, category.key, "description");
           const productsPath = `/products?group=${category.key}&page=1`;
@@ -377,6 +240,30 @@ function Categories() {
                     {copy.viewAll}
                     <ArrowRight size={16} />
                   </Link>
+                </div>
+              </div>
+
+              <div className="categoryShowcase">
+                <div className="categoryShowcaseContent">
+                  <span>{copy.featured}</span>
+                  <h3>{categoryTitle}</h3>
+                  <p>{categoryDescription}</p>
+                  <Link to={productsPath}>
+                    {copy.viewAll}
+                    <ArrowRight size={17} />
+                  </Link>
+                </div>
+
+                <div className="categoryShowcaseImages">
+                  {previewProducts.map((product, index) => (
+                    <div
+                      className={`categoryPreviewImage previewImage${index + 1}`}
+                      key={product.key}
+                    >
+                      <img src={product.imageUrl} alt={product.title} loading="lazy" />
+                      <span>{product.title}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
 
