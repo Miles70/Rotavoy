@@ -275,7 +275,8 @@ function ProductDetailsLive() {
           </div>
 
           <p className="liveProductDescription">
-            Premium marketplace selection with secure checkout, tracked delivery and customer support.
+            {product.description ||
+              "Premium marketplace selection with secure checkout, tracked delivery and customer support."}
           </p>
 
           <div className="liveProductBuyRow">
