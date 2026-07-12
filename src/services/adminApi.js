@@ -60,7 +60,19 @@ export async function getAdminDashboard(token) {
 }
 
 export async function getAdminAnalytics(token) {
-  return adminRequest("/analytics", { token });
+  try {
+    return await adminRequest("/analytics", { token });
+  } catch (error) {
+    if (error.status === 401) {
+      throw error;
+    }
+
+    console.warn("Admin analytics could not be loaded:", error.message);
+    return {
+      orderTrend: [],
+      statusBreakdown: [],
+    };
+  }
 }
 
 export async function getAdminOrders(token, status = "") {
