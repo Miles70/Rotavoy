@@ -1,0 +1,111 @@
+.admin-orders-table {
+  min-width: 1260px;
+}
+
+.admin-order-bulk-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.admin-order-bulk-actions > span {
+  color: #91a0bd;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.admin-order-selection-cell {
+  width: 44px;
+  min-width: 44px;
+  padding-left: 18px !important;
+  padding-right: 6px !important;
+  text-align: center;
+}
+
+.admin-order-checkbox {
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  accent-color: #ff2f7d;
+  cursor: pointer;
+}
+
+.admin-order-checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.admin-orders-table tbody tr.is-selected {
+  background: rgba(255, 47, 125, 0.055);
+}
+
+.admin-orders-table tbody tr.is-selected:hover {
+  background: rgba(255, 47, 125, 0.085);
+}
+
+.admin-order-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.admin-delete-button,
+.admin-bulk-delete-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid rgba(255, 71, 112, 0.32);
+  border-radius: 10px;
+  background: rgba(255, 50, 91, 0.08);
+  color: #ff6b88;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 850;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.admin-delete-button {
+  min-height: 36px;
+  padding: 0 11px;
+}
+
+.admin-bulk-delete-button {
+  min-height: 40px;
+  padding: 0 14px;
+}
+
+.admin-delete-button:hover:not(:disabled),
+.admin-bulk-delete-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(255, 71, 112, 0.62);
+  background: rgba(255, 50, 91, 0.16);
+  color: #ff8aa0;
+}
+
+.admin-delete-button:disabled,
+.admin-bulk-delete-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+  transform: none;
+}
+
+@media (max-width: 720px) {
+  .admin-order-bulk-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .admin-bulk-delete-button {
+    flex: 1;
+  }
+}
