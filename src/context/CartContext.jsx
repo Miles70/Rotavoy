@@ -4,54 +4,28 @@ const CartContext = createContext(null);
 
 const CART_STORAGE_KEY = "gabaloo_cart";
 const LEGACY_CART_STORAGE_KEY = "kemalreis_cart";
-const LAST_ORDER_STORAGE_KEY = "kemalreis_last_order";
-
-function safeParse(value, fallback) {
-  try {
-    return value ? JSON.parse(value) : fallback;
-  } catch {
-    return fallback;
-  }
-}
 
 function getStoredCart() {
-  const storedCart = localStorage.getItem(CART_STORAGE_KEY);
+  try {
+    const storedCart = localStorage.getItem(CART_STORAGE_KEY);
 
-  if (storedCart) {
-    return safeParse(storedCart, []);
-  }
+    if (storedCart) {
+      return JSON.parse(storedCart);
+    }
 
-  const legacyCart = localStorage.getItem(LEGACY_CART_STORAGE_KEY);
+    const legacyCart = localStorage.getItem(LEGACY_CART_STORAGE_KEY);
 
-  if (!legacyCart) {
+    if (!legacyCart) {
+      return [];
+    }
+
+    const parsedLegacyCart = JSON.parse(legacyCart);
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(parsedLegacyCart));
+    localStorage.removeItem(LEGACY_CART_STORAGE_KEY);
+    return parsedLegacyCart;
+  } catch {
     return [];
   }
-
-  const parsedLegacyCart = safeParse(legacyCart, []);
-  localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(parsedLegacyCart));
-  localStorage.removeItem(LEGACY_CART_STORAGE_KEY);
-  return parsedLegacyCart;
-}
-
-function shouldPreservePendingCheckoutCart() {
-  if (window.location.pathname !== "/checkout") {
-    return false;
-  }
-
-  const lastOrder = safeParse(
-    localStorage.getItem(LAST_ORDER_STORAGE_KEY),
-    null,
-  );
-
-  if (!lastOrder || lastOrder.paymentMethod !== "crypto") {
-    return false;
-  }
-
-  return (
-    lastOrder.paymentStatus === "unpaid" ||
-    lastOrder.paymentStatus === "pending" ||
-    lastOrder.status === "awaiting_payment"
-  );
 }
 
 export function CartProvider({ children }) {
@@ -146,13 +120,7 @@ export function CartProvider({ children }) {
     );
   }
 
-  function clearCart(options = {}) {
-    const force = options === true || options?.force === true;
-
-    if (!force && shouldPreservePendingCheckoutCart()) {
-      return;
-    }
-
+  function clearCart() {
     setCartItems([]);
   }
 
