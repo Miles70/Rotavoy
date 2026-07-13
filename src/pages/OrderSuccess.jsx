@@ -38,7 +38,7 @@ function OrderSuccess() {
           <h1>
             {text(
               "orderSuccessPage.noOrderTitle",
-              "There is no completed order yet."
+              "There is no recent order."
             )}
           </h1>
 
@@ -70,25 +70,55 @@ function OrderSuccess() {
       })
     : text("orderSuccessPage.justNow", "Just now");
 
+  const isPaid = order.paymentStatus === "paid";
+  const isAwaitingPayment =
+    order.status === "awaiting_payment" ||
+    order.paymentStatus === "unpaid" ||
+    order.paymentStatus === "pending";
+
+  const statusLabel = isPaid
+    ? text("orderSuccessPage.statusPaid", "Paid")
+    : isAwaitingPayment
+      ? text("orderSuccessPage.statusAwaitingPayment", "Awaiting payment")
+      : order.status;
+
+  const paymentMethodLabel =
+    order.paymentMethod === "crypto"
+      ? text("orderSuccessPage.cryptoPayment", "Crypto")
+      : order.paymentMethod === "card"
+        ? text("orderSuccessPage.cardPayment", "Card")
+        : text("orderSuccessPage.notSelected", "Not selected");
+
   return (
     <main className="orderSuccessPage">
       <section className="orderSuccessCard">
-        <div className="orderSuccessIcon">✅</div>
+        <div className="orderSuccessIcon">{isPaid ? "✅" : "⏳"}</div>
 
         <p className="orderSuccessLabel">
-          {text("orderSuccessPage.tag", "Order completed")}
+          {isPaid
+            ? text("orderSuccessPage.tag", "Payment confirmed")
+            : text("orderSuccessPage.paymentRequiredTag", "Payment required")}
         </p>
 
         <h1>
-          {text("orderSuccessPage.thanks", "Thanks")},{" "}
-          {order.customer?.fullName || text("orderSuccessPage.customer", "customer")}!
+          {isPaid
+            ? `${text("orderSuccessPage.thanks", "Thanks")}, ${
+                order.customer?.fullName ||
+                text("orderSuccessPage.customer", "customer")
+              }!`
+            : text("orderSuccessPage.orderCreated", "Your order was created")}
         </h1>
 
         <span>
-          {text(
-            "orderSuccessPage.text",
-            "Your order has been received successfully."
-          )}
+          {isPaid
+            ? text(
+                "orderSuccessPage.text",
+                "Your payment has been confirmed and your order is being processed."
+              )
+            : text(
+                "orderSuccessPage.awaitingPaymentText",
+                "Your order is safely stored and waiting for crypto payment."
+              )}
         </span>
 
         <div className="orderSuccessMeta">
@@ -104,11 +134,12 @@ function OrderSuccess() {
 
           <div>
             <small>{text("orderSuccessPage.status", "Status")}</small>
-            <strong>
-              {order.status === "pending"
-                ? text("orderSuccessPage.statusPending", "Pending")
-                : order.status}
-            </strong>
+            <strong>{statusLabel}</strong>
+          </div>
+
+          <div>
+            <small>{text("orderSuccessPage.paymentMethod", "Payment")}</small>
+            <strong>{paymentMethodLabel}</strong>
           </div>
 
           <div>
@@ -116,6 +147,23 @@ function OrderSuccess() {
             <strong>{formatPrice(order.total)}</strong>
           </div>
         </div>
+
+        {!isPaid && order.paymentMethod === "crypto" && (
+          <div className="orderSuccessPaymentNotice">
+            <strong>
+              {text(
+                "orderSuccessPage.cryptoNextTitle",
+                "Crypto payment is the next step"
+              )}
+            </strong>
+            <p>
+              {text(
+                "orderSuccessPage.cryptoNextText",
+                "The order and payment records are ready. Wallet transfer and blockchain confirmation will be connected next."
+              )}
+            </p>
+          </div>
+        )}
 
         <div className="orderSuccessDetails">
           <h2>{text("orderSuccessPage.itemsTitle", "Order Items")}</h2>
@@ -136,7 +184,9 @@ function OrderSuccess() {
                 </div>
 
                 <strong>
-                  {formatPrice(Number(item.price || 0) * Number(item.quantity || 1))}
+                  {formatPrice(
+                    Number(item.price || 0) * Number(item.quantity || 1)
+                  )}
                 </strong>
               </div>
             ))}
