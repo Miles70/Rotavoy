@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import ProductThumbnail from "../components/ProductThumbnail/ProductThumbnail";
 import { useLanguage } from "../i18n/LanguageContext";
 import CryptoPayment from "../components/CryptoPayment/CryptoPayment";
 import "./OrderSuccess.css";
@@ -170,7 +171,7 @@ function OrderSuccess() {
             {(order.items || []).map((item) => (
               <div className="orderSuccessItem" key={item.key || item.id}>
                 <div className="orderSuccessItemIcon">
-                  {item.image || "🛍️"}
+                  <ProductThumbnail item={item} />
                 </div>
 
                 <div>
