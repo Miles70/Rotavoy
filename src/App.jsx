@@ -24,6 +24,7 @@ import "./styles/admin-enhancements.css";
 import "./styles/admin-pagination.css";
 import "./styles/admin-order-deletion.css";
 import "./components/admin/AdminCampaignSettings.css";
+import "./components/CampaignShowcase/CampaignCinematic.css";
 
 function App() {
   return (
