@@ -2,6 +2,7 @@ import "dotenv/config";
 import { createApp } from "./app.js";
 import { connectDatabase, disconnectDatabase } from "./config/database.js";
 import { cleanCatalogQuality } from "./services/catalogQualityCleanup.js";
+import { migrateLegacyOrderNumbers } from "./services/orderNumberMigration.js";
 import { syncProductsFromCatalog } from "./services/productSync.js";
 
 const port = Number(process.env.PORT) || 5000;
@@ -10,6 +11,20 @@ let server;
 
 async function startServer() {
   await connectDatabase();
+
+  const orderMigrationResult = await migrateLegacyOrderNumbers();
+
+  if (orderMigrationResult.modifiedCount > 0) {
+    console.log(
+      `Legacy order numbers migrated: ${orderMigrationResult.modifiedCount} KMR orders changed to GBL.`,
+    );
+  }
+
+  if (orderMigrationResult.skippedCount > 0) {
+    console.warn(
+      `Legacy order migration skipped ${orderMigrationResult.skippedCount} duplicate order numbers.`,
+    );
+  }
 
   const legacyCleanupResult = await syncProductsFromCatalog();
   if (legacyCleanupResult.deletedCount > 0) {
