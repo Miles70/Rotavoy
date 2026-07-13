@@ -23,6 +23,7 @@ import "./styles/admin.css";
 import "./styles/admin-enhancements.css";
 import "./styles/admin-pagination.css";
 import "./styles/admin-order-deletion.css";
+import "./components/admin/AdminCampaignSettings.css";
 
 function App() {
   return (
