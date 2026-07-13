@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import ProductThumbnail from "../components/ProductThumbnail/ProductThumbnail";
 import { useLanguage } from "../i18n/LanguageContext";
-import { useCart } from "../context/CartContext";
 import CryptoPayment from "../components/CryptoPayment/CryptoPayment";
 import "./OrderSuccess.css";
 
@@ -28,7 +27,6 @@ function getLastOrder() {
 
 function OrderSuccess() {
   const { t, language } = useLanguage();
-  const { clearCart } = useCart();
   const [order, setOrder] = useState(getLastOrder);
 
   const text = (key, fallback) => {
@@ -37,14 +35,6 @@ function OrderSuccess() {
   };
 
   const formatPrice = (price) => `$${Number(price || 0).toFixed(2)}`;
-
-  const handleOrderUpdated = (nextOrder) => {
-    setOrder(nextOrder);
-
-    if (nextOrder?.paymentStatus === "paid") {
-      clearCart({ force: true });
-    }
-  };
 
   if (!order) {
     return (
@@ -172,7 +162,7 @@ function OrderSuccess() {
           </div>
         </div>
 
-        <CryptoPayment order={order} onOrderUpdated={handleOrderUpdated} />
+        <CryptoPayment order={order} onOrderUpdated={setOrder} />
 
         <div className="orderSuccessDetails">
           <h2>{text("orderSuccessPage.itemsTitle", "Order Items")}</h2>
