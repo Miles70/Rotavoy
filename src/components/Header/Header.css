@@ -7,14 +7,53 @@
 .promoBar {
   position: relative;
   overflow: hidden;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
   background:
     radial-gradient(
-      circle at 15% 50%,
-      rgba(240, 24, 96, 0.22),
-      transparent 24%
+      circle at 16% 40%,
+      rgba(255, 151, 192, 0.36),
+      transparent 25%
     ),
-    linear-gradient(90deg, #08090d, #11131a 55%, #08090d);
+    radial-gradient(
+      circle at 84% 65%,
+      rgba(255, 64, 119, 0.28),
+      transparent 28%
+    ),
+    linear-gradient(
+      102deg,
+      #520826 0%,
+      #861039 20%,
+      #c21855 43%,
+      #e02668 53%,
+      #a71348 72%,
+      #650a30 100%
+    );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(62, 3, 27, 0.32),
+    0 7px 24px rgba(119, 8, 50, 0.2);
+}
+
+.promoBar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.14),
+      transparent 42%,
+      rgba(64, 2, 28, 0.12)
+    ),
+    repeating-linear-gradient(
+      112deg,
+      rgba(255, 255, 255, 0.035) 0,
+      rgba(255, 255, 255, 0.035) 1px,
+      transparent 1px,
+      transparent 8px
+    );
+  mix-blend-mode: screen;
+  pointer-events: none;
 }
 
 .promoBar::after {
@@ -22,14 +61,15 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  left: -140px;
-  width: 100px;
+  left: -160px;
+  width: 120px;
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.11),
+    rgba(255, 255, 255, 0.34),
     transparent
   );
+  filter: blur(1px);
   transform: skewX(-20deg);
   animation: promoShine 7s ease-in-out infinite;
   pointer-events: none;
@@ -45,8 +85,9 @@
   align-items: center;
   justify-content: center;
   gap: 14px;
-  color: rgba(255, 255, 255, 0.78);
+  color: rgba(255, 255, 255, 0.9);
   font-size: 13px;
+  text-shadow: 0 1px 8px rgba(72, 2, 29, 0.34);
 }
 
 .promoBadge {
@@ -55,20 +96,26 @@
   gap: 6px;
   flex: 0 0 auto;
   padding: 5px 10px;
-  border: 1px solid rgba(240, 24, 96, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.48);
   border-radius: 999px;
-  background: rgba(240, 24, 96, 0.14);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.17),
+    rgba(92, 5, 39, 0.2)
+  );
   color: #ffffff;
   font-size: 10px;
   font-weight: 950;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  box-shadow: 0 0 22px rgba(240, 24, 96, 0.14);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 6px 18px rgba(70, 2, 29, 0.2);
 }
 
 .promoText {
   overflow: hidden;
-  color: rgba(255, 255, 255, 0.76);
+  color: rgba(255, 255, 255, 0.92);
   white-space: nowrap;
   text-overflow: ellipsis;
 }
@@ -81,21 +128,29 @@
   justify-content: center;
   gap: 5px;
   flex: 0 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.7);
   border-radius: 999px;
-  background: #ffffff;
-  color: #090b10;
+  background: linear-gradient(180deg, #ffffff, #ffe1ec);
+  color: #780d38;
   font-size: 11px;
   font-weight: 900;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 7px 18px rgba(78, 3, 32, 0.2);
   transition:
     color var(--transition-fast),
     background var(--transition-fast),
+    box-shadow var(--transition-fast),
     transform var(--transition-fast);
 }
 
 .promoLink:hover {
-  background: var(--color-primary);
-  color: #ffffff;
-  transform: translateX(2px);
+  background: linear-gradient(180deg, #ffeff5, #ffc6da);
+  color: #5b062a;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 9px 22px rgba(72, 2, 29, 0.3);
+  transform: translateX(2px) translateY(-1px);
 }
 
 .mainHeader {
@@ -272,11 +327,11 @@
 @keyframes promoShine {
   0%,
   68% {
-    left: -140px;
+    left: -160px;
   }
 
   100% {
-    left: calc(100% + 140px);
+    left: calc(100% + 160px);
   }
 }
 
