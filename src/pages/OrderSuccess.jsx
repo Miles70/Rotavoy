@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "../i18n/LanguageContext";
+import CryptoPayment from "../components/CryptoPayment/CryptoPayment";
 import "./OrderSuccess.css";
 
 function safeParse(value, fallback) {
@@ -16,7 +18,7 @@ function getLastOrder() {
 
 function OrderSuccess() {
   const { t } = useLanguage();
-  const order = getLastOrder();
+  const [order, setOrder] = useState(getLastOrder);
 
   const text = (key, fallback) => {
     const value = t(key);
@@ -148,22 +150,7 @@ function OrderSuccess() {
           </div>
         </div>
 
-        {!isPaid && order.paymentMethod === "crypto" && (
-          <div className="orderSuccessPaymentNotice">
-            <strong>
-              {text(
-                "orderSuccessPage.cryptoNextTitle",
-                "Crypto payment is the next step"
-              )}
-            </strong>
-            <p>
-              {text(
-                "orderSuccessPage.cryptoNextText",
-                "The order and payment records are ready. Wallet transfer and blockchain confirmation will be connected next."
-              )}
-            </p>
-          </div>
-        )}
+        <CryptoPayment order={order} onOrderUpdated={setOrder} />
 
         <div className="orderSuccessDetails">
           <h2>{text("orderSuccessPage.itemsTitle", "Order Items")}</h2>
