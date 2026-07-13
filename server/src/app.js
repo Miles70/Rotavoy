@@ -4,6 +4,10 @@ import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import { adminRouter } from "./routes/admin.js";
 import { adminAnalyticsRouter } from "./routes/adminAnalytics.js";
+import {
+  adminHomeCampaignRouter,
+  homeCampaignRouter,
+} from "./routes/homeCampaign.js";
 import { adminProductCreateRouter } from "./routes/adminProductCreate.js";
 import { adminProductListRouter } from "./routes/adminProductList.js";
 import { ordersRouter } from "./routes/orders.js";
@@ -53,15 +57,17 @@ export function createApp() {
   app.get("/api/health", (request, response) => {
     response.json({
       ok: true,
-      service: "kemalreis-api",
+      service: "gabaloo-api",
       timestamp: new Date().toISOString(),
     });
   });
 
   app.use("/api/admin/analytics", adminAnalyticsRouter);
+  app.use("/api/admin/campaign", adminHomeCampaignRouter);
   app.use("/api/admin/products", adminProductListRouter);
   app.use("/api/admin/products", adminProductCreateRouter);
   app.use("/api/admin", adminRouter);
+  app.use("/api/campaign", homeCampaignRouter);
   app.use("/api/products", productListRouter);
   app.use("/api/products", productsRouter);
   app.use("/api/orders", ordersRouter);
