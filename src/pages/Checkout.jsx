@@ -28,7 +28,7 @@ function saveOrder(order) {
 function Checkout() {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const { cartItems, cartTotal, clearCart } = useCart();
+  const { cartItems, cartTotal } = useCart();
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -76,8 +76,8 @@ function Checkout() {
   const handleChange = (event) => {
     const { name, value } = event.target;
 
-    setFormData((prev) => ({
-      ...prev,
+    setFormData((previous) => ({
+      ...previous,
       [name]: value,
     }));
 
@@ -128,7 +128,6 @@ function Checkout() {
       });
 
       saveOrder(order);
-      clearCart();
       navigate("/order-success");
     } catch (submitError) {
       setError(
