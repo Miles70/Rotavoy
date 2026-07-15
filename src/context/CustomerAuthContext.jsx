@@ -10,6 +10,8 @@ import {
 } from "@reown/appkit/react";
 import { ChainController } from "@reown/appkit-controllers";
 import {
+  FacebookAuthProvider,
+  getAdditionalUserInfo,
   onAuthStateChanged,
   signInWithPopup,
   signOut as firebaseSignOut,
@@ -26,6 +28,7 @@ import {
 
 const CustomerAuthContext = createContext(null);
 const GUEST_STORAGE_KEY = "gabaloo_guest_session";
+const SOCIAL_PHOTO_STORAGE_PREFIX = "gabaloo_social_photo_";
 
 const FIREBASE_PROVIDERS = {
   google: googleAuthProvider,
@@ -88,6 +91,80 @@ function createInitials(value) {
     .join("");
 }
 
+function getFirebaseProviderProfile(user, providerId) {
+  return user?.providerData?.find((item) => item?.providerId === providerId) || null;
+}
+
+function getStoredSocialPhoto(uid) {
+  if (!uid) {
+    return "";
+  }
+
+  try {
+    return localStorage.getItem(`${SOCIAL_PHOTO_STORAGE_PREFIX}${uid}`) || "";
+  } catch {
+    return "";
+  }
+}
+
+function storeSocialPhoto(uid, photoUrl) {
+  if (!uid || !photoUrl) {
+    return;
+  }
+
+  try {
+    localStorage.setItem(`${SOCIAL_PHOTO_STORAGE_PREFIX}${uid}`, photoUrl);
+  } catch {
+    // The image can still be used for the current session.
+  }
+}
+
+function getAdditionalProfilePicture(result) {
+  const profile = getAdditionalUserInfo(result)?.profile;
+  const picture = profile?.picture;
+
+  if (typeof picture === "string") {
+    return picture;
+  }
+
+  return picture?.data?.url || "";
+}
+
+async function resolveFacebookProfilePhoto(result) {
+  const additionalProfilePicture = getAdditionalProfilePicture(result);
+
+  if (additionalProfilePicture) {
+    return additionalProfilePicture;
+  }
+
+  const credential = FacebookAuthProvider.credentialFromResult(result);
+
+  if (credential?.accessToken) {
+    try {
+      const response = await fetch(
+        `https://graph.facebook.com/me?fields=picture.type(large)&access_token=${encodeURIComponent(credential.accessToken)}`,
+      );
+
+      if (response.ok) {
+        const payload = await response.json();
+        const graphPicture = payload?.picture?.data?.url || "";
+
+        if (graphPicture) {
+          return graphPicture;
+        }
+      }
+    } catch {
+      // Fall through to the photo URLs already returned by Firebase.
+    }
+  }
+
+  return (
+    result?.user?.photoURL ||
+    getFirebaseProviderProfile(result?.user, "facebook.com")?.photoURL ||
+    ""
+  );
+}
+
 function getFirebaseAuthType(user) {
   const providerId = user?.providerData?.find((item) => item?.providerId)?.providerId;
 
@@ -129,6 +206,7 @@ export function CustomerAuthProvider({ children }) {
   const [errorCode, setErrorCode] = useState("");
   const [firebaseUser, setFirebaseUser] = useState(null);
   const [isFirebaseReady, setIsFirebaseReady] = useState(false);
+  const [socialProfileImage, setSocialProfileImage] = useState("");
   const [reownProfile, setReownProfile] = useState({
     name: "",
     image: "",
@@ -146,9 +224,16 @@ export function CustomerAuthProvider({ children }) {
       setIsFirebaseReady(true);
 
       if (!nextUser) {
+        setSocialProfileImage("");
         return;
       }
 
+      const providerPhoto = nextUser.providerData?.find(
+        (item) => item?.photoURL,
+      )?.photoURL;
+      const storedPhoto = getStoredSocialPhoto(nextUser.uid);
+
+      setSocialProfileImage(storedPhoto || nextUser.photoURL || providerPhoto || "");
       localStorage.removeItem(GUEST_STORAGE_KEY);
       setGuestSession(null);
       setBusyAction("");
@@ -197,7 +282,15 @@ export function CustomerAuthProvider({ children }) {
         : null;
 
   const profileEmail = firebaseUser?.email || "";
-  const profileImage = firebaseUser?.photoURL || reownProfile.image || "";
+  const providerProfileImage = firebaseUser?.providerData?.find(
+    (item) => item?.photoURL,
+  )?.photoURL;
+  const profileImage =
+    socialProfileImage ||
+    firebaseUser?.photoURL ||
+    providerProfileImage ||
+    reownProfile.image ||
+    "";
 
   const displayName = firebaseUser
     ? firebaseUser.displayName ||
@@ -251,7 +344,27 @@ export function CustomerAuthProvider({ children }) {
     setErrorCode("");
 
     try {
-      await signInWithPopup(firebaseAuth, firebaseProvider);
+      const result = await signInWithPopup(firebaseAuth, firebaseProvider);
+
+      if (provider === "facebook") {
+        const facebookPhoto = await resolveFacebookProfilePhoto(result);
+
+        if (facebookPhoto) {
+          setSocialProfileImage(facebookPhoto);
+          storeSocialPhoto(result.user.uid, facebookPhoto);
+        }
+      } else {
+        const providerPhoto = result.user.providerData?.find(
+          (item) => item?.photoURL,
+        )?.photoURL;
+        const nextPhoto = result.user.photoURL || providerPhoto || "";
+
+        if (nextPhoto) {
+          setSocialProfileImage(nextPhoto);
+          storeSocialPhoto(result.user.uid, nextPhoto);
+        }
+      }
+
       setIsAuthModalOpen(false);
     } catch (error) {
       const nextErrorCode = mapFirebaseError(error);
@@ -337,6 +450,7 @@ export function CustomerAuthProvider({ children }) {
       }
 
       localStorage.removeItem(GUEST_STORAGE_KEY);
+      setSocialProfileImage("");
       setGuestSession(null);
       setIsAuthModalOpen(false);
     } catch {
