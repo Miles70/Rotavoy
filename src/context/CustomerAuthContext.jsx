@@ -58,6 +58,23 @@ function shortenAddress(address) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
+function createInitials(value) {
+  const normalized = String(value || "")
+    .replace(/@.*/, "")
+    .trim();
+
+  if (!normalized) {
+    return "G";
+  }
+
+  const parts = normalized.split(/\s+/).filter(Boolean);
+
+  return parts
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("");
+}
+
 export function CustomerAuthProvider({ children }) {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [guestSession, setGuestSession] = useState(readGuestSession);
@@ -88,13 +105,28 @@ export function CustomerAuthProvider({ children }) {
       ? "guest"
       : null;
 
+  const profileEmail = socialUser?.email || "";
+  const profileImage =
+    socialUser?.profileImage ||
+    socialUser?.avatar ||
+    socialUser?.picture ||
+    socialUser?.image ||
+    "";
+
   const displayName = isConnected
-    ? socialUser?.username ||
-      socialUser?.email ||
+    ? socialUser?.name ||
+      socialUser?.username ||
+      profileEmail?.split("@")[0] ||
       shortenAddress(address) ||
       "Gabaloo"
     : guestSession
       ? "Guest"
+      : "";
+
+  const accountKey = isConnected
+    ? `${authType}:${address || profileEmail || displayName}`
+    : guestSession
+      ? `guest:${guestSession.id}`
       : "";
 
   function openAuthModal() {
@@ -171,6 +203,7 @@ export function CustomerAuthProvider({ children }) {
     localStorage.removeItem(GUEST_STORAGE_KEY);
     setGuestSession(null);
     setErrorCode("");
+    setIsAuthModalOpen(true);
   }
 
   async function manageWallet() {
@@ -209,6 +242,7 @@ export function CustomerAuthProvider({ children }) {
   }
 
   const value = {
+    accountKey,
     address,
     authType,
     busyAction,
@@ -216,13 +250,15 @@ export function CustomerAuthProvider({ children }) {
     continueAsGuest,
     displayName,
     errorCode,
+    initials: createInitials(displayName || profileEmail || address),
     isAuthModalOpen,
     isAuthenticated: isConnected || Boolean(guestSession),
     isConnected,
     isGuest: Boolean(guestSession) && !isConnected,
     manageWallet,
     openAuthModal,
-    profileEmail: socialUser?.email || "",
+    profileEmail,
+    profileImage,
     signOut,
     startSocialLogin,
     startWalletLogin,
