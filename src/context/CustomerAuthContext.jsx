@@ -183,11 +183,18 @@ export function CustomerAuthProvider({ children }) {
     setIsAuthModalOpen(false);
 
     try {
+      await appKit.open({ view: "Connect", namespace: "eip155" });
       await executeSocialLogin(provider);
     } catch {
       setErrorCode("genericError");
       setIsAuthModalOpen(true);
     } finally {
+      try {
+        await appKit.close();
+      } catch {
+        // The social popup is independent after it opens.
+      }
+
       setBusyAction("");
     }
   }
