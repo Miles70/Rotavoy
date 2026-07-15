@@ -1,7 +1,10 @@
 import { useState } from "react";
+import { Heart } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "../../i18n/LanguageContext";
 import { useCart } from "../../context/CartContext";
+import { useCustomerAuth } from "../../context/CustomerAuthContext";
+import { useCustomerAccount } from "../../context/CustomerAccountContext";
 import "./ProductCard.css";
 
 const badgeTranslations = {
@@ -53,10 +56,18 @@ function getCategoryLabel(categoryKey, t) {
 function ProductCard({ product }) {
   const { t, language } = useLanguage();
   const { addToCart } = useCart();
+  const { isAuthenticated, openAuthModal } = useCustomerAuth();
+  const { isFavorite, toggleFavorite } = useCustomerAccount();
   const [isAdded, setIsAdded] = useState(false);
 
   const labels = badgeTranslations[language] || badgeTranslations.en;
   const productPath = `/products/${product.key}`;
+  const favorite = isFavorite(product.key);
+
+  const text = (key, fallback) => {
+    const value = t(key);
+    return value && value !== key ? value : fallback;
+  };
 
   function handleAddToCart() {
     addToCart(product);
@@ -65,6 +76,15 @@ function ProductCard({ product }) {
     setTimeout(() => {
       setIsAdded(false);
     }, 900);
+  }
+
+  function handleFavoriteClick() {
+    if (!isAuthenticated) {
+      openAuthModal();
+      return;
+    }
+
+    toggleFavorite(product);
   }
 
   function handleImageError(event) {
@@ -87,7 +107,6 @@ function ProductCard({ product }) {
       const discount = Math.round(
         ((product.oldPrice - product.price) / product.oldPrice) * 100,
       );
-
       return `-${discount}%`;
     }
 
@@ -95,7 +114,10 @@ function ProductCard({ product }) {
   }
 
   const buttonLabel = isAdded ? labels.added : labels.add;
-  const fallbackLetter = product.title?.charAt(0)?.toUpperCase() || "K";
+  const favoriteLabel = favorite
+    ? text("account.removeFavorite", "Remove from favorites")
+    : text("account.addFavorite", "Add to favorites");
+  const fallbackLetter = product.title?.charAt(0)?.toUpperCase() || "G";
   const badgeLabel = getBadgeLabel();
   const categoryLabel = getCategoryLabel(product.categoryKey, t);
   const displayOldPrice =
@@ -105,45 +127,52 @@ function ProductCard({ product }) {
 
   return (
     <article className={isAdded ? "productCard added" : "productCard"}>
-      <Link
-        to={productPath}
-        className="productImageLink"
-        style={{ display: "block" }}
-        aria-label={product.title}
-      >
-        <div className="productImage">
-          <span className="productImageFallback" aria-hidden="true">
-            {fallbackLetter}
-          </span>
-
-          {product.imageUrl && (
-            <img
-              src={product.imageUrl}
-              alt={product.title}
-              loading="lazy"
-              decoding="async"
-              onError={handleImageError}
-            />
-          )}
-
-          {badgeLabel && (
-            <span className={`productBadge ${product.badge}`}>
-              {product.badge === "stock" && (
-                <span className="productBadgeDot" aria-hidden="true" />
-              )}
-
-              {badgeLabel}
-            </span>
-          )}
-        </div>
-      </Link>
-
-      <div className="productContent">
+      <div className="productImageShell">
         <Link
           to={productPath}
-          className="productTitleLink"
-          style={{ display: "block" }}
+          className="productImageLink"
+          aria-label={product.title}
         >
+          <div className="productImage">
+            <span className="productImageFallback" aria-hidden="true">
+              {fallbackLetter}
+            </span>
+
+            {product.imageUrl && (
+              <img
+                src={product.imageUrl}
+                alt={product.title}
+                loading="lazy"
+                decoding="async"
+                onError={handleImageError}
+              />
+            )}
+
+            {badgeLabel && (
+              <span className={`productBadge ${product.badge}`}>
+                {product.badge === "stock" && (
+                  <span className="productBadgeDot" aria-hidden="true" />
+                )}
+                {badgeLabel}
+              </span>
+            )}
+          </div>
+        </Link>
+
+        <button
+          type="button"
+          className={`productFavoriteButton${favorite ? " active" : ""}`}
+          onClick={handleFavoriteClick}
+          aria-label={favoriteLabel}
+          title={favoriteLabel}
+          aria-pressed={favorite}
+        >
+          <Heart size={18} fill={favorite ? "currentColor" : "none"} />
+        </button>
+      </div>
+
+      <div className="productContent">
+        <Link to={productPath} className="productTitleLink">
           <p className="productCategory">{categoryLabel}</p>
           <h3>{product.title}</h3>
         </Link>
@@ -162,12 +191,7 @@ function ProductCard({ product }) {
             title={buttonLabel}
           >
             {isAdded ? (
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-              >
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path
                   d="M5 12.5L9.2 16.5L19 6.5"
                   stroke="currentColor"
@@ -177,12 +201,7 @@ function ProductCard({ product }) {
                 />
               </svg>
             ) : (
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-              >
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path
                   d="M3 4H5L7.4 15.2C7.5 15.7 8 16 8.5 16H17.7C18.2 16 18.7 15.7 18.8 15.2L21 7H6"
                   stroke="currentColor"
@@ -190,7 +209,6 @@ function ProductCard({ product }) {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
-
                 <circle cx="9" cy="20" r="1.4" fill="currentColor" />
                 <circle cx="18" cy="20" r="1.4" fill="currentColor" />
               </svg>
