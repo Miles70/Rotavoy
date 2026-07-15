@@ -1,9 +1,14 @@
+.customerAccountControl {
+  position: relative;
+  flex: 0 0 auto;
+}
+
 .customerHeaderAuthButton {
   position: relative;
   min-width: 122px;
-  max-width: 190px;
+  max-width: 205px;
   min-height: 42px;
-  padding: 0 15px 0 11px;
+  padding: 0 14px 0 10px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -36,21 +41,23 @@
 }
 
 .customerHeaderAuthButton--active {
-  border-color: rgba(37, 168, 107, 0.3);
-  background: linear-gradient(135deg, #1d9967, #3b6fd8);
-  box-shadow: 0 10px 24px rgba(35, 120, 113, 0.2);
+  border-color: rgba(36, 46, 72, 0.12);
+  background: #ffffff;
+  color: var(--color-text);
+  box-shadow: 0 9px 24px rgba(30, 40, 80, 0.1);
 }
 
 .customerHeaderAuthButton--active:hover {
-  border-color: rgba(31, 142, 91, 0.45);
-  background: linear-gradient(135deg, #17865a, #315fc0);
-  box-shadow: 0 14px 30px rgba(35, 120, 113, 0.26);
+  border-color: rgba(240, 24, 96, 0.24);
+  background: #ffffff;
+  color: var(--color-primary);
+  box-shadow: 0 13px 30px rgba(30, 40, 80, 0.14);
 }
 
 .customerHeaderAuthButton--guest {
-  border-color: rgba(95, 85, 181, 0.25);
-  background: linear-gradient(135deg, #6a5fd0, #e23b74);
-  box-shadow: 0 10px 24px rgba(106, 74, 158, 0.2);
+  border-color: rgba(106, 95, 208, 0.24);
+  background: #ffffff;
+  color: #6255bd;
 }
 
 .customerHeaderAuthIcon {
@@ -71,23 +78,170 @@
   white-space: nowrap;
 }
 
-.customerHeaderAuthStatus {
+.customerHeaderAuthChevron {
+  flex: 0 0 auto;
+  opacity: 0.58;
+  transition: transform var(--transition-fast);
+}
+
+.customerHeaderAuthChevron.open {
+  transform: rotate(180deg);
+}
+
+.customerAccountDropdown {
   position: absolute;
-  top: 5px;
-  right: 7px;
-  width: 7px;
-  height: 7px;
-  border: 2px solid #ffffff;
-  border-radius: 50%;
-  background: #34d399;
-  box-sizing: content-box;
+  top: calc(100% + 12px);
+  right: 0;
+  z-index: 140;
+  width: min(340px, calc(100vw - 24px));
+  padding: 12px;
+  border: 1px solid rgba(82, 91, 121, 0.16);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 24px 70px rgba(23, 31, 58, 0.22);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  animation: customerAccountDropdownIn 0.18s ease both;
+}
+
+.customerAccountDropdown::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  right: 34px;
+  width: 14px;
+  height: 14px;
+  border-top: 1px solid rgba(82, 91, 121, 0.16);
+  border-left: 1px solid rgba(82, 91, 121, 0.16);
+  background: #ffffff;
+  transform: rotate(45deg);
+}
+
+.customerAccountDropdownProfile {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: 15px;
+  color: var(--color-text);
+  transition: background var(--transition-fast);
+}
+
+.customerAccountDropdownProfile:hover {
+  background: var(--color-primary-soft);
+}
+
+.customerAccountDropdownProfile > span:last-child,
+.customerAccountDropdownUpgrade > span {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.customerAccountDropdownProfile strong,
+.customerAccountDropdownUpgrade strong {
+  overflow: hidden;
+  font-size: 14px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.customerAccountDropdownProfile small,
+.customerAccountDropdownUpgrade small {
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.customerAccountDropdownUpgrade {
+  width: 100%;
+  margin: 8px 0 10px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(245, 158, 11, 0.24);
+  border-radius: 14px;
+  background: #fff9e8;
+  color: #9a6500;
+  text-align: left;
+  cursor: pointer;
+}
+
+.customerAccountDropdownUpgrade svg {
+  flex: 0 0 auto;
+}
+
+.customerAccountDropdown nav {
+  padding: 8px 0;
+  display: grid;
+  gap: 3px;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.customerAccountDropdown nav a,
+.customerAccountDropdownSignOut {
+  min-height: 42px;
+  padding: 0 11px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 780;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.customerAccountDropdown nav a:hover {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  transform: translateX(2px);
+}
+
+.customerAccountDropdownSignOut {
+  width: 100%;
+  margin-top: 8px;
+  color: #b4233d;
+}
+
+.customerAccountDropdownSignOut:hover {
+  background: #fff0f2;
+  color: #8d1730;
+}
+
+@keyframes customerAccountDropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-7px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @media (max-width: 1000px) {
   .customerHeaderAuthButton {
     min-width: 108px;
-    max-width: 155px;
-    padding-inline: 10px 13px;
+    max-width: 165px;
+    padding-inline: 9px 11px;
   }
 }
 
@@ -100,12 +254,28 @@
     padding: 0;
   }
 
-  .customerHeaderAuthText {
+  .customerHeaderAuthText,
+  .customerHeaderAuthChevron {
     display: none;
   }
 
-  .customerHeaderAuthStatus {
-    top: -3px;
-    right: -3px;
+  .customerAccountDropdown {
+    position: fixed;
+    top: 112px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+  }
+
+  .customerAccountDropdown::before {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .customerAccountDropdown,
+  .customerHeaderAuthChevron {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
   }
 }
