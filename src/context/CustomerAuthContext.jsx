@@ -2,7 +2,6 @@ import {
   createContext,
   useContext,
   useEffect,
-  useRef,
   useState,
 } from "react";
 import {
@@ -10,18 +9,29 @@ import {
   useDisconnect,
 } from "@reown/appkit/react";
 import { ChainController } from "@reown/appkit-controllers";
-import { executeSocialLogin } from "@reown/appkit-controllers/utils";
+import {
+  onAuthStateChanged,
+  signInWithPopup,
+  signOut as firebaseSignOut,
+} from "firebase/auth";
 
 import { appKit } from "../config/wagmi";
+import {
+  appleAuthProvider,
+  facebookAuthProvider,
+  firebaseAuth,
+  firebaseProviderAvailability,
+  googleAuthProvider,
+} from "../config/firebase";
 
 const CustomerAuthContext = createContext(null);
 const GUEST_STORAGE_KEY = "gabaloo_guest_session";
-const SOCIAL_AUTH_CLASS = "gabalooSocialAuthActive";
-const SUPPORTED_SOCIAL_PROVIDERS = new Set([
-  "google",
-  "apple",
-  "facebook",
-]);
+
+const FIREBASE_PROVIDERS = {
+  google: googleAuthProvider,
+  facebook: facebookAuthProvider,
+  apple: appleAuthProvider,
+};
 
 function createGuestId() {
   if (globalThis.crypto?.randomUUID) {
@@ -78,14 +88,38 @@ function createInitials(value) {
     .join("");
 }
 
-function hasConnectedReownAccount() {
-  const accountData = ChainController.getAccountData();
+function getFirebaseAuthType(user) {
+  const providerId = user?.providerData?.find((item) => item?.providerId)?.providerId;
 
-  return Boolean(
-    accountData?.address ||
-      accountData?.caipAddress ||
-      accountData?.status === "connected",
-  );
+  switch (providerId) {
+    case "google.com":
+      return "google";
+    case "facebook.com":
+      return "facebook";
+    case "apple.com":
+      return "apple";
+    default:
+      return "email";
+  }
+}
+
+function mapFirebaseError(error) {
+  switch (error?.code) {
+    case "auth/popup-closed-by-user":
+      return "popupClosed";
+    case "auth/popup-blocked":
+      return "popupBlocked";
+    case "auth/operation-not-allowed":
+      return "socialUnavailable";
+    case "auth/unauthorized-domain":
+      return "unauthorizedDomain";
+    case "auth/account-exists-with-different-credential":
+      return "accountExists";
+    case "auth/cancelled-popup-request":
+      return "";
+    default:
+      return "genericError";
+  }
 }
 
 export function CustomerAuthProvider({ children }) {
@@ -93,55 +127,35 @@ export function CustomerAuthProvider({ children }) {
   const [guestSession, setGuestSession] = useState(readGuestSession);
   const [busyAction, setBusyAction] = useState("");
   const [errorCode, setErrorCode] = useState("");
+  const [firebaseUser, setFirebaseUser] = useState(null);
+  const [isFirebaseReady, setIsFirebaseReady] = useState(false);
   const [reownProfile, setReownProfile] = useState({
     name: "",
     image: "",
   });
 
-  const socialPollRef = useRef(null);
-  const socialGraceRef = useRef(null);
-  const isConnectedRef = useRef(false);
-
-  const { address, embeddedWalletInfo, isConnected } = useAppKitAccount();
+  const {
+    address,
+    isConnected: isWalletConnected,
+  } = useAppKitAccount();
   const { disconnect } = useDisconnect();
 
-  isConnectedRef.current = isConnected;
+  useEffect(() => {
+    return onAuthStateChanged(firebaseAuth, (nextUser) => {
+      setFirebaseUser(nextUser);
+      setIsFirebaseReady(true);
 
-  function clearSocialWatchers() {
-    if (socialPollRef.current) {
-      window.clearInterval(socialPollRef.current);
-      socialPollRef.current = null;
-    }
+      if (!nextUser) {
+        return;
+      }
 
-    if (socialGraceRef.current) {
-      window.clearTimeout(socialGraceRef.current);
-      socialGraceRef.current = null;
-    }
-  }
-
-  function hideReownDuringSocialAuth() {
-    document.documentElement.classList.add(SOCIAL_AUTH_CLASS);
-  }
-
-  function restoreReownVisibility() {
-    document.documentElement.classList.remove(SOCIAL_AUTH_CLASS);
-  }
-
-  function closeReownModal() {
-    Promise.resolve(appKit.close()).catch(() => undefined);
-  }
-
-  function finishSocialAttempt({ reopenAuth = false, error = "" } = {}) {
-    clearSocialWatchers();
-    restoreReownVisibility();
-    closeReownModal();
-    setBusyAction("");
-
-    if (reopenAuth && !isConnectedRef.current && !hasConnectedReownAccount()) {
-      setErrorCode(error || "genericError");
-      setIsAuthModalOpen(true);
-    }
-  }
+      localStorage.removeItem(GUEST_STORAGE_KEY);
+      setGuestSession(null);
+      setBusyAction("");
+      setErrorCode("");
+      setIsAuthModalOpen(false);
+    });
+  }, []);
 
   useEffect(() => {
     function syncReownProfile() {
@@ -162,63 +176,50 @@ export function CustomerAuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    return () => {
-      clearSocialWatchers();
-      restoreReownVisibility();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!isConnected) {
+    if (!isWalletConnected) {
       return;
     }
 
-    clearSocialWatchers();
-    restoreReownVisibility();
-    closeReownModal();
+    localStorage.removeItem(GUEST_STORAGE_KEY);
+    setGuestSession(null);
     setBusyAction("");
-
-    if (guestSession) {
-      localStorage.removeItem(GUEST_STORAGE_KEY);
-      setGuestSession(null);
-    }
-
     setErrorCode("");
     setIsAuthModalOpen(false);
-  }, [guestSession, isConnected]);
+  }, [isWalletConnected]);
 
-  const socialUser = embeddedWalletInfo?.user;
-  const authType = isConnected
-    ? embeddedWalletInfo?.authProvider || "wallet"
-    : guestSession
-      ? "guest"
-      : null;
+  const firebaseAuthType = getFirebaseAuthType(firebaseUser);
+  const authType = firebaseUser
+    ? firebaseAuthType
+    : isWalletConnected
+      ? "wallet"
+      : guestSession
+        ? "guest"
+        : null;
 
-  const profileEmail = socialUser?.email || "";
-  const profileImage =
-    reownProfile.image ||
-    socialUser?.profileImage ||
-    socialUser?.avatar ||
-    socialUser?.picture ||
-    socialUser?.image ||
-    "";
+  const profileEmail = firebaseUser?.email || "";
+  const profileImage = firebaseUser?.photoURL || reownProfile.image || "";
 
-  const displayName = isConnected
-    ? reownProfile.name ||
-      socialUser?.name ||
-      socialUser?.username ||
-      profileEmail?.split("@")[0] ||
-      shortenAddress(address) ||
+  const displayName = firebaseUser
+    ? firebaseUser.displayName ||
+      profileEmail.split("@")[0] ||
       "Gabaloo"
-    : guestSession
-      ? "Guest"
-      : "";
+    : isWalletConnected
+      ? reownProfile.name || shortenAddress(address) || "Gabaloo"
+      : guestSession
+        ? "Guest"
+        : "";
 
-  const accountKey = isConnected
-    ? `${authType}:${address || profileEmail || displayName}`
-    : guestSession
-      ? `guest:${guestSession.id}`
-      : "";
+  const accountKey = firebaseUser
+    ? `firebase:${firebaseUser.uid}`
+    : isWalletConnected
+      ? `wallet:${address || displayName}`
+      : guestSession
+        ? `guest:${guestSession.id}`
+        : "";
+
+  const isAuthenticated = Boolean(
+    firebaseUser || isWalletConnected || guestSession,
+  );
 
   function openAuthModal() {
     setErrorCode("");
@@ -239,81 +240,28 @@ export function CustomerAuthProvider({ children }) {
       return;
     }
 
-    if (!SUPPORTED_SOCIAL_PROVIDERS.has(provider)) {
+    const firebaseProvider = FIREBASE_PROVIDERS[provider];
+
+    if (!firebaseProvider || !firebaseProviderAvailability[provider]) {
       setErrorCode("socialUnavailable");
       return;
     }
 
-    clearSocialWatchers();
     setBusyAction(provider);
     setErrorCode("");
-    setIsAuthModalOpen(false);
-    hideReownDuringSocialAuth();
 
     try {
-      await appKit.open({ view: "Connect", namespace: "eip155" });
-      await executeSocialLogin(provider);
+      await signInWithPopup(firebaseAuth, firebaseProvider);
+      setIsAuthModalOpen(false);
+    } catch (error) {
+      const nextErrorCode = mapFirebaseError(error);
 
-      const startedAt = Date.now();
-
-      socialPollRef.current = window.setInterval(() => {
-        const accountData = ChainController.getAccountData();
-        const popupWindow = accountData?.socialWindow;
-        const connected =
-          isConnectedRef.current ||
-          Boolean(accountData?.address) ||
-          Boolean(accountData?.caipAddress) ||
-          accountData?.status === "connected";
-
-        if (connected) {
-          finishSocialAttempt();
-          return;
-        }
-
-        if (popupWindow?.closed) {
-          window.clearInterval(socialPollRef.current);
-          socialPollRef.current = null;
-
-          socialGraceRef.current = window.setTimeout(() => {
-            if (isConnectedRef.current || hasConnectedReownAccount()) {
-              finishSocialAttempt();
-            } else {
-              finishSocialAttempt({
-                reopenAuth: true,
-                error: "genericError",
-              });
-            }
-          }, 900);
-
-          return;
-        }
-
-        if (!popupWindow && Date.now() - startedAt > 10000) {
-          finishSocialAttempt({
-            reopenAuth: true,
-            error: "genericError",
-          });
-          return;
-        }
-
-        if (Date.now() - startedAt > 120000) {
-          try {
-            popupWindow?.close();
-          } catch {
-            // Ignore cross-origin popup cleanup errors.
-          }
-
-          finishSocialAttempt({
-            reopenAuth: true,
-            error: "genericError",
-          });
-        }
-      }, 350);
-    } catch {
-      finishSocialAttempt({
-        reopenAuth: true,
-        error: "genericError",
-      });
+      if (nextErrorCode) {
+        setErrorCode(nextErrorCode);
+        setIsAuthModalOpen(true);
+      }
+    } finally {
+      setBusyAction("");
     }
   }
 
@@ -322,8 +270,6 @@ export function CustomerAuthProvider({ children }) {
       return;
     }
 
-    clearSocialWatchers();
-    restoreReownVisibility();
     setBusyAction("wallet");
     setErrorCode("");
     setIsAuthModalOpen(false);
@@ -339,10 +285,6 @@ export function CustomerAuthProvider({ children }) {
   }
 
   function continueAsGuest() {
-    clearSocialWatchers();
-    restoreReownVisibility();
-    closeReownModal();
-
     const nextGuestSession = {
       id: createGuestId(),
       createdAt: new Date().toISOString(),
@@ -362,8 +304,10 @@ export function CustomerAuthProvider({ children }) {
   }
 
   async function manageWallet() {
-    clearSocialWatchers();
-    restoreReownVisibility();
+    if (!isWalletConnected) {
+      return;
+    }
+
     setErrorCode("");
     setIsAuthModalOpen(false);
 
@@ -380,17 +324,18 @@ export function CustomerAuthProvider({ children }) {
       return;
     }
 
-    clearSocialWatchers();
-    restoreReownVisibility();
     setBusyAction("signOut");
     setErrorCode("");
 
     try {
-      if (isConnected) {
+      if (firebaseUser) {
+        await firebaseSignOut(firebaseAuth);
+      }
+
+      if (isWalletConnected) {
         await disconnect();
       }
 
-      closeReownModal();
       localStorage.removeItem(GUEST_STORAGE_KEY);
       setGuestSession(null);
       setIsAuthModalOpen(false);
@@ -410,15 +355,19 @@ export function CustomerAuthProvider({ children }) {
     continueAsGuest,
     displayName,
     errorCode,
+    firebaseUser,
     initials: createInitials(displayName || profileEmail || address),
     isAuthModalOpen,
-    isAuthenticated: isConnected || Boolean(guestSession),
-    isConnected,
-    isGuest: Boolean(guestSession) && !isConnected,
+    isAuthenticated,
+    isConnected: isWalletConnected,
+    isFirebaseAuthenticated: Boolean(firebaseUser),
+    isFirebaseReady,
+    isGuest: Boolean(guestSession) && !firebaseUser && !isWalletConnected,
     manageWallet,
     openAuthModal,
     profileEmail,
     profileImage,
+    providerAvailability: firebaseProviderAvailability,
     signOut,
     startSocialLogin,
     startWalletLogin,
