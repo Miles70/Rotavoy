@@ -14,6 +14,7 @@ import AdminOrders from "./pages/admin/AdminOrders";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminProtectedRoute from "./components/admin/AdminProtectedRoute";
+import AuthModal from "./components/AuthModal/AuthModal";
 import CartToast from "./components/CartToast/CartToast";
 import "./styles/store-products.css";
 import "./styles/search-live.css";
@@ -51,6 +52,7 @@ function App() {
         </Route>
       </Routes>
 
+      <AuthModal />
       <CartToast />
     </>
   );
