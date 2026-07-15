@@ -38,7 +38,7 @@ const authTranslations = {
     },
   },
   tr: {
-    headerSignIn: "Oturum Aç",
+    headerSignIn: "Giriş Yap",
     headerGuest: "Misafir",
     close: "Kapat",
     modalEyebrow: "Güvenli giriş",
