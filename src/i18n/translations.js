@@ -4,12 +4,15 @@ import ru from "./locales/ru";
 import ar from "./locales/ar";
 import zh from "./locales/zh";
 import paymentTranslations from "./paymentTranslations";
+import authTranslations from "./authTranslations";
 
-function withPaymentTranslations(baseTranslations, language) {
+function withSharedTranslations(baseTranslations, language) {
   const payment = paymentTranslations[language] || paymentTranslations.en;
+  const auth = authTranslations[language] || authTranslations.en;
 
   return {
     ...baseTranslations,
+    auth,
     checkoutPage: {
       ...baseTranslations.checkoutPage,
       ...payment.checkoutPage,
@@ -22,11 +25,11 @@ function withPaymentTranslations(baseTranslations, language) {
 }
 
 const translations = {
-  en: withPaymentTranslations(en, "en"),
-  tr: withPaymentTranslations(tr, "tr"),
-  ru: withPaymentTranslations(ru, "ru"),
-  ar: withPaymentTranslations(ar, "ar"),
-  zh: withPaymentTranslations(zh, "zh"),
+  en: withSharedTranslations(en, "en"),
+  tr: withSharedTranslations(tr, "tr"),
+  ru: withSharedTranslations(ru, "ru"),
+  ar: withSharedTranslations(ar, "ar"),
+  zh: withSharedTranslations(zh, "zh"),
 };
 
 export default translations;
