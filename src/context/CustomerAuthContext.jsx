@@ -183,7 +183,6 @@ export function CustomerAuthProvider({ children }) {
     setIsAuthModalOpen(false);
 
     try {
-      await appKit.open({ view: "Connect" });
       await executeSocialLogin(provider);
     } catch {
       setErrorCode("genericError");
