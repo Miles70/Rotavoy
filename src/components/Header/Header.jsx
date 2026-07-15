@@ -25,6 +25,7 @@ import siteConfig from "../../config/site";
 
 import "./Header.css";
 import "./AuthHeader.css";
+import "./LoginPreview.css";
 import "./Logo.css";
 
 function Header() {
