@@ -1,6 +1,13 @@
-import { Link, NavLink } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import {
   ArrowRight,
+  ChevronDown,
+  Heart,
+  LogOut,
+  MapPin,
+  Package,
+  ShieldCheck,
   ShoppingBag,
   Sparkles,
   UserRound,
@@ -9,6 +16,7 @@ import {
 import { useLanguage } from "../../i18n/LanguageContext";
 import { useCart } from "../../context/CartContext";
 import { useCustomerAuth } from "../../context/CustomerAuthContext";
+import CustomerAvatar from "../CustomerAvatar/CustomerAvatar";
 import LanguageSwitcher from "../LanguageSwitcher";
 import siteConfig from "../../config/site";
 
@@ -17,20 +25,77 @@ import "./AuthHeader.css";
 import "./Logo.css";
 
 function Header() {
+  const location = useLocation();
+  const accountControlRef = useRef(null);
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const { t } = useLanguage();
   const { cartCount } = useCart();
   const {
+    address,
+    authType,
     displayName,
     isAuthenticated,
     isGuest,
     openAuthModal,
+    profileEmail,
+    signOut,
+    upgradeGuestAccount,
   } = useCustomerAuth();
 
+  const text = (key, fallback) => {
+    const value = t(key);
+    return value && value !== key ? value : fallback;
+  };
+
   const accountLabel = !isAuthenticated
-    ? t("auth.headerSignIn")
+    ? text("auth.headerSignIn", "Sign in")
     : isGuest
-      ? t("auth.headerGuest")
+      ? text("auth.headerGuest", "Guest")
       : displayName;
+
+  useEffect(() => {
+    setIsAccountMenuOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!isAccountMenuOpen) {
+      return undefined;
+    }
+
+    function handlePointerDown(event) {
+      if (!accountControlRef.current?.contains(event.target)) {
+        setIsAccountMenuOpen(false);
+      }
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        setIsAccountMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isAccountMenuOpen]);
+
+  function handleAccountButton() {
+    if (!isAuthenticated) {
+      openAuthModal();
+      return;
+    }
+
+    setIsAccountMenuOpen((previous) => !previous);
+  }
+
+  async function handleSignOut() {
+    setIsAccountMenuOpen(false);
+    await signOut();
+  }
 
   return (
     <header className="headerWrapper">
@@ -106,25 +171,105 @@ function Header() {
           </nav>
 
           <div className="headerActions">
-            <button
-              type="button"
-              className={`customerHeaderAuthButton${
-                isAuthenticated ? " customerHeaderAuthButton--active" : ""
-              }${isGuest ? " customerHeaderAuthButton--guest" : ""}`}
-              onClick={openAuthModal}
-              aria-label={accountLabel}
-              title={accountLabel}
-            >
-              <span className="customerHeaderAuthIcon" aria-hidden="true">
-                <UserRound size={17} />
-              </span>
+            <div className="customerAccountControl" ref={accountControlRef}>
+              <button
+                type="button"
+                className={`customerHeaderAuthButton${
+                  isAuthenticated ? " customerHeaderAuthButton--active" : ""
+                }${isGuest ? " customerHeaderAuthButton--guest" : ""}`}
+                onClick={handleAccountButton}
+                aria-label={accountLabel}
+                aria-expanded={isAuthenticated ? isAccountMenuOpen : undefined}
+                aria-haspopup={isAuthenticated ? "menu" : undefined}
+                title={accountLabel}
+              >
+                {isAuthenticated ? (
+                  <CustomerAvatar size="small" />
+                ) : (
+                  <span className="customerHeaderAuthIcon" aria-hidden="true">
+                    <UserRound size={17} />
+                  </span>
+                )}
 
-              <span className="customerHeaderAuthText">{accountLabel}</span>
+                <span className="customerHeaderAuthText">{accountLabel}</span>
 
-              {isAuthenticated && (
-                <span className="customerHeaderAuthStatus" aria-hidden="true" />
+                {isAuthenticated && (
+                  <ChevronDown
+                    className={`customerHeaderAuthChevron${
+                      isAccountMenuOpen ? " open" : ""
+                    }`}
+                    size={15}
+                    aria-hidden="true"
+                  />
+                )}
+              </button>
+
+              {isAuthenticated && isAccountMenuOpen && (
+                <div className="customerAccountDropdown" role="menu">
+                  <Link className="customerAccountDropdownProfile" to="/account">
+                    <CustomerAvatar size="medium" />
+                    <span>
+                      <strong>{displayName || accountLabel}</strong>
+                      <small>
+                        {profileEmail ||
+                          address ||
+                          text(`auth.method.${authType}`, "Account")}
+                      </small>
+                    </span>
+                  </Link>
+
+                  {isGuest && (
+                    <button
+                      type="button"
+                      className="customerAccountDropdownUpgrade"
+                      onClick={() => {
+                        setIsAccountMenuOpen(false);
+                        upgradeGuestAccount();
+                      }}
+                    >
+                      <ShieldCheck size={17} />
+                      <span>
+                        <strong>{text("account.guestUpgrade", "Create an account")}</strong>
+                        <small>{text("account.guestHint", "Keep your details across devices.")}</small>
+                      </span>
+                    </button>
+                  )}
+
+                  <nav aria-label={text("account.menuLabel", "Account menu")}>
+                    <Link to="/account/orders" role="menuitem">
+                      <Package size={18} />
+                      {text("account.orders", "My orders")}
+                    </Link>
+                    <Link to="/account/favorites" role="menuitem">
+                      <Heart size={18} />
+                      {text("account.favorites", "Favorites")}
+                    </Link>
+                    <Link to="/account/addresses" role="menuitem">
+                      <MapPin size={18} />
+                      {text("account.addresses", "Addresses")}
+                    </Link>
+                    <Link to="/account/profile" role="menuitem">
+                      <UserRound size={18} />
+                      {text("account.profile", "Profile details")}
+                    </Link>
+                    <Link to="/account/security" role="menuitem">
+                      <ShieldCheck size={18} />
+                      {text("account.security", "Account & security")}
+                    </Link>
+                  </nav>
+
+                  <button
+                    type="button"
+                    className="customerAccountDropdownSignOut"
+                    onClick={handleSignOut}
+                    role="menuitem"
+                  >
+                    <LogOut size={18} />
+                    {text("account.signOut", "Sign out")}
+                  </button>
+                </div>
               )}
-            </button>
+            </div>
 
             <Link
               to="/cart"
