@@ -2,6 +2,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import {
@@ -15,6 +16,7 @@ import { appKit } from "../config/wagmi";
 
 const CustomerAuthContext = createContext(null);
 const GUEST_STORAGE_KEY = "gabaloo_guest_session";
+const SOCIAL_AUTH_CLASS = "gabalooSocialAuthActive";
 const SUPPORTED_SOCIAL_PROVIDERS = new Set([
   "google",
   "apple",
@@ -76,6 +78,16 @@ function createInitials(value) {
     .join("");
 }
 
+function hasConnectedReownAccount() {
+  const accountData = ChainController.getAccountData();
+
+  return Boolean(
+    accountData?.address ||
+      accountData?.caipAddress ||
+      accountData?.status === "connected",
+  );
+}
+
 export function CustomerAuthProvider({ children }) {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [guestSession, setGuestSession] = useState(readGuestSession);
@@ -86,8 +98,50 @@ export function CustomerAuthProvider({ children }) {
     image: "",
   });
 
+  const socialPollRef = useRef(null);
+  const socialGraceRef = useRef(null);
+  const isConnectedRef = useRef(false);
+
   const { address, embeddedWalletInfo, isConnected } = useAppKitAccount();
   const { disconnect } = useDisconnect();
+
+  isConnectedRef.current = isConnected;
+
+  function clearSocialWatchers() {
+    if (socialPollRef.current) {
+      window.clearInterval(socialPollRef.current);
+      socialPollRef.current = null;
+    }
+
+    if (socialGraceRef.current) {
+      window.clearTimeout(socialGraceRef.current);
+      socialGraceRef.current = null;
+    }
+  }
+
+  function hideReownDuringSocialAuth() {
+    document.documentElement.classList.add(SOCIAL_AUTH_CLASS);
+  }
+
+  function restoreReownVisibility() {
+    document.documentElement.classList.remove(SOCIAL_AUTH_CLASS);
+  }
+
+  function closeReownModal() {
+    Promise.resolve(appKit.close()).catch(() => undefined);
+  }
+
+  function finishSocialAttempt({ reopenAuth = false, error = "" } = {}) {
+    clearSocialWatchers();
+    restoreReownVisibility();
+    closeReownModal();
+    setBusyAction("");
+
+    if (reopenAuth && !isConnectedRef.current && !hasConnectedReownAccount()) {
+      setErrorCode(error || "genericError");
+      setIsAuthModalOpen(true);
+    }
+  }
 
   useEffect(() => {
     function syncReownProfile() {
@@ -108,9 +162,21 @@ export function CustomerAuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
+    return () => {
+      clearSocialWatchers();
+      restoreReownVisibility();
+    };
+  }, []);
+
+  useEffect(() => {
     if (!isConnected) {
       return;
     }
+
+    clearSocialWatchers();
+    restoreReownVisibility();
+    closeReownModal();
+    setBusyAction("");
 
     if (guestSession) {
       localStorage.removeItem(GUEST_STORAGE_KEY);
@@ -178,24 +244,76 @@ export function CustomerAuthProvider({ children }) {
       return;
     }
 
+    clearSocialWatchers();
     setBusyAction(provider);
     setErrorCode("");
     setIsAuthModalOpen(false);
+    hideReownDuringSocialAuth();
 
     try {
       await appKit.open({ view: "Connect", namespace: "eip155" });
       await executeSocialLogin(provider);
-    } catch {
-      setErrorCode("genericError");
-      setIsAuthModalOpen(true);
-    } finally {
-      try {
-        await appKit.close();
-      } catch {
-        // The social popup is independent after it opens.
-      }
 
-      setBusyAction("");
+      const startedAt = Date.now();
+
+      socialPollRef.current = window.setInterval(() => {
+        const accountData = ChainController.getAccountData();
+        const popupWindow = accountData?.socialWindow;
+        const connected =
+          isConnectedRef.current ||
+          Boolean(accountData?.address) ||
+          Boolean(accountData?.caipAddress) ||
+          accountData?.status === "connected";
+
+        if (connected) {
+          finishSocialAttempt();
+          return;
+        }
+
+        if (popupWindow?.closed) {
+          window.clearInterval(socialPollRef.current);
+          socialPollRef.current = null;
+
+          socialGraceRef.current = window.setTimeout(() => {
+            if (isConnectedRef.current || hasConnectedReownAccount()) {
+              finishSocialAttempt();
+            } else {
+              finishSocialAttempt({
+                reopenAuth: true,
+                error: "genericError",
+              });
+            }
+          }, 900);
+
+          return;
+        }
+
+        if (!popupWindow && Date.now() - startedAt > 10000) {
+          finishSocialAttempt({
+            reopenAuth: true,
+            error: "genericError",
+          });
+          return;
+        }
+
+        if (Date.now() - startedAt > 120000) {
+          try {
+            popupWindow?.close();
+          } catch {
+            // Ignore cross-origin popup cleanup errors.
+          }
+
+          finishSocialAttempt({
+            reopenAuth: true,
+            error: "genericError",
+          });
+        }
+      }, 350);
+    } catch {
+      finishSocialAttempt({
+        reopenAuth: true,
+        error: "genericError",
+      });
     }
   }
 
@@ -204,6 +322,8 @@ export function CustomerAuthProvider({ children }) {
       return;
     }
 
+    clearSocialWatchers();
+    restoreReownVisibility();
     setBusyAction("wallet");
     setErrorCode("");
     setIsAuthModalOpen(false);
@@ -219,6 +339,10 @@ export function CustomerAuthProvider({ children }) {
   }
 
   function continueAsGuest() {
+    clearSocialWatchers();
+    restoreReownVisibility();
+    closeReownModal();
+
     const nextGuestSession = {
       id: createGuestId(),
       createdAt: new Date().toISOString(),
@@ -238,6 +362,8 @@ export function CustomerAuthProvider({ children }) {
   }
 
   async function manageWallet() {
+    clearSocialWatchers();
+    restoreReownVisibility();
     setErrorCode("");
     setIsAuthModalOpen(false);
 
@@ -254,6 +380,8 @@ export function CustomerAuthProvider({ children }) {
       return;
     }
 
+    clearSocialWatchers();
+    restoreReownVisibility();
     setBusyAction("signOut");
     setErrorCode("");
 
@@ -262,6 +390,7 @@ export function CustomerAuthProvider({ children }) {
         await disconnect();
       }
 
+      closeReownModal();
       localStorage.removeItem(GUEST_STORAGE_KEY);
       setGuestSession(null);
       setIsAuthModalOpen(false);
