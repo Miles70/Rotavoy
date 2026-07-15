@@ -16,7 +16,7 @@ async function startServer() {
 
   if (orderMigrationResult.modifiedCount > 0) {
     console.log(
-      `Legacy order numbers migrated: ${orderMigrationResult.modifiedCount} KMR orders changed to GBL.`,
+      `Legacy order numbers migrated: ${orderMigrationResult.modifiedCount} KMR orders changed to MTR.`,
     );
   }
 
@@ -56,7 +56,7 @@ async function startServer() {
   }
 
   server = app.listen(port, () => {
-    console.log(`Gabaloo API running on http://localhost:${port}`);
+    console.log(`Masterota API running on http://localhost:${port}`);
   });
 }
 

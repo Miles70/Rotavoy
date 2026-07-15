@@ -1,6 +1,6 @@
 const STORAGE_KEY_ALIASES = {
-  kemalreis_orders: "gabaloo_orders",
-  kemalreis_last_order: "gabaloo_last_order",
+  kemalreis_orders: "masterota_orders",
+  kemalreis_last_order: "masterota_last_order",
 };
 
 const originalGetItem = Storage.prototype.getItem;
@@ -26,7 +26,7 @@ function migrateStorage(storage) {
   }
 }
 
-if (!globalThis.__gabalooStorageAliasesInstalled) {
+if (!globalThis.__masterotaStorageAliasesInstalled) {
   migrateStorage(localStorage);
 
   Storage.prototype.getItem = function getItem(key) {
@@ -51,5 +51,5 @@ if (!globalThis.__gabalooStorageAliasesInstalled) {
     }
   };
 
-  globalThis.__gabalooStorageAliasesInstalled = true;
+  globalThis.__masterotaStorageAliasesInstalled = true;
 }

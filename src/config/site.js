@@ -1,7 +1,7 @@
 const siteConfig = {
-  brandName: "Gabaloo",
-  shortName: "G",
-  description: "Premium online shopping experience.",
+  brandName: "Masterota",
+  shortName: "M",
+  description: "Shop, Travel, Discover.",
 };
 
 export default siteConfig;

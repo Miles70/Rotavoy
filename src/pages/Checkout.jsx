@@ -17,13 +17,13 @@ function safeParse(value, fallback) {
 }
 
 function saveOrder(order) {
-  const existingOrders = safeParse(localStorage.getItem("gabaloo_orders"), []);
+  const existingOrders = safeParse(localStorage.getItem("masterota_orders"), []);
   const nextOrders = Array.isArray(existingOrders)
     ? [order, ...existingOrders]
     : [order];
 
-  localStorage.setItem("gabaloo_orders", JSON.stringify(nextOrders));
-  localStorage.setItem("gabaloo_last_order", JSON.stringify(order));
+  localStorage.setItem("masterota_orders", JSON.stringify(nextOrders));
+  localStorage.setItem("masterota_last_order", JSON.stringify(order));
 }
 
 function Checkout() {

@@ -9,7 +9,7 @@ import {
 import { useCustomerAuth } from "./CustomerAuthContext";
 
 const CustomerAccountContext = createContext(null);
-const STORAGE_PREFIX = "gabaloo_customer_account:";
+const STORAGE_PREFIX = "masterota_customer_account:";
 
 function safeParse(value, fallback) {
   try {

@@ -137,7 +137,7 @@ function Header() {
               <svg className="logoGlyph" viewBox="0 0 48 48">
                 <path
                   className="logoGlyphStroke"
-                  d="M34 15.5C31.2 12.6 27.9 11 23.6 11C16 11 10.5 16.4 10.5 24S16 37 23.6 37C27.9 37 31.5 35.5 34.4 32.8V25H24"
+                  d="M10.5 36.5V11.5L24 27L37.5 11.5V36.5"
                 />
                 <circle className="logoGlyphDot" cx="34.4" cy="25" r="2.3" />
               </svg>
@@ -145,8 +145,8 @@ function Header() {
             </span>
 
             <span className="logoText" aria-hidden="true">
-              <span className="logoTextCore">Gaba</span>
-              <span className="logoTextAccent">loo</span>
+              <span className="logoTextCore">Master</span>
+              <span className="logoTextAccent">ota</span>
             </span>
           </Link>
 

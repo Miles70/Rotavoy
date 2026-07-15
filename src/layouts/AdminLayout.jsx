@@ -45,9 +45,9 @@ function AdminLayout() {
 
       <aside className={`admin-sidebar ${isSidebarOpen ? "is-open" : ""}`}>
         <div className="admin-brand">
-          <div className="admin-brand-mark">G</div>
+          <div className="admin-brand-mark">M</div>
           <div>
-            <strong>Gabaloo</strong>
+            <strong>Masterota</strong>
             <span>Command Center</span>
           </div>
           <button
@@ -104,7 +104,7 @@ function AdminLayout() {
             <Menu size={22} />
           </button>
           <div>
-            <p>Gabaloo yönetim paneli</p>
+            <p>Masterota yönetim paneli</p>
             <span>Operasyonu tek ekrandan yönet.</span>
           </div>
           <div className="admin-live-pill">

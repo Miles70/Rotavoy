@@ -26,8 +26,8 @@ import {
 } from "../config/firebase";
 
 const CustomerAuthContext = createContext(null);
-const GUEST_STORAGE_KEY = "gabaloo_guest_session";
-const SOCIAL_PHOTO_STORAGE_PREFIX = "gabaloo_social_photo_";
+const GUEST_STORAGE_KEY = "masterota_guest_session";
+const SOCIAL_PHOTO_STORAGE_PREFIX = "masterota_social_photo_";
 
 const FIREBASE_PROVIDERS = {
   google: googleAuthProvider,
@@ -291,9 +291,9 @@ export function CustomerAuthProvider({ children }) {
   const displayName = firebaseUser
     ? firebaseUser.displayName ||
       profileEmail.split("@")[0] ||
-      "Gabaloo"
+      "Masterota"
     : isWalletConnected
-      ? reownProfile.name || shortenAddress(address) || "Gabaloo"
+      ? reownProfile.name || shortenAddress(address) || "Masterota"
       : guestSession
         ? "Guest"
         : "";

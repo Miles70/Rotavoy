@@ -57,7 +57,7 @@ export function createApp() {
   app.get("/api/health", (request, response) => {
     response.json({
       ok: true,
-      service: "gabaloo-api",
+      service: "masterota-api",
       timestamp: new Date().toISOString(),
     });
   });

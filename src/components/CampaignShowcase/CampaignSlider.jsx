@@ -41,7 +41,7 @@ function localizeSlide(slide, dictionary) {
     title:
       slide.title === "Big finds. Better prices." ? dictionary.defaultTitle : slide.title,
     description:
-      slide.description === "Discover popular products picked for this week's Gabaloo campaign."
+      slide.description === "Discover popular products picked for this week's Masterota campaign."
         ? dictionary.defaultDescription
         : slide.description,
     buttonLabel: slide.buttonLabel === "Shop now" ? dictionary.shopNow : slide.buttonLabel,

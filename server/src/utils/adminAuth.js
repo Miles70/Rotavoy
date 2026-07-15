@@ -78,7 +78,7 @@ export function verifyAdminToken(token) {
   }
 
   return {
-    sub: "gabaloo-admin",
+    sub: "masterota-admin",
     email: session.email,
     iat: Math.floor(session.issuedAt / 1000),
     exp: Math.floor(session.expiresAt / 1000),

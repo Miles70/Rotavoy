@@ -19,8 +19,8 @@ if (!projectId) {
 export const networks = [mainnet, bsc, polygon, arbitrum, base];
 
 const metadata = {
-  name: "Gabaloo",
-  description: "Global commerce powered by Web3.",
+  name: "Masterota",
+  description: "Shop, travel and discover with Web3.",
   url: window.location.origin,
   icons: [],
 };

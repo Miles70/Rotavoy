@@ -22,7 +22,7 @@ export function getCryptoPaymentConfig() {
     process.env.BSC_USDT_CONTRACT || DEFAULT_BSC_USDT_CONTRACT
   );
   const recipientAddress = normalizeEvmAddress(
-    process.env.GABALOO_PAYMENT_WALLET
+    process.env.MASTEROTA_PAYMENT_WALLET
   );
 
   return {

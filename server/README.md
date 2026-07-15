@@ -1,4 +1,4 @@
-# Gabaloo API
+# Masterota API
 
 ## Local setup
 

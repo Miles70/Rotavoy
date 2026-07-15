@@ -1,7 +1,7 @@
 import { Order } from "../models/Order.js";
 
 const LEGACY_PREFIX = "KMR-";
-const CURRENT_PREFIX = "GBL-";
+const CURRENT_PREFIX = "MTR-";
 
 export function getCompatibleOrderNumbers(value) {
   const orderNumber = String(value || "").trim().toUpperCase();

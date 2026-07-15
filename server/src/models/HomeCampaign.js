@@ -9,7 +9,7 @@ const homeCampaignSchema = new mongoose.Schema(
     description: {
       type: String,
       trim: true,
-      default: "Discover popular products picked for this week's Gabaloo campaign.",
+      default: "Discover popular products picked for this week's Masterota campaign.",
     },
     buttonLabel: { type: String, trim: true, default: "Shop now" },
     buttonUrl: { type: String, trim: true, default: "/products" },
