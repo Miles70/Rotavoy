@@ -5,10 +5,87 @@ const tr = {
     categories: "Kategoriler",
     products: "Ürünler",
     cart: "Sepet",
+    travel: "Travel",
   },
   header: {
     cart: "Sepet",
     connectWallet: "Cüzdanı Bağla",
+  },
+  travelPage: {
+    "onlineTravelAgency": "ONLINE TRAVEL AGENCY",
+    "pill": "Masterota Travel",
+    "heroTitle": "Tatil rotanı tek yerde",
+    "heroAccent": "oluştur.",
+    "heroText": "Otelini bul, uçuşunu planla, aracını kirala ve deneyimlerini yolculuğuna ekle. Yakında kart veya kripto ile her şeyi tek platformdan yönet.",
+    "trustSecure": "Güvenli rezervasyon altyapısı",
+    "trustPayment": "Kart ve Web3 ödeme vizyonu",
+    "servicesLabel": "Seyahat hizmetleri",
+    "services": {
+      "hotels": {
+        "label": "Oteller",
+        "eyebrow": "Konaklama rotanı bul",
+        "title": "Nereye gitmek istiyorsun?",
+        "locationLabel": "Destinasyon",
+        "locationPlaceholder": "Antalya, İstanbul, Roma...",
+        "button": "Otel Ara"
+      },
+      "flights": {
+        "label": "Uçuşlar",
+        "eyebrow": "Uçuş rotanı planla",
+        "title": "Sıradaki yolculuğun nerede başlıyor?",
+        "locationLabel": "Kalkış ve varış",
+        "locationPlaceholder": "Antalya → Moskova",
+        "button": "Uçuş Ara"
+      },
+      "cars": {
+        "label": "Araç Kiralama",
+        "eyebrow": "Yolculuğuna özgürlük kat",
+        "title": "Aracını nereden teslim almak istiyorsun?",
+        "locationLabel": "Teslim alma noktası",
+        "locationPlaceholder": "Antalya Havalimanı",
+        "button": "Araç Ara"
+      },
+      "activities": {
+        "label": "Aktiviteler",
+        "eyebrow": "Şehri gerçekten keşfet",
+        "title": "Hangi şehirde deneyim arıyorsun?",
+        "locationLabel": "Şehir veya bölge",
+        "locationPlaceholder": "Kapadokya, Dubai, Phuket...",
+        "button": "Aktivite Ara"
+      }
+    },
+    "search": {
+      "start": "Başlangıç",
+      "end": "Bitiş",
+      "guests": "Misafir / Yolcu",
+      "people1": "1 kişi",
+      "people2": "2 kişi",
+      "people3": "3 kişi",
+      "people4": "4 kişi",
+      "people5": "5+ kişi"
+    },
+    "prototypeNote": "Arama ekranı hazır. Gerçek fiyat ve müsaitlik sonuçları travel API bağlantısıyla burada açılacak.",
+    "routesEyebrow": "MASTEROTA ROTALARI",
+    "routesTitle": "Alışveriş rotandan tatil rotana.",
+    "routesText": "Travel bölümü mağazadan ayrı çalışır; hesap, dil ve ödeme deneyimi Masterota çatısı altında kalır.",
+    "cards": {
+      "antalya": {
+        "badge": "Popüler",
+        "title": "Antalya Rotası",
+        "text": "Sahil otelleri, transfer ve yaz deneyimleri."
+      },
+      "istanbul": {
+        "badge": "Şehir",
+        "title": "İstanbul Rotası",
+        "text": "Şehir otelleri, uçuşlar ve özel aktiviteler."
+      },
+      "freedom": {
+        "badge": "Yakında",
+        "title": "Özgür Yolculuk",
+        "text": "Araç kirala, kendi rotanı kendin oluştur."
+      }
+    },
+    "exploreRoute": "Rotayı keşfet"
   },
   search: {
     placeholder: "Ürün ara...",

@@ -174,6 +174,13 @@ function Header() {
             </NavLink>
 
             <NavLink
+              to="/travel"
+              className={({ isActive }) => (isActive ? "active" : "")}
+            >
+              {t("nav.travel")}
+            </NavLink>
+
+            <NavLink
               to="/cart"
               className={({ isActive }) => (isActive ? "active" : "")}
             >
