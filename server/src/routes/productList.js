@@ -4,6 +4,7 @@ import { Product } from "../models/Product.js";
 export const productListRouter = Router();
 
 const QUALITY_SOURCE = "amazon-reviews-2023";
+const STOREFRONT_SOURCES = [QUALITY_SOURCE, "manual"];
 const CATEGORY_GROUPS = {
   electronics: ["electronics", "mobile"],
   fashion: ["fashion"],
@@ -45,7 +46,7 @@ productListRouter.get("/", async (request, response, next) => {
     const sortMode = String(request.query.sort || "popular").trim().toLowerCase();
     const filter = {
       isActive: true,
-      source: QUALITY_SOURCE,
+      source: { $in: STOREFRONT_SOURCES },
     };
 
     if (sortMode === "showcase") {
