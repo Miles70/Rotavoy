@@ -15,7 +15,7 @@ export async function releaseOrderStock(
   {
     status = "expired",
     paymentStatus = "failed",
-  } = {}
+  } = {},
 ) {
   const orderId = orderOrId?._id || orderOrId;
   if (!orderId) return null;
@@ -30,7 +30,8 @@ export async function releaseOrderStock(
           _id: orderId,
           stockReserved: true,
           stockReleasedAt: null,
-          paymentStatus: { $in: ["unpaid", "pending"] },
+          stockCommittedAt: null,
+          paymentStatus: { $ne: "paid" },
         },
         {
           $set: {
@@ -45,7 +46,7 @@ export async function releaseOrderStock(
           new: true,
           runValidators: true,
           session,
-        }
+        },
       );
 
       if (!releasedOrder) return;
@@ -77,7 +78,8 @@ export async function releaseExpiredOrderReservations({
   const expiredOrders = await Order.find({
     stockReserved: true,
     stockReleasedAt: null,
-    paymentStatus: { $in: ["unpaid", "pending"] },
+    stockCommittedAt: null,
+    paymentStatus: { $ne: "paid" },
     reservationExpiresAt: { $ne: null, $lte: new Date() },
   })
     .select({ _id: 1 })
