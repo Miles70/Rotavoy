@@ -22,7 +22,6 @@ const customerSessionSchema = new mongoose.Schema(
     expiresAt: {
       type: Date,
       required: true,
-      index: true,
     },
     lastUsedAt: { type: Date, default: Date.now },
   },
