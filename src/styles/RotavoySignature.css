@@ -1,0 +1,83 @@
+:root {
+  --rotavoy-signature-gradient: linear-gradient(
+    100deg,
+    #159ca7 0%,
+    #66c8c2 40%,
+    #d8c3a5 72%,
+    #ef9b82 100%
+  );
+  --rotavoy-signature-gradient-hover: linear-gradient(
+    100deg,
+    #118d98 0%,
+    #55bbb5 38%,
+    #d9bfa0 70%,
+    #ee896f 100%
+  );
+  --rotavoy-signature-shadow:
+    0 16px 34px rgba(21, 156, 167, 0.2),
+    0 9px 24px rgba(239, 155, 130, 0.15);
+}
+
+/* Rotavoy's signature text treatment: sea, mint, sand and sunset coral. */
+.heroGradientText,
+.heroStat strong,
+.logoTextAccent,
+.travelIntro h1 span,
+.travelBrandName span {
+  background: var(--rotavoy-signature-gradient);
+  background-size: 140% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Keep the effect selective so it feels like a brand signature, not decoration everywhere. */
+.primaryButton,
+.travelSearchButton {
+  border-color: transparent;
+  background: var(--rotavoy-signature-gradient);
+  background-size: 160% 100%;
+  color: #ffffff;
+  box-shadow: var(--rotavoy-signature-shadow);
+}
+
+.primaryButton:hover,
+.travelSearchButton:hover {
+  border-color: transparent;
+  background: var(--rotavoy-signature-gradient-hover);
+  background-position: 100% 50%;
+  color: #ffffff;
+  box-shadow:
+    0 20px 42px rgba(21, 156, 167, 0.25),
+    0 11px 28px rgba(239, 137, 111, 0.2);
+}
+
+.logoTextAccent {
+  margin-left: 1px;
+  text-shadow: 0 4px 16px rgba(21, 156, 167, 0.12);
+}
+
+.navLinks a::after {
+  background: var(--rotavoy-signature-gradient);
+}
+
+.heroGlowLeft {
+  background: #66c8c2;
+}
+
+.heroGlowRight {
+  background: #ef9b82;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .primaryButton,
+  .travelSearchButton,
+  .heroGradientText {
+    transition:
+      background-position var(--transition-normal),
+      filter var(--transition-fast),
+      transform var(--transition-fast),
+      box-shadow var(--transition-fast);
+  }
+}
