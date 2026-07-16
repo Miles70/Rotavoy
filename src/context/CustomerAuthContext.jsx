@@ -1,14 +1,14 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
-import {
-  useAppKitAccount,
-  useDisconnect,
-} from "@reown/appkit/react";
+import { useAppKitAccount, useDisconnect } from "@reown/appkit/react";
 import { ChainController } from "@reown/appkit-controllers";
+import { useSignMessage } from "wagmi";
 import {
   FacebookAuthProvider,
   getAdditionalUserInfo,
@@ -24,6 +24,17 @@ import {
   firebaseProviderAvailability,
   googleAuthProvider,
 } from "../config/firebase";
+import {
+  clearStoredCustomerSession,
+  createFirebaseCustomerSession,
+  createGuestCustomerSession,
+  createWalletChallenge,
+  createWalletCustomerSession,
+  getStoredCustomerSession,
+  logoutCustomerSession,
+  storeCustomerSession,
+  validateCustomerSession,
+} from "../services/customerApi";
 
 const CustomerAuthContext = createContext(null);
 const GUEST_STORAGE_KEY = "masterota_guest_session";
@@ -35,28 +46,19 @@ const FIREBASE_PROVIDERS = {
 };
 
 function createGuestId() {
-  if (globalThis.crypto?.randomUUID) {
-    return globalThis.crypto.randomUUID();
-  }
-
+  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
   return `guest-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
 function readGuestSession() {
   try {
     const storedSession = localStorage.getItem(GUEST_STORAGE_KEY);
-
-    if (!storedSession) {
-      return null;
-    }
-
+    if (!storedSession) return null;
     const parsedSession = JSON.parse(storedSession);
-
     if (!parsedSession?.id) {
       localStorage.removeItem(GUEST_STORAGE_KEY);
       return null;
     }
-
     return parsedSession;
   } catch {
     localStorage.removeItem(GUEST_STORAGE_KEY);
@@ -65,25 +67,16 @@ function readGuestSession() {
 }
 
 function shortenAddress(address) {
-  if (!address) {
-    return "";
-  }
-
+  if (!address) return "";
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
 function createInitials(value) {
-  const normalized = String(value || "")
-    .replace(/@.*/, "")
-    .trim();
-
-  if (!normalized) {
-    return "G";
-  }
-
-  const parts = normalized.split(/\s+/).filter(Boolean);
-
-  return parts
+  const normalized = String(value || "").replace(/@.*/, "").trim();
+  if (!normalized) return "M";
+  return normalized
+    .split(/\s+/)
+    .filter(Boolean)
     .slice(0, 2)
     .map((part) => part.charAt(0).toUpperCase())
     .join("");
@@ -94,10 +87,7 @@ function getFirebaseProviderProfile(user, providerId) {
 }
 
 function getStoredSocialPhoto(uid) {
-  if (!uid) {
-    return "";
-  }
-
+  if (!uid) return "";
   try {
     return localStorage.getItem(`${SOCIAL_PHOTO_STORAGE_PREFIX}${uid}`) || "";
   } catch {
@@ -106,10 +96,7 @@ function getStoredSocialPhoto(uid) {
 }
 
 function storeSocialPhoto(uid, photoUrl) {
-  if (!uid || !photoUrl) {
-    return;
-  }
-
+  if (!uid || !photoUrl) return;
   try {
     localStorage.setItem(`${SOCIAL_PHOTO_STORAGE_PREFIX}${uid}`, photoUrl);
   } catch {
@@ -120,39 +107,26 @@ function storeSocialPhoto(uid, photoUrl) {
 function getAdditionalProfilePicture(result) {
   const profile = getAdditionalUserInfo(result)?.profile;
   const picture = profile?.picture;
-
-  if (typeof picture === "string") {
-    return picture;
-  }
-
+  if (typeof picture === "string") return picture;
   return picture?.data?.url || "";
 }
 
 async function resolveFacebookProfilePhoto(result) {
   const additionalProfilePicture = getAdditionalProfilePicture(result);
-
-  if (additionalProfilePicture) {
-    return additionalProfilePicture;
-  }
+  if (additionalProfilePicture) return additionalProfilePicture;
 
   const credential = FacebookAuthProvider.credentialFromResult(result);
-
   if (credential?.accessToken) {
     try {
       const response = await fetch(
         `https://graph.facebook.com/me?fields=picture.type(large)&access_token=${encodeURIComponent(credential.accessToken)}`,
       );
-
       if (response.ok) {
         const payload = await response.json();
-        const graphPicture = payload?.picture?.data?.url || "";
-
-        if (graphPicture) {
-          return graphPicture;
-        }
+        if (payload?.picture?.data?.url) return payload.picture.data.url;
       }
     } catch {
-      // Fall through to the photo URLs already returned by Firebase.
+      // Firebase photo URLs remain available as fallback.
     }
   }
 
@@ -161,19 +135,6 @@ async function resolveFacebookProfilePhoto(result) {
     getFirebaseProviderProfile(result?.user, "facebook.com")?.photoURL ||
     ""
   );
-}
-
-function getFirebaseAuthType(user) {
-  const providerId = user?.providerData?.find((item) => item?.providerId)?.providerId;
-
-  switch (providerId) {
-    case "google.com":
-      return "google";
-    case "facebook.com":
-      return "facebook";
-    default:
-      return "email";
-  }
 }
 
 function mapFirebaseError(error) {
@@ -195,6 +156,11 @@ function mapFirebaseError(error) {
   }
 }
 
+function getSessionAccountKey(session) {
+  if (!session?.provider || !session?.providerId) return "";
+  return `${session.provider}:${session.providerId}`;
+}
+
 export function CustomerAuthProvider({ children }) {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [guestSession, setGuestSession] = useState(readGuestSession);
@@ -203,24 +169,77 @@ export function CustomerAuthProvider({ children }) {
   const [firebaseUser, setFirebaseUser] = useState(null);
   const [isFirebaseReady, setIsFirebaseReady] = useState(false);
   const [socialProfileImage, setSocialProfileImage] = useState("");
-  const [reownProfile, setReownProfile] = useState({
-    name: "",
-    image: "",
-  });
+  const [customerSession, setCustomerSession] = useState(getStoredCustomerSession);
+  const [isBackendSessionReady, setIsBackendSessionReady] = useState(false);
+  const [reownProfile, setReownProfile] = useState({ name: "", image: "" });
 
-  const {
-    address,
-    isConnected: isWalletConnected,
-  } = useAppKitAccount();
+  const walletLoginPendingRef = useRef(false);
+  const walletLoginInFlightRef = useRef(false);
+
+  const { address: connectedAddress, isConnected: isWalletConnected } =
+    useAppKitAccount();
   const { disconnect } = useDisconnect();
+  const { signMessageAsync } = useSignMessage();
+
+  const applyCustomerSession = useCallback((nextSession) => {
+    if (!nextSession?.token) return null;
+    const stored = storeCustomerSession(nextSession);
+    setCustomerSession(stored);
+    setIsBackendSessionReady(true);
+    return stored;
+  }, []);
+
+  const clearCustomerSession = useCallback(() => {
+    clearStoredCustomerSession();
+    setCustomerSession(null);
+    setIsBackendSessionReady(true);
+  }, []);
+
+  const updateBackendCustomer = useCallback((customer) => {
+    if (!customer) return;
+    setCustomerSession((previous) => {
+      if (!previous) return previous;
+      const next = { ...previous, customer };
+      storeCustomerSession(next);
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
-    return onAuthStateChanged(firebaseAuth, (nextUser) => {
+    let cancelled = false;
+    const storedSession = getStoredCustomerSession();
+
+    if (!storedSession) {
+      setIsBackendSessionReady(true);
+      return undefined;
+    }
+
+    validateCustomerSession()
+      .then((validated) => {
+        if (!cancelled && validated) applyCustomerSession(validated);
+      })
+      .catch(() => {
+        if (!cancelled) clearCustomerSession();
+      })
+      .finally(() => {
+        if (!cancelled) setIsBackendSessionReady(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [applyCustomerSession, clearCustomerSession]);
+
+  useEffect(() => {
+    return onAuthStateChanged(firebaseAuth, async (nextUser) => {
       setFirebaseUser(nextUser);
       setIsFirebaseReady(true);
 
       if (!nextUser) {
         setSocialProfileImage("");
+        if (getStoredCustomerSession()?.provider === "firebase") {
+          clearCustomerSession();
+        }
         return;
       }
 
@@ -228,20 +247,29 @@ export function CustomerAuthProvider({ children }) {
         (item) => item?.photoURL,
       )?.photoURL;
       const storedPhoto = getStoredSocialPhoto(nextUser.uid);
-
       setSocialProfileImage(storedPhoto || nextUser.photoURL || providerPhoto || "");
-      localStorage.removeItem(GUEST_STORAGE_KEY);
-      setGuestSession(null);
-      setBusyAction("");
-      setErrorCode("");
-      setIsAuthModalOpen(false);
+
+      try {
+        setBusyAction("firebaseSession");
+        const idToken = await nextUser.getIdToken();
+        const session = await createFirebaseCustomerSession(idToken);
+        applyCustomerSession(session);
+        localStorage.removeItem(GUEST_STORAGE_KEY);
+        setGuestSession(null);
+        setErrorCode("");
+        setIsAuthModalOpen(false);
+      } catch {
+        setErrorCode("genericError");
+        setIsAuthModalOpen(true);
+      } finally {
+        setBusyAction("");
+      }
     });
-  }, []);
+  }, [applyCustomerSession, clearCustomerSession]);
 
   useEffect(() => {
     function syncReownProfile() {
       const accountData = ChainController.getAccountData();
-
       setReownProfile({
         name: accountData?.profileName || "",
         image: accountData?.profileImage || "",
@@ -250,65 +278,129 @@ export function CustomerAuthProvider({ children }) {
 
     syncReownProfile();
     const unsubscribe = ChainController.subscribe(syncReownProfile);
-
-    return () => {
-      unsubscribe?.();
-    };
+    return () => unsubscribe?.();
   }, []);
 
   useEffect(() => {
-    if (!isWalletConnected) {
+    if (
+      customerSession ||
+      !guestSession?.id ||
+      !isBackendSessionReady ||
+      firebaseUser
+    ) {
       return;
     }
 
-    localStorage.removeItem(GUEST_STORAGE_KEY);
-    setGuestSession(null);
-    setBusyAction("");
-    setErrorCode("");
-    setIsAuthModalOpen(false);
-  }, [isWalletConnected]);
+    let cancelled = false;
+    setBusyAction("guestSession");
+    createGuestCustomerSession(guestSession.id)
+      .then((session) => {
+        if (!cancelled) applyCustomerSession(session);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          localStorage.removeItem(GUEST_STORAGE_KEY);
+          setGuestSession(null);
+          setErrorCode("genericError");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setBusyAction("");
+      });
 
-  const firebaseAuthType = getFirebaseAuthType(firebaseUser);
-  const authType = firebaseUser
-    ? firebaseAuthType
-    : isWalletConnected
-      ? "wallet"
-      : guestSession
-        ? "guest"
-        : null;
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    applyCustomerSession,
+    customerSession,
+    firebaseUser,
+    guestSession,
+    isBackendSessionReady,
+  ]);
 
-  const profileEmail = firebaseUser?.email || "";
-  const providerProfileImage = firebaseUser?.providerData?.find(
-    (item) => item?.photoURL,
-  )?.photoURL;
+  const authenticateWallet = useCallback(
+    async (walletAddress) => {
+      if (!walletAddress || walletLoginInFlightRef.current) return;
+
+      walletLoginInFlightRef.current = true;
+      setBusyAction("wallet");
+      setErrorCode("");
+
+      try {
+        const challenge = await createWalletChallenge(walletAddress);
+        const signature = await signMessageAsync({
+          account: walletAddress,
+          message: challenge.message,
+        });
+        const session = await createWalletCustomerSession({
+          address: walletAddress,
+          challengeId: challenge.challengeId,
+          signature,
+        });
+
+        applyCustomerSession(session);
+        localStorage.removeItem(GUEST_STORAGE_KEY);
+        setGuestSession(null);
+        setIsAuthModalOpen(false);
+      } catch {
+        setErrorCode("genericError");
+        setIsAuthModalOpen(true);
+      } finally {
+        walletLoginInFlightRef.current = false;
+        walletLoginPendingRef.current = false;
+        setBusyAction("");
+      }
+    },
+    [applyCustomerSession, signMessageAsync],
+  );
+
+  useEffect(() => {
+    if (
+      walletLoginPendingRef.current &&
+      isWalletConnected &&
+      connectedAddress
+    ) {
+      authenticateWallet(connectedAddress);
+    }
+  }, [authenticateWallet, connectedAddress, isWalletConnected]);
+
+  const sessionProvider = customerSession?.provider || null;
+  const firebaseProviderId = firebaseUser?.providerData?.find(
+    (item) => item?.providerId,
+  )?.providerId;
+  const authType =
+    sessionProvider === "firebase"
+      ? firebaseProviderId === "google.com"
+        ? "google"
+        : firebaseProviderId === "facebook.com"
+          ? "facebook"
+          : "email"
+      : sessionProvider;
+  const sessionCustomer = customerSession?.customer || null;
+  const walletAddress =
+    sessionProvider === "wallet"
+      ? customerSession?.providerId || connectedAddress
+      : connectedAddress;
+  const profileEmail =
+    sessionCustomer?.profile?.email || sessionCustomer?.email || firebaseUser?.email || "";
   const profileImage =
+    sessionCustomer?.photoUrl ||
     socialProfileImage ||
     firebaseUser?.photoURL ||
-    providerProfileImage ||
     reownProfile.image ||
     "";
-
-  const displayName = firebaseUser
-    ? firebaseUser.displayName ||
-      profileEmail.split("@")[0] ||
-      "Masterota"
-    : isWalletConnected
-      ? reownProfile.name || shortenAddress(address) || "Masterota"
-      : guestSession
-        ? "Guest"
-        : "";
-
-  const accountKey = firebaseUser
-    ? `firebase:${firebaseUser.uid}`
-    : isWalletConnected
-      ? `wallet:${address || displayName}`
-      : guestSession
-        ? `guest:${guestSession.id}`
-        : "";
-
-  const isAuthenticated = Boolean(
-    firebaseUser || isWalletConnected || guestSession,
-  );
+  const displayName =
+    sessionCustomer?.profile?.fullName ||
+    sessionCustomer?.displayName ||
+    firebaseUser?.displayName ||
+    (sessionProvider === "wallet"
+      ? reownProfile.name || shortenAddress(walletAddress)
+      : "") ||
+    (sessionProvider === "guest" ? "Guest" : "");
+  const accountKey = getSessionAccountKey(customerSession);
+  const isAuthenticated = Boolean(customerSession?.token);
+  const isGuest = sessionProvider === "guest";
 
   function openAuthModal() {
     setErrorCode("");
@@ -316,19 +408,13 @@ export function CustomerAuthProvider({ children }) {
   }
 
   function closeAuthModal() {
-    if (busyAction) {
-      return;
-    }
-
+    if (busyAction) return;
     setErrorCode("");
     setIsAuthModalOpen(false);
   }
 
   async function startSocialLogin(provider) {
-    if (busyAction) {
-      return;
-    }
-
+    if (busyAction) return;
     const firebaseProvider = FIREBASE_PROVIDERS[provider];
 
     if (!firebaseProvider || !firebaseProviderAvailability[provider]) {
@@ -341,30 +427,23 @@ export function CustomerAuthProvider({ children }) {
 
     try {
       const result = await signInWithPopup(firebaseAuth, firebaseProvider);
+      let photo = result.user.photoURL || "";
 
       if (provider === "facebook") {
-        const facebookPhoto = await resolveFacebookProfilePhoto(result);
-
-        if (facebookPhoto) {
-          setSocialProfileImage(facebookPhoto);
-          storeSocialPhoto(result.user.uid, facebookPhoto);
-        }
+        photo = await resolveFacebookProfilePhoto(result);
       } else {
-        const providerPhoto = result.user.providerData?.find(
-          (item) => item?.photoURL,
-        )?.photoURL;
-        const nextPhoto = result.user.photoURL || providerPhoto || "";
-
-        if (nextPhoto) {
-          setSocialProfileImage(nextPhoto);
-          storeSocialPhoto(result.user.uid, nextPhoto);
-        }
+        photo =
+          photo ||
+          result.user.providerData?.find((item) => item?.photoURL)?.photoURL ||
+          "";
       }
 
-      setIsAuthModalOpen(false);
+      if (photo) {
+        setSocialProfileImage(photo);
+        storeSocialPhoto(result.user.uid, photo);
+      }
     } catch (error) {
       const nextErrorCode = mapFirebaseError(error);
-
       if (nextErrorCode) {
         setErrorCode(nextErrorCode);
         setIsAuthModalOpen(true);
@@ -375,16 +454,45 @@ export function CustomerAuthProvider({ children }) {
   }
 
   async function startWalletLogin() {
-    if (busyAction) {
+    if (busyAction) return;
+    setErrorCode("");
+
+    if (isWalletConnected && connectedAddress) {
+      await authenticateWallet(connectedAddress);
       return;
     }
 
-    setBusyAction("wallet");
-    setErrorCode("");
-    setIsAuthModalOpen(false);
+    walletLoginPendingRef.current = true;
+    setBusyAction("walletConnect");
 
     try {
       await appKit.open({ view: "Connect" });
+      if (!walletLoginInFlightRef.current) {
+        setBusyAction("");
+      }
+    } catch {
+      walletLoginPendingRef.current = false;
+      setBusyAction("");
+      setErrorCode("genericError");
+      setIsAuthModalOpen(true);
+    }
+  }
+
+  async function continueAsGuest() {
+    if (busyAction) return;
+    setBusyAction("guest");
+    setErrorCode("");
+
+    const nextGuestSession = guestSession?.id
+      ? guestSession
+      : { id: createGuestId(), createdAt: new Date().toISOString() };
+
+    try {
+      localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(nextGuestSession));
+      setGuestSession(nextGuestSession);
+      const session = await createGuestCustomerSession(nextGuestSession.id);
+      applyCustomerSession(session);
+      setIsAuthModalOpen(false);
     } catch {
       setErrorCode("genericError");
       setIsAuthModalOpen(true);
@@ -393,19 +501,13 @@ export function CustomerAuthProvider({ children }) {
     }
   }
 
-  function continueAsGuest() {
-    const nextGuestSession = {
-      id: createGuestId(),
-      createdAt: new Date().toISOString(),
-    };
-
-    localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(nextGuestSession));
-    setGuestSession(nextGuestSession);
-    setErrorCode("");
-    setIsAuthModalOpen(false);
-  }
-
-  function upgradeGuestAccount() {
+  async function upgradeGuestAccount() {
+    try {
+      await logoutCustomerSession();
+    } catch {
+      clearStoredCustomerSession();
+    }
+    clearCustomerSession();
     localStorage.removeItem(GUEST_STORAGE_KEY);
     setGuestSession(null);
     setErrorCode("");
@@ -413,13 +515,9 @@ export function CustomerAuthProvider({ children }) {
   }
 
   async function manageWallet() {
-    if (!isWalletConnected) {
-      return;
-    }
-
+    if (!isWalletConnected) return;
     setErrorCode("");
     setIsAuthModalOpen(false);
-
     try {
       await appKit.open({ view: "Account" });
     } catch {
@@ -429,50 +527,50 @@ export function CustomerAuthProvider({ children }) {
   }
 
   async function signOut() {
-    if (busyAction) {
-      return;
-    }
-
+    if (busyAction) return;
     setBusyAction("signOut");
     setErrorCode("");
 
     try {
-      if (firebaseUser) {
-        await firebaseSignOut(firebaseAuth);
-      }
+      await logoutCustomerSession();
+    } catch {
+      clearStoredCustomerSession();
+    }
 
-      if (isWalletConnected) {
-        await disconnect();
-      }
-
+    try {
+      if (firebaseUser) await firebaseSignOut(firebaseAuth);
+      if (isWalletConnected) await disconnect();
+    } catch {
+      setErrorCode("genericError");
+    } finally {
+      clearCustomerSession();
       localStorage.removeItem(GUEST_STORAGE_KEY);
       setSocialProfileImage("");
       setGuestSession(null);
       setIsAuthModalOpen(false);
-    } catch {
-      setErrorCode("genericError");
-    } finally {
       setBusyAction("");
     }
   }
 
   const value = {
     accountKey,
-    address,
+    address: walletAddress || "",
     authType,
     busyAction,
     closeAuthModal,
     continueAsGuest,
+    customerSession,
     displayName,
     errorCode,
     firebaseUser,
-    initials: createInitials(displayName || profileEmail || address),
+    initials: createInitials(displayName || profileEmail || walletAddress),
     isAuthModalOpen,
     isAuthenticated,
+    isBackendSessionReady,
     isConnected: isWalletConnected,
-    isFirebaseAuthenticated: Boolean(firebaseUser),
+    isFirebaseAuthenticated: sessionProvider === "firebase",
     isFirebaseReady,
-    isGuest: Boolean(guestSession) && !firebaseUser && !isWalletConnected,
+    isGuest,
     manageWallet,
     openAuthModal,
     profileEmail,
@@ -481,6 +579,7 @@ export function CustomerAuthProvider({ children }) {
     signOut,
     startSocialLogin,
     startWalletLogin,
+    updateBackendCustomer,
     upgradeGuestAccount,
   };
 
@@ -493,10 +592,8 @@ export function CustomerAuthProvider({ children }) {
 
 export function useCustomerAuth() {
   const context = useContext(CustomerAuthContext);
-
   if (!context) {
     throw new Error("useCustomerAuth must be used inside CustomerAuthProvider");
   }
-
   return context;
 }
