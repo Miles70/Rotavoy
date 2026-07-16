@@ -16,8 +16,8 @@ import {
 import { useCustomerAuth } from "./CustomerAuthContext";
 
 const CustomerAccountContext = createContext(null);
-const LEGACY_STORAGE_PREFIX = "masterota_customer_account:";
-const LEGACY_ORDERS_KEY = "masterota_orders";
+const LEGACY_STORAGE_PREFIX = "rotavoy_customer_account:";
+const LEGACY_ORDERS_KEY = "rotavoy_orders";
 
 function safeParse(value, fallback) {
   try {

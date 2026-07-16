@@ -26,7 +26,7 @@ function safeParse(value, fallback) {
 
 function persistOrder(order) {
   const existingOrders = safeParse(
-    localStorage.getItem("kemalreis_orders"),
+    localStorage.getItem("rotavoy_orders"),
     []
   );
   let orderWasUpdated = false;
@@ -41,8 +41,8 @@ function persistOrder(order) {
 
   if (!orderWasUpdated) nextOrders.unshift(order);
 
-  localStorage.setItem("kemalreis_orders", JSON.stringify(nextOrders));
-  localStorage.setItem("kemalreis_last_order", JSON.stringify(order));
+  localStorage.setItem("rotavoy_orders", JSON.stringify(nextOrders));
+  localStorage.setItem("rotavoy_last_order", JSON.stringify(order));
 }
 
 function shortenAddress(value) {

@@ -13,7 +13,7 @@ const tr = {
   },
   travelPage: {
     "onlineTravelAgency": "ONLINE TRAVEL AGENCY",
-    "pill": "Masterota Travel",
+    "pill": "Rotavoy Travel",
     "heroTitle": "Tatil rotanı tek yerde",
     "heroAccent": "oluştur.",
     "heroText": "Otelini bul, uçuşunu planla, aracını kirala ve deneyimlerini yolculuğuna ekle. Yakında kart veya kripto ile her şeyi tek platformdan yönet.",
@@ -65,9 +65,9 @@ const tr = {
       "people5": "5+ kişi"
     },
     "prototypeNote": "Arama ekranı hazır. Gerçek fiyat ve müsaitlik sonuçları travel API bağlantısıyla burada açılacak.",
-    "routesEyebrow": "MASTEROTA ROTALARI",
+    "routesEyebrow": "ROTAVOY ROTALARI",
     "routesTitle": "Alışveriş rotandan tatil rotana.",
-    "routesText": "Travel bölümü mağazadan ayrı çalışır; hesap, dil ve ödeme deneyimi Masterota çatısı altında kalır.",
+    "routesText": "Travel bölümü mağazadan ayrı çalışır; hesap, dil ve ödeme deneyimi Rotavoy çatısı altında kalır.",
     "cards": {
       "antalya": {
         "badge": "Popüler",

@@ -10,19 +10,19 @@
 }
 
 .campaignShowcase--forward .campaignScene--active {
-  animation: masterotaSlideInRight 1s cubic-bezier(.22,.78,.2,1) both;
+  animation: rotavoySlideInRight 1s cubic-bezier(.22,.78,.2,1) both;
 }
 
 .campaignShowcase--forward .campaignScene--previous {
-  animation: masterotaSlideOutLeft 1s cubic-bezier(.22,.78,.2,1) both;
+  animation: rotavoySlideOutLeft 1s cubic-bezier(.22,.78,.2,1) both;
 }
 
 .campaignShowcase--backward .campaignScene--active {
-  animation: masterotaSlideInLeft 1s cubic-bezier(.22,.78,.2,1) both;
+  animation: rotavoySlideInLeft 1s cubic-bezier(.22,.78,.2,1) both;
 }
 
 .campaignShowcase--backward .campaignScene--previous {
-  animation: masterotaSlideOutRight 1s cubic-bezier(.22,.78,.2,1) both;
+  animation: rotavoySlideOutRight 1s cubic-bezier(.22,.78,.2,1) both;
 }
 
 .campaignShowcase--cinematic .campaignSceneContent,
@@ -47,39 +47,39 @@
 }
 
 .campaignShowcase--forward .campaignScene--active .campaignSceneBackdrop {
-  animation: masterotaBackdropRight 1.15s cubic-bezier(.22,.78,.2,1) both;
+  animation: rotavoyBackdropRight 1.15s cubic-bezier(.22,.78,.2,1) both;
 }
 
 .campaignShowcase--backward .campaignScene--active .campaignSceneBackdrop {
-  animation: masterotaBackdropLeft 1.15s cubic-bezier(.22,.78,.2,1) both;
+  animation: rotavoyBackdropLeft 1.15s cubic-bezier(.22,.78,.2,1) both;
 }
 
-@keyframes masterotaSlideInRight {
+@keyframes rotavoySlideInRight {
   from { transform: translate3d(100%,0,0); }
   to { transform: translate3d(0,0,0); }
 }
 
-@keyframes masterotaSlideOutLeft {
+@keyframes rotavoySlideOutLeft {
   from { transform: translate3d(0,0,0); }
   to { transform: translate3d(-100%,0,0); }
 }
 
-@keyframes masterotaSlideInLeft {
+@keyframes rotavoySlideInLeft {
   from { transform: translate3d(-100%,0,0); }
   to { transform: translate3d(0,0,0); }
 }
 
-@keyframes masterotaSlideOutRight {
+@keyframes rotavoySlideOutRight {
   from { transform: translate3d(0,0,0); }
   to { transform: translate3d(100%,0,0); }
 }
 
-@keyframes masterotaBackdropRight {
+@keyframes rotavoyBackdropRight {
   from { transform: scale(1.08) translateX(4%); }
   to { transform: scale(1.035) translateX(0); }
 }
 
-@keyframes masterotaBackdropLeft {
+@keyframes rotavoyBackdropLeft {
   from { transform: scale(1.08) translateX(-4%); }
   to { transform: scale(1.035) translateX(0); }
 }

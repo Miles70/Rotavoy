@@ -59,7 +59,7 @@ export function createApp() {
   app.get("/api/health", (request, response) => {
     response.json({
       ok: true,
-      service: "masterota-api",
+      service: "rotavoy-api",
       timestamp: new Date().toISOString(),
     });
   });

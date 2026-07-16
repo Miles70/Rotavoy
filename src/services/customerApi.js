@@ -1,5 +1,5 @@
 const apiBaseUrl = String(import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
-const CUSTOMER_SESSION_STORAGE_KEY = "masterota_customer_session";
+const CUSTOMER_SESSION_STORAGE_KEY = "rotavoy_customer_session";
 
 function safeParse(value, fallback = null) {
   try {

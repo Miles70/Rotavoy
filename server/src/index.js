@@ -42,7 +42,7 @@ async function startServer() {
 
   if (orderMigrationResult.modifiedCount > 0) {
     console.log(
-      `Legacy order numbers migrated: ${orderMigrationResult.modifiedCount} KMR/GBL orders changed to MTR.`,
+      `Legacy order numbers migrated: ${orderMigrationResult.modifiedCount} KMR/GBL/MTR orders changed to RTV.`,
     );
   }
 
@@ -84,7 +84,7 @@ async function startServer() {
   await sweepExpiredReservations();
 
   server = app.listen(port, () => {
-    console.log(`Masterota API running on http://localhost:${port}`);
+    console.log(`Rotavoy API running on http://localhost:${port}`);
   });
 
   reservationSweepTimer = setInterval(

@@ -23,7 +23,7 @@ function safeParse(value, fallback) {
 }
 
 function getLastOrder() {
-  return safeParse(localStorage.getItem("kemalreis_last_order"), null);
+  return safeParse(localStorage.getItem("rotavoy_last_order"), null);
 }
 
 function OrderSuccess() {

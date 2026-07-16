@@ -1,7 +1,6 @@
 const DEFAULT_BSC_RPC_URL = "https://bsc-dataseed.binance.org";
 const DEFAULT_BSC_USDT_CONTRACT =
   "0x55d398326f99059ff775485246999027b3197955";
-const PREVIOUS_PAYMENT_WALLET_ENV_KEY = ["GABA", "LOO_PAYMENT_WALLET"].join("");
 
 function parsePositiveInteger(value, fallback) {
   const parsed = Number.parseInt(value, 10);
@@ -23,8 +22,7 @@ export function getCryptoPaymentConfig() {
     process.env.BSC_USDT_CONTRACT || DEFAULT_BSC_USDT_CONTRACT
   );
   const recipientAddress = normalizeEvmAddress(
-    process.env.MASTEROTA_PAYMENT_WALLET ||
-      process.env[PREVIOUS_PAYMENT_WALLET_ENV_KEY]
+    process.env.ROTAVOY_PAYMENT_WALLET
   );
 
   return {

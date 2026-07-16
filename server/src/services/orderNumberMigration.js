@@ -1,7 +1,7 @@
 import { Order } from "../models/Order.js";
 
-const LEGACY_PREFIXES = ["KMR-", "GBL-"];
-const CURRENT_PREFIX = "MTR-";
+const LEGACY_PREFIXES = ["KMR-", "GBL-", "MTR-"];
+const CURRENT_PREFIX = "RTV-";
 
 function getOrderSuffix(orderNumber, prefix) {
   return orderNumber.slice(prefix.length);
@@ -42,7 +42,7 @@ export function getCompatibleOrderNumbers(value) {
 
 export async function migrateLegacyOrderNumbers() {
   const legacyOrders = await Order.find({
-    orderNumber: /^(KMR|GBL)-/i,
+    orderNumber: /^(KMR|GBL|MTR)-/i,
   })
     .select({ _id: 1, orderNumber: 1 })
     .lean();
@@ -56,7 +56,7 @@ export async function migrateLegacyOrderNumbers() {
 
   for (const order of legacyOrders) {
     const currentOrderNumber = String(order.orderNumber || "").replace(
-      /^(KMR|GBL)-/i,
+      /^(KMR|GBL|MTR)-/i,
       CURRENT_PREFIX,
     );
 

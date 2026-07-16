@@ -118,7 +118,7 @@ function createOrderNumber() {
   ].join("");
   const randomPart = crypto.randomBytes(4).toString("hex").toUpperCase();
 
-  return `MTR-${datePart}-${randomPart}`;
+  return `RTV-${datePart}-${randomPart}`;
 }
 
 function getPaymentData(paymentMethod, total) {

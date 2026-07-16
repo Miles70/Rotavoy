@@ -13,7 +13,7 @@ const ar = {
   },
   travelPage: {
     "onlineTravelAgency": "وكالة سفر إلكترونية",
-    "pill": "Masterota Travel",
+    "pill": "Rotavoy Travel",
     "heroTitle": "أنشئ مسار رحلتك",
     "heroAccent": "في مكان واحد.",
     "heroText": "اعثر على فندقك، خطط لرحلتك الجوية، استأجر سيارة وأضف التجارب إلى رحلتك. قريباً ستدير كل شيء من منصة واحدة بالدفع بالبطاقة أو العملات الرقمية.",
@@ -65,9 +65,9 @@ const ar = {
       "people5": "5 أشخاص أو أكثر"
     },
     "prototypeNote": "واجهة البحث جاهزة. ستظهر الأسعار والتوافر الفعلي هنا بعد ربط واجهة travel API.",
-    "routesEyebrow": "مسارات MASTEROTA",
+    "routesEyebrow": "مسارات ROTAVOY",
     "routesTitle": "من مسار التسوق إلى مسار العطلة.",
-    "routesText": "يعمل قسم السفر بشكل منفصل عن المتجر، بينما يبقى الحساب واللغة والدفع تحت مظلة Masterota.",
+    "routesText": "يعمل قسم السفر بشكل منفصل عن المتجر، بينما يبقى الحساب واللغة والدفع تحت مظلة Rotavoy.",
     "cards": {
       "antalya": {
         "badge": "رائج",

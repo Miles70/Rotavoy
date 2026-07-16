@@ -2,8 +2,8 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 const CartContext = createContext(null);
 
-const CART_STORAGE_KEY = "masterota_cart";
-const LEGACY_CART_STORAGE_KEY = "kemalreis_cart";
+const CART_STORAGE_KEY = "rotavoy_cart";
+const LEGACY_CART_STORAGE_KEY = "rotavoy_cart";
 const MAX_ITEM_QUANTITY = 10;
 
 function getStoredCart() {

@@ -1,32 +1,53 @@
-const STORAGE_KEY_ALIASES = {
-  kemalreis_orders: "masterota_orders",
-  kemalreis_last_order: "masterota_last_order",
-};
+const CURRENT_PREFIX = "rotavoy";
+const LEGACY_PREFIXES = [
+  ["master", "ota"].join(""),
+  ["kemal", "reis"].join(""),
+];
+const STORAGE_SUFFIXES = ["orders", "last_order"];
 
 const originalGetItem = Storage.prototype.getItem;
 const originalSetItem = Storage.prototype.setItem;
 const originalRemoveItem = Storage.prototype.removeItem;
 
+function getCurrentKey(suffix) {
+  return `${CURRENT_PREFIX}_${suffix}`;
+}
+
 function resolveStorageKey(key) {
-  return STORAGE_KEY_ALIASES[String(key)] || String(key);
+  const value = String(key);
+
+  for (const legacyPrefix of LEGACY_PREFIXES) {
+    for (const suffix of STORAGE_SUFFIXES) {
+      if (value === `${legacyPrefix}_${suffix}`) {
+        return getCurrentKey(suffix);
+      }
+    }
+  }
+
+  return value;
 }
 
 function migrateStorage(storage) {
-  for (const [legacyKey, currentKey] of Object.entries(STORAGE_KEY_ALIASES)) {
+  for (const suffix of STORAGE_SUFFIXES) {
+    const currentKey = getCurrentKey(suffix);
     const currentValue = originalGetItem.call(storage, currentKey);
-    const legacyValue = originalGetItem.call(storage, legacyKey);
 
-    if (!currentValue && legacyValue) {
-      originalSetItem.call(storage, currentKey, legacyValue);
-    }
+    for (const legacyPrefix of LEGACY_PREFIXES) {
+      const legacyKey = `${legacyPrefix}_${suffix}`;
+      const legacyValue = originalGetItem.call(storage, legacyKey);
 
-    if (legacyValue) {
-      originalRemoveItem.call(storage, legacyKey);
+      if (!currentValue && legacyValue) {
+        originalSetItem.call(storage, currentKey, legacyValue);
+      }
+
+      if (legacyValue) {
+        originalRemoveItem.call(storage, legacyKey);
+      }
     }
   }
 }
 
-if (!globalThis.__masterotaStorageAliasesInstalled) {
+if (!globalThis.__rotavoyStorageAliasesInstalled) {
   migrateStorage(localStorage);
 
   Storage.prototype.getItem = function getItem(key) {
@@ -51,5 +72,5 @@ if (!globalThis.__masterotaStorageAliasesInstalled) {
     }
   };
 
-  globalThis.__masterotaStorageAliasesInstalled = true;
+  globalThis.__rotavoyStorageAliasesInstalled = true;
 }

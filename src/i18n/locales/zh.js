@@ -13,7 +13,7 @@ const zh = {
   },
   travelPage: {
     "onlineTravelAgency": "在线旅行社",
-    "pill": "Masterota Travel",
+    "pill": "Rotavoy Travel",
     "heroTitle": "在一个平台",
     "heroAccent": "规划整段旅程。",
     "heroText": "查找酒店、规划航班、租赁汽车并添加旅行体验。未来可在同一平台使用银行卡或加密货币完成全部安排。",
@@ -65,9 +65,9 @@ const zh = {
       "people5": "5 人以上"
     },
     "prototypeNote": "搜索界面已准备完成。接入旅行 API 后，实时价格和可订状态将在这里显示。",
-    "routesEyebrow": "MASTEROTA 路线",
+    "routesEyebrow": "ROTAVOY 路线",
     "routesTitle": "从购物路线到度假路线。",
-    "routesText": "旅行板块与商店独立运行，账户、语言和支付体验仍统一在 Masterota 平台中。",
+    "routesText": "旅行板块与商店独立运行，账户、语言和支付体验仍统一在 Rotavoy 平台中。",
     "cards": {
       "antalya": {
         "badge": "热门",

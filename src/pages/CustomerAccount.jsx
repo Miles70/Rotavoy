@@ -40,7 +40,7 @@ function safeParse(value, fallback) {
 }
 
 function getOrders() {
-  const orders = safeParse(localStorage.getItem("masterota_orders"), []);
+  const orders = safeParse(localStorage.getItem("rotavoy_orders"), []);
   return Array.isArray(orders) ? orders : [];
 }
 

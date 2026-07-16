@@ -13,7 +13,7 @@ const en = {
   },
   travelPage: {
     "onlineTravelAgency": "ONLINE TRAVEL AGENCY",
-    "pill": "Masterota Travel",
+    "pill": "Rotavoy Travel",
     "heroTitle": "Build your holiday route",
     "heroAccent": "in one place.",
     "heroText": "Find your hotel, plan your flight, rent a car and add experiences to your journey. Soon, manage everything on one platform with card or crypto payments.",
@@ -65,9 +65,9 @@ const en = {
       "people5": "5+ people"
     },
     "prototypeNote": "The search interface is ready. Live prices and availability will appear here after the travel API integration.",
-    "routesEyebrow": "MASTEROTA ROUTES",
+    "routesEyebrow": "ROTAVOY ROUTES",
     "routesTitle": "From your shopping route to your holiday route.",
-    "routesText": "Travel works separately from the store while the account, language and payment experience stay under the Masterota roof.",
+    "routesText": "Travel works separately from the store while the account, language and payment experience stay under the Rotavoy roof.",
     "cards": {
       "antalya": {
         "badge": "Popular",

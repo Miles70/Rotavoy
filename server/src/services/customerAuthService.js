@@ -153,7 +153,7 @@ export async function createWalletChallenge(addressValue) {
     issuedAt.getTime() + WALLET_CHALLENGE_MINUTES * 60 * 1000,
   );
   const appName = cleanText(
-    process.env.CUSTOMER_AUTH_APP_NAME || "Masterota",
+    process.env.CUSTOMER_AUTH_APP_NAME || "Rotavoy",
     80,
   );
   const message = [

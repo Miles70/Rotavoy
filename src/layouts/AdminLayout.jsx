@@ -47,7 +47,7 @@ function AdminLayout() {
         <div className="admin-brand">
           <div className="admin-brand-mark">M</div>
           <div>
-            <strong>Masterota</strong>
+            <strong>Rotavoy</strong>
             <span>Command Center</span>
           </div>
           <button
@@ -104,7 +104,7 @@ function AdminLayout() {
             <Menu size={22} />
           </button>
           <div>
-            <p>Masterota yönetim paneli</p>
+            <p>Rotavoy yönetim paneli</p>
             <span>Operasyonu tek ekrandan yönet.</span>
           </div>
           <div className="admin-live-pill">

@@ -1,6 +1,6 @@
 const apiBaseUrl = String(import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
-const tokenStorageKey = "masterota_admin_token";
-const legacyTokenStorageKey = "kemalreis_admin_token";
+const tokenStorageKey = "rotavoy_admin_token";
+const legacyTokenStorageKey = "rotavoy_admin_token";
 
 export function getStoredAdminToken() {
   const storedToken = sessionStorage.getItem(tokenStorageKey);

@@ -32,19 +32,19 @@
 }
 
 .campaignShowcase--forward .campaignScene--active {
-  animation: masterotaSlideInRight 1s cubic-bezier(.22,.78,.2,1) both;
+  animation: rotavoySlideInRight 1s cubic-bezier(.22,.78,.2,1) both;
 }
 
 .campaignShowcase--forward .campaignScene--previous {
-  animation: masterotaSlideOutLeft 1s cubic-bezier(.22,.78,.2,1) both;
+  animation: rotavoySlideOutLeft 1s cubic-bezier(.22,.78,.2,1) both;
 }
 
 .campaignShowcase--backward .campaignScene--active {
-  animation: masterotaSlideInLeft 1s cubic-bezier(.22,.78,.2,1) both;
+  animation: rotavoySlideInLeft 1s cubic-bezier(.22,.78,.2,1) both;
 }
 
 .campaignShowcase--backward .campaignScene--previous {
-  animation: masterotaSlideOutRight 1s cubic-bezier(.22,.78,.2,1) both;
+  animation: rotavoySlideOutRight 1s cubic-bezier(.22,.78,.2,1) both;
 }
 
 .campaignScene--signature { background: linear-gradient(105deg,#2c0a31,#741451 50%,#3e1c75); }
@@ -93,10 +93,10 @@
 .campaignScene .campaignProductCard:nth-child(2) { transform: translateY(-14px); }
 .campaignCarouselControls { z-index: 10; }
 
-@keyframes masterotaSlideInRight { from { transform: translate3d(100%,0,0); } to { transform: translate3d(0,0,0); } }
-@keyframes masterotaSlideOutLeft { from { transform: translate3d(0,0,0); } to { transform: translate3d(-100%,0,0); } }
-@keyframes masterotaSlideInLeft { from { transform: translate3d(-100%,0,0); } to { transform: translate3d(0,0,0); } }
-@keyframes masterotaSlideOutRight { from { transform: translate3d(0,0,0); } to { transform: translate3d(100%,0,0); } }
+@keyframes rotavoySlideInRight { from { transform: translate3d(100%,0,0); } to { transform: translate3d(0,0,0); } }
+@keyframes rotavoySlideOutLeft { from { transform: translate3d(0,0,0); } to { transform: translate3d(-100%,0,0); } }
+@keyframes rotavoySlideInLeft { from { transform: translate3d(-100%,0,0); } to { transform: translate3d(0,0,0); } }
+@keyframes rotavoySlideOutRight { from { transform: translate3d(0,0,0); } to { transform: translate3d(100%,0,0); } }
 
 @media (max-width:720px) {
   .campaignShowcase--cinematic,

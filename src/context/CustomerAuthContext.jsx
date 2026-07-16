@@ -37,8 +37,8 @@ import {
 } from "../services/customerApi";
 
 const CustomerAuthContext = createContext(null);
-const GUEST_STORAGE_KEY = "masterota_guest_session";
-const SOCIAL_PHOTO_STORAGE_PREFIX = "masterota_social_photo_";
+const GUEST_STORAGE_KEY = "rotavoy_guest_session";
+const SOCIAL_PHOTO_STORAGE_PREFIX = "rotavoy_social_photo_";
 
 const FIREBASE_PROVIDERS = {
   google: googleAuthProvider,

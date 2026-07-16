@@ -19,7 +19,7 @@ if (!projectId) {
 export const networks = [mainnet, bsc, polygon, arbitrum, base];
 
 const metadata = {
-  name: "Masterota",
+  name: "Rotavoy",
   description: "Shop, travel and discover with Web3.",
   url: window.location.origin,
   icons: [],
