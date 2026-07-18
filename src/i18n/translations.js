@@ -7,14 +7,17 @@ import es from "./locales/es";
 import pt from "./locales/pt";
 import fr from "./locales/fr";
 import de from "./locales/de";
+import it from "./locales/it";
 import paymentTranslations from "./paymentTranslations";
 import authTranslations from "./authTranslations";
 import accountTranslations from "./accountTranslations";
 import localTranslations from "./localTranslations";
 import regionalSharedTranslations from "./regionalSharedTranslations";
+import itSharedTranslations from "./itSharedTranslations";
 
 function withSharedTranslations(baseTranslations, language) {
-  const regional = regionalSharedTranslations[language];
+  const regional =
+    language === "it" ? itSharedTranslations : regionalSharedTranslations[language];
   const payment =
     regional?.payment || paymentTranslations[language] || paymentTranslations.en;
   const auth = regional?.auth || authTranslations[language] || authTranslations.en;
@@ -52,6 +55,7 @@ const translations = {
   pt: withSharedTranslations(pt, "pt"),
   fr: withSharedTranslations(fr, "fr"),
   de: withSharedTranslations(de, "de"),
+  it: withSharedTranslations(it, "it"),
 };
 
 export default translations;
