@@ -10,6 +10,8 @@ import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
 import CustomerAccount from "./pages/CustomerAccount";
 import Travel from "./pages/Travel";
+import LocalHub from "./pages/LocalHub";
+import LocalService from "./pages/LocalService";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminOrders from "./pages/admin/AdminOrders";
@@ -42,6 +44,8 @@ function App() {
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/order-success" element={<OrderSuccess />} />
           <Route path="/travel" element={<Travel />} />
+          <Route path="/local" element={<LocalHub />} />
+          <Route path="/local/:serviceKey" element={<LocalService />} />
           <Route path="/account/*" element={<CustomerAccount />} />
         </Route>
 
