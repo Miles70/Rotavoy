@@ -1,9 +1,19 @@
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import translations from "./translations";
 
 const LanguageContext = createContext(null);
 
-const supportedLanguages = ["en", "tr", "ru", "ar", "zh"];
+const supportedLanguages = [
+  "en",
+  "tr",
+  "ru",
+  "ar",
+  "zh",
+  "es",
+  "pt",
+  "fr",
+  "de",
+];
 
 function normalizeLanguage(language) {
   if (!language) return "en";
@@ -14,6 +24,10 @@ function normalizeLanguage(language) {
   if (lowerLanguage.startsWith("ru")) return "ru";
   if (lowerLanguage.startsWith("ar")) return "ar";
   if (lowerLanguage.startsWith("zh")) return "zh";
+  if (lowerLanguage.startsWith("es")) return "es";
+  if (lowerLanguage.startsWith("pt")) return "pt";
+  if (lowerLanguage.startsWith("fr")) return "fr";
+  if (lowerLanguage.startsWith("de")) return "de";
 
   return "en";
 }
@@ -32,6 +46,11 @@ function detectInitialLanguage() {
 
 export function LanguageProvider({ children }) {
   const [language, setLanguageState] = useState(detectInitialLanguage);
+
+  useEffect(() => {
+    document.documentElement.lang = language === "pt" ? "pt-BR" : language;
+    document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
+  }, [language]);
 
   function setLanguage(nextLanguage) {
     if (!supportedLanguages.includes(nextLanguage)) {
