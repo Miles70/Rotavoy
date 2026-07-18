@@ -4,7 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import ProductCard from "../components/ProductCard/ProductCard";
 import SearchBar from "../components/SearchBar/SearchBar";
 import categories from "../data/categories";
-import { getCategoryGroupText } from "../i18n/categoryGroups";
+import { getCategoryGroupText } from "../i18n/categoryGroupText";
 import { useLanguage } from "../i18n/LanguageContext";
 import { getStoreProducts } from "../services/productsApi";
 import "./Products.css";
@@ -16,6 +16,11 @@ const productsPageDescriptions = {
   ru: "Изучайте товары маркетплейса в девяти понятных коллекциях.",
   ar: "استكشف منتجات السوق ضمن تسع مجموعات واضحة.",
   zh: "浏览九个清晰商品集合中的完整市场产品。",
+  es: "Explora todo el marketplace a través de nueve colecciones de productos bien definidas.",
+  pt: "Explore todo o marketplace em nove coleções de produtos bem definidas.",
+  fr: "Explorez toute la marketplace à travers neuf collections de produits clairement définies.",
+  de: "Entdecke den gesamten Marktplatz in neun übersichtlichen Produktkollektionen.",
+  it: "Esplora l'intero marketplace attraverso nove collezioni di prodotti ben definite.",
 };
 
 function getPageItems(currentPage, totalPages) {
