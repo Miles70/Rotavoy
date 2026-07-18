@@ -38,14 +38,34 @@
   top: calc(100% + 12px);
   right: 0;
   z-index: 200;
-  width: 190px;
+  width: 218px;
+  max-height: min(480px, calc(100vh - 112px));
   padding: 8px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   border: 1px solid var(--color-border);
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.98);
   box-shadow: var(--shadow-large);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary-border) transparent;
+}
+
+.languageDropdown::-webkit-scrollbar {
+  width: 7px;
+}
+
+.languageDropdown::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.languageDropdown::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: var(--color-primary-border);
+  background-clip: padding-box;
 }
 
 .languageOption {
@@ -53,7 +73,7 @@
   min-height: 44px;
   padding: 9px 10px;
   display: grid;
-  grid-template-columns: 28px 1fr 18px;
+  grid-template-columns: 28px minmax(0, 1fr) 18px;
   align-items: center;
   gap: 8px;
   border: 0;
@@ -74,11 +94,23 @@
 }
 
 .languageOptionLabel {
+  overflow: hidden;
   font-size: 0.9rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .languageCheck {
   color: var(--color-primary);
+}
+
+html[dir="rtl"] .languageDropdown {
+  right: auto;
+  left: 0;
+}
+
+html[dir="rtl"] .languageOption {
+  text-align: right;
 }
 
 @media (max-width: 620px) {
@@ -93,5 +125,11 @@
 
   .languageDropdown {
     right: -4px;
+    width: min(218px, calc(100vw - 24px));
+  }
+
+  html[dir="rtl"] .languageDropdown {
+    right: auto;
+    left: -4px;
   }
 }
