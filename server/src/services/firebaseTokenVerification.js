@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 
 const FIREBASE_CERT_URL =
   "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com";
-const DEFAULT_FIREBASE_PROJECT_ID = "gabaloo-219b1";
+const DEFAULT_FIREBASE_PROJECT_ID = "rotavoy";
 
 let cachedCertificates = null;
 let certificateExpiresAt = 0;
