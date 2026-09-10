@@ -1,32 +1,16 @@
 const apiBaseUrl = String(import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
 const tokenStorageKey = "rotavoy_admin_token";
-const legacyTokenStorageKey = "kemalreis_admin_token";
 
 export function getStoredAdminToken() {
-  const storedToken = sessionStorage.getItem(tokenStorageKey);
-
-  if (storedToken) {
-    return storedToken;
-  }
-
-  const legacyToken = sessionStorage.getItem(legacyTokenStorageKey) || "";
-
-  if (legacyToken) {
-    sessionStorage.setItem(tokenStorageKey, legacyToken);
-    sessionStorage.removeItem(legacyTokenStorageKey);
-  }
-
-  return legacyToken;
+  return sessionStorage.getItem(tokenStorageKey) || "";
 }
 
 export function storeAdminToken(token) {
   sessionStorage.setItem(tokenStorageKey, token);
-  sessionStorage.removeItem(legacyTokenStorageKey);
 }
 
 export function clearAdminToken() {
   sessionStorage.removeItem(tokenStorageKey);
-  sessionStorage.removeItem(legacyTokenStorageKey);
 }
 
 async function adminRequest(path, { token, method = "GET", body } = {}) {
