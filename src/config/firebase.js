@@ -8,13 +8,13 @@ import {
 } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBOEaktyL9CwDomZuZBK-W7f8ZQoTAloTI",
-  authDomain: "gabaloo-219b1.firebaseapp.com",
-  projectId: "gabaloo-219b1",
-  storageBucket: "gabaloo-219b1.firebasestorage.app",
-  messagingSenderId: "427482712446",
-  appId: "1:427482712446:web:7f37bddc4e69f8b6e70b2f",
-  measurementId: "G-9LNK6DK1F5",
+  apiKey: "AIzaSyA_xjP6-K1MpyKZ6HGSCF03Be_R48_xGU8",
+  authDomain: "rotavoy.firebaseapp.com",
+  projectId: "rotavoy",
+  storageBucket: "rotavoy.firebasestorage.app",
+  messagingSenderId: "612442693103",
+  appId: "1:612442693103:web:2e53b37c5fc91469e4aa1a",
+  measurementId: "G-SLQ0MLNHJS",
 };
 
 const firebaseApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
