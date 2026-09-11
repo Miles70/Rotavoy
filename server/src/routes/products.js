@@ -1,21 +1,15 @@
 import { Router } from "express";
 import { Product } from "../models/Product.js";
 import { isCjConfigured } from "../services/cjApi.js";
+import {
+  normalizeStorefrontLanguage,
+  STOREFRONT_PRIVATE_FIELDS,
+  trimStorefrontTranslations,
+} from "../services/storefrontProduct.js";
 
 export const productsRouter = Router();
 
 const LEGACY_SOURCES = ["amazon-reviews-2023", "manual"];
-const STOREFRONT_PRIVATE_FIELDS = [
-  "-costPrice",
-  "-supplierContent",
-  "-contentMeta",
-  "-translationMeta",
-  "-sourceHash",
-  "-sourceCode",
-  "-sourceUrl",
-  "-supplierVariantId",
-  "-supplierSku",
-].join(" ");
 
 function getStorefrontSources() {
   return isCjConfigured() ? ["cj"] : LEGACY_SOURCES;
@@ -24,6 +18,7 @@ function getStorefrontSources() {
 productsRouter.get("/", async (request, response, next) => {
   try {
     const category = String(request.query.category || "").trim();
+    const language = normalizeStorefrontLanguage(request.query.language);
     const filter = {
       isActive: true,
       source: { $in: getStorefrontSources() },
@@ -38,7 +33,9 @@ productsRouter.get("/", async (request, response, next) => {
       .limit(100)
       .lean();
 
-    response.json({ products });
+    response.json({
+      products: products.map((product) => trimStorefrontTranslations(product, language)),
+    });
   } catch (error) {
     next(error);
   }
@@ -46,6 +43,7 @@ productsRouter.get("/", async (request, response, next) => {
 
 productsRouter.get("/:productKey", async (request, response, next) => {
   try {
+    const language = normalizeStorefrontLanguage(request.query.language);
     const product = await Product.findOne({
       key: request.params.productKey,
       isActive: true,
@@ -58,7 +56,9 @@ productsRouter.get("/:productKey", async (request, response, next) => {
       return response.status(404).json({ message: "Product not found." });
     }
 
-    return response.json({ product });
+    return response.json({
+      product: trimStorefrontTranslations(product, language),
+    });
   } catch (error) {
     return next(error);
   }
