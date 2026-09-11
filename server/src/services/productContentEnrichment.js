@@ -247,6 +247,7 @@ async function requestProfessionalContent(source) {
           model,
           instructions: buildInstructions(),
           input: JSON.stringify(source),
+          store: false,
           text: {
             format: {
               type: "json_schema",
@@ -264,6 +265,9 @@ async function requestProfessionalContent(source) {
         throw new Error(
           cleanText(payload?.error?.message || payload?.message || `OpenAI content request failed with ${response.status}.`, 500),
         );
+      }
+      if (payload?.status && payload.status !== "completed") {
+        throw new Error(`OpenAI product content response ended with status ${payload.status}.`);
       }
 
       const text = extractResponseText(payload);
@@ -449,7 +453,7 @@ async function getPendingSupplierProductIds(limit) {
 
 export async function enrichPendingProductContent({ limit } = {}) {
   if (!isProductContentAiConfigured()) {
-    throw new Error("AI product content is not configured. Set OPENAI_API_KEY on the backend (or disable ROTAVOY_AI_CONTENT_ENABLED)." );
+    throw new Error("AI product content is not configured. Set OPENAI_API_KEY on the backend (or disable ROTAVOY_AI_CONTENT_ENABLED).");
   }
 
   const safeLimit = parsePositiveInt(
