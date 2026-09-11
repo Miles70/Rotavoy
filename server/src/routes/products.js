@@ -1,24 +1,28 @@
 import { Router } from "express";
 import { Product } from "../models/Product.js";
+import { isCjConfigured } from "../services/cjApi.js";
 
 export const productsRouter = Router();
 
-const STOREFRONT_SOURCES = ["amazon-reviews-2023", "manual"];
+const LEGACY_SOURCES = ["amazon-reviews-2023", "manual"];
+
+function getStorefrontSources() {
+  return isCjConfigured() ? ["cj"] : LEGACY_SOURCES;
+}
 
 productsRouter.get("/", async (request, response, next) => {
   try {
     const category = String(request.query.category || "").trim();
     const filter = {
       isActive: true,
-      source: { $in: STOREFRONT_SOURCES },
+      source: { $in: getStorefrontSources() },
+      stock: { $gt: 0 },
     };
 
-    if (category) {
-      filter.categoryKey = category;
-    }
+    if (category) filter.categoryKey = category;
 
     const products = await Product.find(filter)
-      .sort({ popularity: -1, rating: -1, reviewCount: -1 })
+      .sort({ popularity: -1, createdAt: -1 })
       .limit(100)
       .lean();
 
@@ -33,7 +37,7 @@ productsRouter.get("/:productKey", async (request, response, next) => {
     const product = await Product.findOne({
       key: request.params.productKey,
       isActive: true,
-      source: { $in: STOREFRONT_SOURCES },
+      source: { $in: getStorefrontSources() },
     }).lean();
 
     if (!product) {
