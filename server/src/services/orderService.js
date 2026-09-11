@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import { getPublicCryptoPaymentConfig } from "../config/cryptoPayment.js";
 import { Order } from "../models/Order.js";
 import { Product } from "../models/Product.js";
+import { calculateCjFreight, getCjVariantStock } from "./cjApi.js";
 import { runWithOptionalMongoTransaction } from "./mongoTransactions.js";
 
 const MAX_ORDER_ITEMS = 50;
@@ -18,12 +19,15 @@ function parsePositiveInteger(value, fallback) {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
 }
 
+function getOriginCountryCode() {
+  return String(process.env.CJ_FROM_COUNTRY_CODE || "CN").toUpperCase();
+}
+
 function getReservationExpiresAt() {
   const ttlMinutes = parsePositiveInteger(
     process.env.ORDER_PAYMENT_TTL_MINUTES,
-    DEFAULT_PAYMENT_TTL_MINUTES
+    DEFAULT_PAYMENT_TTL_MINUTES,
   );
-
   return new Date(Date.now() + ttlMinutes * 60 * 1000);
 }
 
@@ -32,14 +36,26 @@ function normalizeCustomer(customer = {}) {
     fullName: cleanText(customer.fullName, 120),
     email: cleanText(customer.email, 180).toLowerCase(),
     phone: cleanText(customer.phone, 40),
+    country: cleanText(customer.country, 100),
+    countryCode: cleanText(customer.countryCode, 2).toUpperCase(),
+    province: cleanText(customer.province, 100),
     city: cleanText(customer.city, 100),
+    postalCode: cleanText(customer.postalCode, 20),
     address: cleanText(customer.address, 500),
     note: cleanText(customer.note, 1000),
   };
 
-  const requiredFields = ["fullName", "email", "phone", "city", "address"];
+  const requiredFields = [
+    "fullName",
+    "email",
+    "phone",
+    "country",
+    "countryCode",
+    "province",
+    "city",
+    "address",
+  ];
   const missingField = requiredFields.find((field) => !normalized[field]);
-
   if (missingField) {
     const error = new Error(`Missing required customer field: ${missingField}`);
     error.statusCode = 400;
@@ -52,18 +68,22 @@ function normalizeCustomer(customer = {}) {
     throw error;
   }
 
+  if (!/^[A-Z]{2}$/.test(normalized.countryCode)) {
+    const error = new Error("Country code must be a two-letter ISO code.");
+    error.statusCode = 400;
+    throw error;
+  }
+
   return normalized;
 }
 
 function normalizePaymentMethod(value) {
   const paymentMethod = cleanText(value || "not_selected", 30).toLowerCase();
-
   if (!PAYMENT_METHODS.has(paymentMethod)) {
     const error = new Error("Unsupported payment method.");
     error.statusCode = 400;
     throw error;
   }
-
   return paymentMethod;
 }
 
@@ -73,7 +93,6 @@ function normalizeRequestedItems(items) {
     error.statusCode = 400;
     throw error;
   }
-
   if (items.length > MAX_ORDER_ITEMS) {
     const error = new Error("Too many different products in one order.");
     error.statusCode = 400;
@@ -81,11 +100,9 @@ function normalizeRequestedItems(items) {
   }
 
   const quantitiesByKey = new Map();
-
   for (const item of items) {
     const productKey = cleanText(item.productKey || item.key, 100);
     const quantity = Number.parseInt(item.quantity, 10);
-
     if (!productKey || !Number.isInteger(quantity) || quantity < 1) {
       const error = new Error("Invalid product or quantity.");
       error.statusCode = 400;
@@ -93,13 +110,11 @@ function normalizeRequestedItems(items) {
     }
 
     const nextQuantity = (quantitiesByKey.get(productKey) || 0) + quantity;
-
     if (nextQuantity > MAX_ITEM_QUANTITY) {
       const error = new Error(`Maximum quantity is ${MAX_ITEM_QUANTITY} per product.`);
       error.statusCode = 400;
       throw error;
     }
-
     quantitiesByKey.set(productKey, nextQuantity);
   }
 
@@ -117,14 +132,12 @@ function createOrderNumber() {
     String(date.getUTCDate()).padStart(2, "0"),
   ].join("");
   const randomPart = crypto.randomBytes(4).toString("hex").toUpperCase();
-
   return `RTV-${datePart}-${randomPart}`;
 }
 
 function getPaymentData(paymentMethod, total) {
   if (paymentMethod === "crypto") {
     const config = getPublicCryptoPaymentConfig();
-
     return {
       ...config,
       expectedAmount: Number(total).toFixed(2),
@@ -141,26 +154,159 @@ function getPaymentData(paymentMethod, total) {
     };
   }
 
-  return {
-    configured: false,
-    provider: "none",
-  };
+  return { configured: false, provider: "none" };
 }
 
 function createAvailabilityError(productKey, product) {
   const error = new Error(
     product
       ? `Not enough stock for ${product.title}.`
-      : `Product is unavailable: ${productKey}`
+      : `Product is unavailable: ${productKey}`,
   );
   error.statusCode = 409;
   return error;
 }
 
+async function loadRequestedProducts(requestedItems) {
+  const keys = requestedItems.map((item) => item.productKey);
+  const products = await Product.find({
+    key: { $in: keys },
+    isActive: true,
+  }).lean();
+  const byKey = new Map(products.map((product) => [product.key, product]));
+
+  return requestedItems.map((item) => {
+    const product = byKey.get(item.productKey);
+    if (!product) throw createAvailabilityError(item.productKey, null);
+    return { ...item, product };
+  });
+}
+
+function sumOriginStock(rows) {
+  const origin = getOriginCountryCode();
+  return (Array.isArray(rows) ? rows : []).reduce((sum, row) => {
+    if (String(row?.countryCode || "").toUpperCase() !== origin) return sum;
+    return sum + Math.max(Number(row?.totalInventoryNum || 0), 0);
+  }, 0);
+}
+
+async function refreshSupplierStock(lines) {
+  for (const line of lines) {
+    const product = line.product;
+    if (product.supplier !== "cj") continue;
+
+    const vid = String(product.supplierVariantId || "");
+    if (!vid) throw createAvailabilityError(product.key, product);
+
+    const stockRows = await getCjVariantStock(vid);
+    const liveStock = sumOriginStock(stockRows);
+    await Product.updateOne({ _id: product._id }, { $set: { stock: liveStock } });
+    product.stock = liveStock;
+
+    if (liveStock < line.quantity) {
+      throw createAvailabilityError(product.key, product);
+    }
+  }
+}
+
+function normalizeFreightOptions(rows) {
+  return (Array.isArray(rows) ? rows : [])
+    .map((row) => {
+      const basePrice = Number(row?.logisticPrice || 0);
+      const totalPrice = Number(row?.totalPostageFee || 0);
+      const taxes = Number(row?.taxesFee || 0);
+      const clearance = Number(row?.clearanceOperationFee || 0);
+      const price =
+        totalPrice > 0 ? totalPrice : basePrice + taxes + clearance;
+
+      return {
+        logisticName: cleanText(row?.logisticName, 80),
+        estimatedDays: cleanText(row?.logisticAging, 40),
+        price: Number(Math.max(price, 0).toFixed(2)),
+      };
+    })
+    .filter((row) => row.logisticName && Number.isFinite(row.price))
+    .sort((a, b) => a.price - b.price);
+}
+
+async function calculateShipping(lines, destination, requestedLogisticName = "") {
+  const cjLines = lines.filter((line) => line.product.supplier === "cj");
+  if (cjLines.length === 0) {
+    return {
+      provider: "",
+      originCountryCode: "",
+      selected: { logisticName: "", estimatedDays: "", price: 0 },
+      options: [],
+    };
+  }
+
+  if (cjLines.length !== lines.length) {
+    const error = new Error(
+      "Mixed supplier carts are not supported yet. Please place CJ products in a separate order.",
+    );
+    error.statusCode = 409;
+    throw error;
+  }
+
+  const freightRows = await calculateCjFreight({
+    endCountryCode: destination.countryCode,
+    zip: destination.postalCode || "",
+    startCountryCode: getOriginCountryCode(),
+    products: cjLines.map((line) => ({
+      vid: line.product.supplierVariantId,
+      quantity: line.quantity,
+    })),
+  });
+
+  const options = normalizeFreightOptions(freightRows);
+  if (options.length === 0) {
+    const error = new Error("No CJ shipping method is available for this address.");
+    error.statusCode = 409;
+    throw error;
+  }
+
+  const requested = cleanText(requestedLogisticName, 80);
+  const selected = requested
+    ? options.find((option) => option.logisticName === requested)
+    : options[0];
+
+  if (!selected) {
+    const error = new Error("The selected shipping method is no longer available.");
+    error.statusCode = 409;
+    throw error;
+  }
+
+  return {
+    provider: "cj",
+    originCountryCode: getOriginCountryCode(),
+    selected,
+    options,
+  };
+}
+
+export async function getOrderShippingQuote(payload = {}) {
+  const requestedItems = normalizeRequestedItems(payload.items);
+  const countryCode = cleanText(payload.countryCode, 2).toUpperCase();
+  const postalCode = cleanText(payload.postalCode, 20);
+
+  if (!/^[A-Z]{2}$/.test(countryCode)) {
+    const error = new Error("Country code must be a two-letter ISO code.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const lines = await loadRequestedProducts(requestedItems);
+  return calculateShipping(
+    lines,
+    { countryCode, postalCode },
+    payload.logisticName,
+  );
+}
+
 async function reserveRequestedProducts(
   requestedItems,
   session = null,
-  orderItems = []
+  orderItems = [],
 ) {
   for (const { productKey, quantity } of requestedItems) {
     const options = {
@@ -174,18 +320,12 @@ async function reserveRequestedProducts(
         isActive: true,
         stock: { $gte: quantity },
       },
-      {
-        $inc: { stock: -quantity },
-      },
-      options
+      { $inc: { stock: -quantity } },
+      options,
     ).lean();
 
     if (!product) {
-      const query = Product.findOne({
-        key: productKey,
-        isActive: true,
-      });
-
+      const query = Product.findOne({ key: productKey, isActive: true });
       if (session) query.session(session);
       const availableProduct = await query.lean();
       throw createAvailabilityError(productKey, availableProduct);
@@ -203,18 +343,28 @@ async function reserveRequestedProducts(
       unitPrice,
       quantity,
       lineTotal,
+      supplier: product.supplier || "",
+      supplierProductId: product.supplierProductId || "",
+      supplierVariantId: product.supplierVariantId || "",
+      supplierSku: product.supplierSku || "",
     });
   }
 
   return orderItems;
 }
 
-function buildOrderData({ customer, paymentMethod, orderItems }) {
+function buildOrderData({
+  customer,
+  paymentMethod,
+  orderItems,
+  shippingQuote,
+}) {
   const subtotal = Number(
-    orderItems.reduce((sum, item) => sum + item.lineTotal, 0).toFixed(2)
+    orderItems.reduce((sum, item) => sum + item.lineTotal, 0).toFixed(2),
   );
-  const shipping = 0;
+  const shipping = Number(shippingQuote?.selected?.price || 0);
   const total = Number((subtotal + shipping).toFixed(2));
+  const hasCjItems = orderItems.some((item) => item.supplier === "cj");
 
   return {
     orderNumber: createOrderNumber(),
@@ -228,6 +378,19 @@ function buildOrderData({ customer, paymentMethod, orderItems }) {
     shipping,
     total,
     currency: "USD",
+    logistics: {
+      provider: shippingQuote?.provider || "",
+      logisticName: shippingQuote?.selected?.logisticName || "",
+      estimatedDays: shippingQuote?.selected?.estimatedDays || "",
+      shippingCost: shipping,
+      originCountryCode: shippingQuote?.originCountryCode || "",
+    },
+    fulfillment: {
+      provider: hasCjItems ? "cj" : "none",
+      status: hasCjItems ? "pending" : "not_required",
+      sandbox: String(process.env.CJ_SANDBOX || "true").toLowerCase() !== "false",
+      updatedAt: new Date(),
+    },
     reservationExpiresAt: getReservationExpiresAt(),
     stockReserved: true,
   };
@@ -243,39 +406,59 @@ async function rollbackReservedProducts(orderItems) {
         update: { $inc: { stock: item.quantity } },
       },
     })),
-    { ordered: false }
+    { ordered: false },
   );
 }
 
-async function createOrderWithTransaction({ customer, paymentMethod, requestedItems }, session) {
-  const orderItems = await reserveRequestedProducts(requestedItems, session);
-  const [order] = await Order.create(
-    [buildOrderData({ customer, paymentMethod, orderItems })],
-    { session }
+async function createOrderWithTransaction(input, session) {
+  const orderItems = await reserveRequestedProducts(
+    input.requestedItems,
+    session,
   );
-
+  const [order] = await Order.create(
+    [
+      buildOrderData({
+        customer: input.customer,
+        paymentMethod: input.paymentMethod,
+        orderItems,
+        shippingQuote: input.shippingQuote,
+      }),
+    ],
+    { session },
+  );
   return order;
 }
 
-async function createOrderWithCompensation({ customer, paymentMethod, requestedItems }) {
+async function createOrderWithCompensation(input) {
   const orderItems = [];
 
   try {
-    await reserveRequestedProducts(requestedItems, null, orderItems);
-    return await Order.create(buildOrderData({ customer, paymentMethod, orderItems }));
+    await reserveRequestedProducts(input.requestedItems, null, orderItems);
+    return await Order.create(
+      buildOrderData({
+        customer: input.customer,
+        paymentMethod: input.paymentMethod,
+        orderItems,
+        shippingQuote: input.shippingQuote,
+      }),
+    );
   } catch (error) {
     try {
       await rollbackReservedProducts(orderItems);
     } catch (rollbackError) {
-      console.error("Could not restore reserved stock after order failure:", rollbackError);
+      console.error(
+        "Could not restore reserved stock after order failure:",
+        rollbackError,
+      );
     }
-
     throw error;
   }
 }
 
 export function serializeOrder(orderDocument) {
-  const order = orderDocument.toObject ? orderDocument.toObject() : orderDocument;
+  const order = orderDocument.toObject
+    ? orderDocument.toObject()
+    : orderDocument;
   const payment = order.payment || {};
 
   return {
@@ -291,8 +474,9 @@ export function serializeOrder(orderDocument) {
       chainId: payment.chainId || null,
       token: payment.token || "",
       tokenAddress: payment.tokenAddress || "",
-      tokenDecimals:
-        Number.isInteger(payment.tokenDecimals) ? payment.tokenDecimals : null,
+      tokenDecimals: Number.isInteger(payment.tokenDecimals)
+        ? payment.tokenDecimals
+        : null,
       payerAddress: payment.payerAddress || "",
       recipientAddress: payment.recipientAddress || "",
       transactionHash: payment.transactionHash || "",
@@ -305,6 +489,8 @@ export function serializeOrder(orderDocument) {
       failedAt: payment.failedAt || null,
       failureReason: payment.failureReason || "",
     },
+    logistics: order.logistics || {},
+    fulfillment: order.fulfillment || {},
     reservationExpiresAt: order.reservationExpiresAt || null,
     stockReserved: Boolean(order.stockReserved),
     createdAt: order.createdAt,
@@ -319,6 +505,10 @@ export function serializeOrder(orderDocument) {
       price: item.unitPrice,
       quantity: item.quantity,
       lineTotal: item.lineTotal,
+      supplier: item.supplier || "",
+      supplierProductId: item.supplierProductId || "",
+      supplierVariantId: item.supplierVariantId || "",
+      supplierSku: item.supplierSku || "",
     })),
     subtotal: order.subtotal,
     shipping: order.shipping,
@@ -328,10 +518,26 @@ export function serializeOrder(orderDocument) {
 }
 
 export async function createOrder(payload = {}) {
+  const customer = normalizeCustomer(payload.customer);
+  const requestedItems = normalizeRequestedItems(payload.items);
+  const lines = await loadRequestedProducts(requestedItems);
+
+  await refreshSupplierStock(lines);
+
+  const shippingQuote = await calculateShipping(
+    lines,
+    {
+      countryCode: customer.countryCode,
+      postalCode: customer.postalCode,
+    },
+    payload.logisticName,
+  );
+
   const input = {
-    customer: normalizeCustomer(payload.customer),
+    customer,
     paymentMethod: normalizePaymentMethod(payload.paymentMethod),
-    requestedItems: normalizeRequestedItems(payload.items),
+    requestedItems,
+    shippingQuote,
   };
 
   const createdOrder = await runWithOptionalMongoTransaction({
