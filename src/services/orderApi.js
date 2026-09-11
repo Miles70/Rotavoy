@@ -20,6 +20,17 @@ function getHeaders() {
   };
 }
 
+export async function getShippingQuote(payload) {
+  const response = await fetch(`${apiBaseUrl}/api/orders/shipping-quote`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify(payload),
+  });
+
+  const data = await parseResponse(response);
+  return data.quote;
+}
+
 export async function createOrder(payload) {
   const response = await fetch(`${apiBaseUrl}/api/orders`, {
     method: "POST",
