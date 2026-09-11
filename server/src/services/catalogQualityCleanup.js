@@ -1,7 +1,7 @@
 import { Product } from "../models/Product.js";
 
 const QUALITY_SOURCE = "amazon-reviews-2023";
-const PRESERVED_SOURCES = [QUALITY_SOURCE, "manual"];
+const PRESERVED_SOURCES = [QUALITY_SOURCE, "manual", "cj"];
 const MIN_QUALITY_PRODUCT_COUNT = 500;
 
 function normalizeWhitespace(value) {
@@ -34,9 +34,7 @@ function buildTitleRestoreUpdate(product) {
     .filter(Boolean);
 
   const candidate = paragraphs.at(-1) || "";
-  if (!looksLikeOriginalLongTitle(product.title, candidate)) {
-    return null;
-  }
+  if (!looksLikeOriginalLongTitle(product.title, candidate)) return null;
 
   return {
     title: normalizeWhitespace(candidate),
@@ -56,7 +54,6 @@ async function restorePreviouslyShortenedAmazonTitles() {
     .map((product) => {
       const restored = buildTitleRestoreUpdate(product);
       if (!restored) return null;
-
       return {
         updateOne: {
           filter: { _id: product._id, title: product.title },
@@ -66,17 +63,12 @@ async function restorePreviouslyShortenedAmazonTitles() {
     })
     .filter(Boolean);
 
-  if (!operations.length) {
-    return { modifiedCount: 0 };
-  }
-
+  if (!operations.length) return { modifiedCount: 0 };
   return Product.bulkWrite(operations, { ordered: false });
 }
 
 export async function cleanCatalogQuality() {
-  const qualityProductCount = await Product.countDocuments({
-    source: QUALITY_SOURCE,
-  });
+  const qualityProductCount = await Product.countDocuments({ source: QUALITY_SOURCE });
 
   if (qualityProductCount < MIN_QUALITY_PRODUCT_COUNT) {
     return {
