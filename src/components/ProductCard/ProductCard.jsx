@@ -84,7 +84,10 @@ const numberLocales = {
   it: "it-IT",
 };
 
-function getCategoryLabel(categoryKey, t) {
+function getCategoryLabel(product, t) {
+  if (product?.categoryLabel) return product.categoryLabel;
+
+  const categoryKey = product?.categoryKey;
   if (!categoryKey) return "General";
 
   const translationKey = `categories.${categoryKey}.title`;
@@ -164,7 +167,7 @@ function ProductCard({ product }) {
     : text("account.addFavorite", "Add to favorites");
   const fallbackLetter = product.title?.charAt(0)?.toUpperCase() || "G";
   const badgeLabel = getBadgeLabel();
-  const categoryLabel = getCategoryLabel(product.categoryKey, t);
+  const categoryLabel = getCategoryLabel(product, t);
   const displayOldPrice =
     Number(product.oldPrice || 0) > Number(product.price || 0)
       ? Number(product.oldPrice)
