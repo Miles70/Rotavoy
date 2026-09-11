@@ -18,19 +18,11 @@ function Footer() {
 
           <p>{siteConfig.description}</p>
 
-          <div className="socialLinks">
-            <a href="#" aria-label="Facebook">
-              <FaFacebookF />
-            </a>
-            <a href="#" aria-label="Instagram">
-              <FaInstagram />
-            </a>
-            <a href="#" aria-label="X">
-              <FaXTwitter />
-            </a>
-            <a href="#" aria-label="YouTube">
-              <FaYoutube />
-            </a>
+          <div className="socialLinks" aria-label="Rotavoy sosyal medya hesapları yakında">
+            <span aria-label="Facebook yakında"><FaFacebookF /></span>
+            <span aria-label="Instagram yakında"><FaInstagram /></span>
+            <span aria-label="X yakında"><FaXTwitter /></span>
+            <span aria-label="YouTube yakında"><FaYoutube /></span>
           </div>
         </div>
 
@@ -43,16 +35,16 @@ function Footer() {
 
         <div className="footerColumn">
           <h3>{t("footer.company")}</h3>
-          <Link to="/">{t("footer.about")}</Link>
-          <Link to="/">{t("footer.contact")}</Link>
-          <Link to="/">{t("footer.support")}</Link>
+          <Link to="/about">{t("footer.about")}</Link>
+          <Link to="/contact">{t("footer.contact")}</Link>
+          <Link to="/support">{t("footer.support")}</Link>
         </div>
 
         <div className="footerColumn">
           <h3>{t("footer.legal")}</h3>
-          <Link to="/">{t("footer.privacy")}</Link>
-          <Link to="/">{t("footer.terms")}</Link>
-          <Link to="/">{t("footer.refund")}</Link>
+          <Link to="/privacy">{t("footer.privacy")}</Link>
+          <Link to="/terms">{t("footer.terms")}</Link>
+          <Link to="/refund">{t("footer.refund")}</Link>
         </div>
       </div>
 

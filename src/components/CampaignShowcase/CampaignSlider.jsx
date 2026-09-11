@@ -84,10 +84,14 @@ function SlideButton({ slide, tabIndex }) {
 function CampaignSlider({ campaign }) {
   const { language } = useLanguage();
   const dictionary = campaignTranslations[language] || campaignTranslations.en;
-  const rawSlides = campaign.slides?.length ? campaign.slides : [campaign];
   const slides = useMemo(
-    () => rawSlides.map((slide) => localizeSlide(slide, dictionary.campaignSlider)),
-    [dictionary, rawSlides],
+    () => {
+      const rawSlides = campaign.slides?.length ? campaign.slides : [campaign];
+      return rawSlides.map((slide) =>
+        localizeSlide(slide, dictionary.campaignSlider),
+      );
+    },
+    [campaign, dictionary.campaignSlider],
   );
   const [activeIndex, setActiveIndex] = useState(0);
   const [previousIndex, setPreviousIndex] = useState(null);

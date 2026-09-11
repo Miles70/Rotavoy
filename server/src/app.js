@@ -39,7 +39,9 @@ export function createApp() {
           return;
         }
 
-        callback(new Error("Origin is not allowed by CORS."));
+        const error = new Error("Origin is not allowed by CORS.");
+        error.statusCode = 403;
+        callback(error);
       },
       credentials: false,
     }),
@@ -86,9 +88,10 @@ export function createApp() {
       return;
     }
 
-    console.error(error);
-
     const statusCode = Number(error.statusCode) || 500;
+    if (statusCode >= 500) {
+      console.error(error);
+    }
     const message =
       statusCode >= 500 && process.env.NODE_ENV === "production"
         ? "Internal server error."
