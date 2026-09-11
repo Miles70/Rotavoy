@@ -1,21 +1,16 @@
 import { Router } from "express";
 import { Product } from "../models/Product.js";
 import { isCjConfigured } from "../services/cjApi.js";
+import {
+  getLocalizedSearchFields,
+  normalizeStorefrontLanguage,
+  STOREFRONT_PRIVATE_FIELDS,
+  trimStorefrontTranslations,
+} from "../services/storefrontProduct.js";
 
 export const productListRouter = Router();
 
 const LEGACY_SOURCES = ["amazon-reviews-2023", "manual"];
-const STOREFRONT_PRIVATE_FIELDS = [
-  "-costPrice",
-  "-supplierContent",
-  "-contentMeta",
-  "-translationMeta",
-  "-sourceHash",
-  "-sourceCode",
-  "-sourceUrl",
-  "-supplierVariantId",
-  "-supplierSku",
-].join(" ");
 const CATEGORY_GROUPS = {
   electronics: ["electronics", "mobile"],
   fashion: ["fashion"],
@@ -45,6 +40,7 @@ productListRouter.get("/", async (request, response, next) => {
     const category = String(request.query.category || "").trim().toLowerCase();
     const group = String(request.query.group || "").trim();
     const sortMode = String(request.query.sort || "popular").trim().toLowerCase();
+    const language = normalizeStorefrontLanguage(request.query.language);
     const filter = {
       isActive: true,
       source: { $in: getStorefrontSources() },
@@ -67,6 +63,7 @@ productListRouter.get("/", async (request, response, next) => {
         { categoryLabel: pattern },
         { description: pattern },
         { supplierSku: pattern },
+        ...getLocalizedSearchFields(language).map((field) => ({ [field]: pattern })),
       ];
     }
 
@@ -86,7 +83,7 @@ productListRouter.get("/", async (request, response, next) => {
       .lean();
 
     response.json({
-      products,
+      products: products.map((product) => trimStorefrontTranslations(product, language)),
       pagination: {
         page,
         limit,
