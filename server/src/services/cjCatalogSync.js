@@ -1,5 +1,11 @@
+import { createHash } from "node:crypto";
 import { Product } from "../models/Product.js";
 import { getCjProductDetail, getCjVariantStock, listCjProducts } from "./cjApi.js";
+import {
+  getRotavoyProductLanguages,
+  productTranslationsComplete,
+  translateProductBundle,
+} from "./productTranslation.js";
 
 const LEGACY_SOURCES = ["amazon-reviews-2023", "manual"];
 
@@ -57,15 +63,43 @@ function sumOriginStock(rows, originCountryCode) {
   }, 0);
 }
 
+function getVariantLabel(variant) {
+  return cleanText(
+    variant?.variantKey || variant?.variantNameEn || variant?.variantSku || "Default",
+    160,
+  );
+}
+
 function buildVariantTitle(productTitle, variant) {
-  const option = cleanText(variant?.variantKey || variant?.variantNameEn || "", 120);
-  if (!option) return productTitle;
+  const option = getVariantLabel(variant);
+  if (!option || option === "Default") return productTitle;
   if (productTitle.toLowerCase().includes(option.toLowerCase())) return productTitle;
   return `${productTitle} - ${option}`.slice(0, 300);
 }
 
 function uniqueUrls(values) {
   return [...new Set(values.filter((value) => /^https?:\/\//i.test(String(value || ""))))];
+}
+
+function createTranslationSourceHash({ title, description, categoryLabel, variants }) {
+  return createHash("sha256")
+    .update(JSON.stringify({ title, description, categoryLabel, variants }))
+    .digest("hex");
+}
+
+function buildVariantTranslations(bundle, variantIndex, fallback) {
+  const translations = {};
+
+  for (const [language, localized] of Object.entries(bundle || {})) {
+    translations[language] = {
+      title: String(localized?.title || fallback.title).trim(),
+      description: String(localized?.description || fallback.description).trim(),
+      categoryLabel: String(localized?.categoryLabel || fallback.categoryLabel).trim(),
+      variant: String(localized?.variants?.[variantIndex] || fallback.variant).trim(),
+    };
+  }
+
+  return translations;
 }
 
 async function syncOneProduct(listProduct, options) {
@@ -80,14 +114,59 @@ async function syncOneProduct(listProduct, options) {
 
   const categoryLabel = cleanText(
     detail?.categoryName || listProduct?.threeCategoryName || listProduct?.twoCategoryName || listProduct?.oneCategoryName || "General",
-    120,
+    160,
   );
   const categoryKey = normalizeCategory(categoryLabel);
   const description = cleanText(detail?.description || listProduct?.description, 1800);
   const baseImage = detail?.productImage || detail?.bigImage || listProduct?.bigImage || "";
+  const variantLabels = selectedVariants.map(getVariantLabel);
+  const sourceHash = createTranslationSourceHash({
+    title: productTitle,
+    description,
+    categoryLabel,
+    variants: variantLabels,
+  });
+
+  const selectedVariantIds = selectedVariants
+    .map((variant) => String(variant?.vid || "").trim())
+    .filter(Boolean);
+
+  const existingProducts = selectedVariantIds.length
+    ? await Product.find({
+      source: "cj",
+      supplierProductId: pid,
+      supplierVariantId: { $in: selectedVariantIds },
+    })
+      .select({ supplierVariantId: 1, translations: 1, translationMeta: 1 })
+      .lean()
+    : [];
+
+  const existingByVariantId = new Map(
+    existingProducts.map((product) => [String(product.supplierVariantId || ""), product]),
+  );
+
+  const canReuseTranslations = selectedVariantIds.length > 0 && selectedVariantIds.every((vid) => {
+    const existing = existingByVariantId.get(vid);
+    return Boolean(
+      existing &&
+      existing.translationMeta?.sourceHash === sourceHash &&
+      productTranslationsComplete(existing.translations),
+    );
+  });
+
+  const translationBundle = canReuseTranslations
+    ? null
+    : await translateProductBundle({
+      title: productTitle,
+      description,
+      categoryLabel,
+      variants: variantLabels,
+    });
+
   let upserted = 0;
 
-  for (const variant of selectedVariants) {
+  for (let variantIndex = 0; variantIndex < selectedVariants.length; variantIndex += 1) {
+    const variant = selectedVariants[variantIndex];
     const vid = String(variant?.vid || "").trim();
     if (!vid) continue;
 
@@ -100,8 +179,18 @@ async function syncOneProduct(listProduct, options) {
 
     const images = uniqueUrls([variant?.variantImage || "", baseImage]);
     const title = buildVariantTitle(productTitle, variant);
+    const variantLabel = variantLabels[variantIndex] || "Default";
     const price = roundMoney(costPrice * options.markupMultiplier);
     const key = `cj-${vid}`;
+    const existing = existingByVariantId.get(vid);
+    const translations = canReuseTranslations
+      ? existing.translations
+      : buildVariantTranslations(translationBundle, variantIndex, {
+        title,
+        description,
+        categoryLabel,
+        variant: variantLabel,
+      });
 
     await Product.findOneAndUpdate(
       { key },
@@ -112,11 +201,21 @@ async function syncOneProduct(listProduct, options) {
           features: [],
           details: {
             supplier: "CJdropshipping",
-            variant: cleanText(variant?.variantKey || variant?.variantNameEn, 160),
+            variant: variantLabel,
             sku: cleanText(variant?.variantSku, 100),
             originCountry: options.originCountryCode,
             weightGrams: Number(variant?.variantWeight || 0),
           },
+          translations,
+          translationMeta: {
+            provider: "google-translate",
+            sourceHash,
+            sourceLanguage: "en",
+            languages: Object.keys(translations || {}),
+            updatedAt: new Date().toISOString(),
+          },
+          sourceLanguage: "en",
+          sourceHash,
           brand: cleanText(detail?.supplierName, 120),
           quantity: "",
           categoryKey,
@@ -142,12 +241,6 @@ async function syncOneProduct(listProduct, options) {
           supplierVariantId: vid,
           supplierSku: cleanText(variant?.variantSku, 100),
           isActive: true,
-        },
-        $setOnInsert: {
-          sourceLanguage: "en",
-          sourceHash: "",
-          translations: {},
-          translationMeta: {},
         },
       },
       { upsert: true, returnDocument: "after", runValidators: true },
@@ -202,5 +295,7 @@ export async function syncCjCatalog() {
     deletedLegacyCount,
     markupMultiplier: options.markupMultiplier,
     originCountryCode: options.originCountryCode,
+    productLanguages: getRotavoyProductLanguages(),
+    autoTranslation: String(process.env.CJ_TRANSLATE_PRODUCTS || "true").toLowerCase() !== "false",
   };
 }
