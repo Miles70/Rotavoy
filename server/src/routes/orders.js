@@ -2,8 +2,13 @@ import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { optionalCustomer } from "../middleware/customerAuth.js";
 import { Order } from "../models/Order.js";
+import { fulfillPaidOrder } from "../services/cjFulfillment.js";
 import { getCompatibleOrderNumbers } from "../services/orderNumberMigration.js";
-import { createOrder, serializeOrder } from "../services/orderService.js";
+import {
+  createOrder,
+  getOrderShippingQuote,
+  serializeOrder,
+} from "../services/orderService.js";
 import { verifyCryptoPayment } from "../services/paymentVerification.js";
 
 export const ordersRouter = Router();
@@ -16,6 +21,14 @@ const createOrderLimiter = rateLimit({
   message: { message: "Too many order attempts. Please try again later." },
 });
 
+const shippingQuoteLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  limit: 30,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: { message: "Too many shipping quote requests. Please try again later." },
+});
+
 const verifyPaymentLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
   limit: 20,
@@ -23,6 +36,19 @@ const verifyPaymentLimiter = rateLimit({
   legacyHeaders: false,
   message: { message: "Too many payment checks. Please try again later." },
 });
+
+ordersRouter.post(
+  "/shipping-quote",
+  shippingQuoteLimiter,
+  async (request, response, next) => {
+    try {
+      const quote = await getOrderShippingQuote(request.body || {});
+      return response.json({ quote });
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
 
 ordersRouter.post(
   "/",
@@ -83,8 +109,9 @@ ordersRouter.post(
         transactionHash,
         payerAddress,
       });
+      const fulfilledOrder = await fulfillPaidOrder(verifiedOrder);
 
-      return response.json({ order: serializeOrder(verifiedOrder) });
+      return response.json({ order: serializeOrder(fulfilledOrder) });
     } catch (error) {
       return next(error);
     }
