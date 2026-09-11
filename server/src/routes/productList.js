@@ -5,6 +5,17 @@ import { isCjConfigured } from "../services/cjApi.js";
 export const productListRouter = Router();
 
 const LEGACY_SOURCES = ["amazon-reviews-2023", "manual"];
+const STOREFRONT_PRIVATE_FIELDS = [
+  "-costPrice",
+  "-supplierContent",
+  "-contentMeta",
+  "-translationMeta",
+  "-sourceHash",
+  "-sourceCode",
+  "-sourceUrl",
+  "-supplierVariantId",
+  "-supplierSku",
+].join(" ");
 const CATEGORY_GROUPS = {
   electronics: ["electronics", "mobile"],
   fashion: ["fashion"],
@@ -68,6 +79,7 @@ productListRouter.get("/", async (request, response, next) => {
       : { popularity: -1, createdAt: -1, key: 1 };
 
     const products = await Product.find(filter)
+      .select(STOREFRONT_PRIVATE_FIELDS)
       .sort(sort)
       .skip(skip)
       .limit(limit)
