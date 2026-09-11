@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CreditCard, ShieldCheck, WalletCards } from "lucide-react";
+import { CreditCard, ShieldCheck, Truck, WalletCards } from "lucide-react";
 import ProductThumbnail from "../components/ProductThumbnail/ProductThumbnail";
-import { useLanguage } from "../i18n/LanguageContext";
 import { useCart } from "../context/CartContext";
 import { useCustomerAccount } from "../context/CustomerAccountContext";
-import { createOrder } from "../services/orderApi";
+import { useLanguage } from "../i18n/LanguageContext";
+import { createOrder, getShippingQuote } from "../services/orderApi";
 import "./Checkout.css";
+import "../styles/checkout-cj.css";
 
 function safeParse(value, fallback) {
   try {
@@ -30,89 +31,144 @@ function Checkout() {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { cartItems, cartTotal } = useCart();
-  const {
-    defaultAddress,
-    profile,
-    rememberCheckoutDetails,
-  } = useCustomerAccount();
+  const { defaultAddress, profile, rememberCheckoutDetails } = useCustomerAccount();
 
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
     phone: "",
+    country: "",
+    countryCode: "",
+    province: "",
     city: "",
+    postalCode: "",
     address: "",
     note: "",
   });
   const [paymentMethod, setPaymentMethod] = useState("crypto");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    setFormData((previous) => ({
-      ...previous,
-      fullName:
-        previous.fullName ||
-        defaultAddress?.fullName ||
-        profile.fullName ||
-        "",
-      email: previous.email || profile.email || "",
-      phone:
-        previous.phone ||
-        defaultAddress?.phone ||
-        profile.phone ||
-        "",
-      city: previous.city || defaultAddress?.city || "",
-      address: previous.address || defaultAddress?.address || "",
-    }));
-  }, [defaultAddress, profile]);
+  const [shippingOptions, setShippingOptions] = useState([]);
+  const [selectedLogisticName, setSelectedLogisticName] = useState("");
+  const [isShippingLoading, setIsShippingLoading] = useState(false);
+  const [shippingError, setShippingError] = useState("");
+  const [shippingQuoted, setShippingQuoted] = useState(false);
 
   const text = (key, fallback) => {
     const value = t(key);
     return value && value !== key ? value : fallback;
   };
 
-  const hasItems = cartItems.length > 0;
+  useEffect(() => {
+    setFormData((previous) => ({
+      ...previous,
+      fullName: previous.fullName || defaultAddress?.fullName || profile.fullName || "",
+      email: previous.email || profile.email || "",
+      phone: previous.phone || defaultAddress?.phone || profile.phone || "",
+      country: previous.country || defaultAddress?.country || "",
+      city: previous.city || defaultAddress?.city || "",
+      address: previous.address || defaultAddress?.address || "",
+    }));
+  }, [defaultAddress, profile]);
 
+  const hasItems = cartItems.length > 0;
   const subtotal = useMemo(() => {
     if (typeof cartTotal === "number") return cartTotal;
-
-    return cartItems.reduce((total, item) => {
-      return total + Number(item.price || 0) * Number(item.quantity || 1);
-    }, 0);
+    return cartItems.reduce(
+      (total, item) => total + Number(item.price || 0) * Number(item.quantity || 1),
+      0,
+    );
   }, [cartItems, cartTotal]);
 
-  const shipping = 0;
+  const selectedShipping = useMemo(
+    () =>
+      shippingOptions.find(
+        (option) => option.logisticName === selectedLogisticName,
+      ) || null,
+    [selectedLogisticName, shippingOptions],
+  );
+  const shipping = Number(selectedShipping?.price || 0);
   const total = subtotal + shipping;
+  const countryCode = formData.countryCode.trim().toUpperCase();
+  const validCountryCode = /^[A-Z]{2}$/.test(countryCode);
+
+  useEffect(() => {
+    if (!hasItems || !validCountryCode) {
+      setShippingOptions([]);
+      setSelectedLogisticName("");
+      setShippingError("");
+      setShippingQuoted(false);
+      return undefined;
+    }
+
+    let cancelled = false;
+    setShippingQuoted(false);
+    const timer = window.setTimeout(() => {
+      setIsShippingLoading(true);
+      setShippingError("");
+
+      getShippingQuote({
+        countryCode,
+        postalCode: formData.postalCode.trim(),
+        items: cartItems.map((item) => ({
+          productKey: item.key,
+          quantity: Number(item.quantity || 1),
+        })),
+      })
+        .then((quote) => {
+          if (cancelled) return;
+          const options = Array.isArray(quote?.options) ? quote.options : [];
+          setShippingOptions(options);
+          setSelectedLogisticName(
+            quote?.selected?.logisticName || options[0]?.logisticName || "",
+          );
+          setShippingQuoted(true);
+        })
+        .catch((quoteError) => {
+          if (cancelled) return;
+          setShippingOptions([]);
+          setSelectedLogisticName("");
+          setShippingQuoted(false);
+          setShippingError(
+            quoteError.message || "Shipping could not be calculated.",
+          );
+        })
+        .finally(() => {
+          if (!cancelled) setIsShippingLoading(false);
+        });
+    }, 600);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [cartItems, countryCode, formData.postalCode, hasItems, validCountryCode]);
 
   const formatPrice = (price) => `$${Number(price || 0).toFixed(2)}`;
 
   const getCategoryLabel = (item) => {
-    if (item.categoryKey) {
-      return text(
-        `categories.${item.categoryKey}.title`,
-        item.category || text("checkoutPage.generalCategory", "General"),
-      );
+    if (!item.categoryKey) {
+      return item.category || text("checkoutPage.generalCategory", "General");
     }
-
-    return item.category || text("checkoutPage.generalCategory", "General");
+    return text(
+      `categories.${item.categoryKey}.title`,
+      item.category || item.categoryKey,
+    );
   };
 
   const handleChange = (event) => {
     const { name, value } = event.target;
-
     setFormData((previous) => ({
       ...previous,
-      [name]: value,
+      [name]: name === "countryCode" ? value.toUpperCase().slice(0, 2) : value,
     }));
-
     if (error) setError("");
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
     if (isSubmitting) return;
+
     if (!hasItems) {
       setError(text("checkoutPage.emptyError", "Your cart is empty."));
       return;
@@ -122,11 +178,24 @@ function Checkout() {
       !formData.fullName.trim() ||
       !formData.email.trim() ||
       !formData.phone.trim() ||
+      !formData.country.trim() ||
+      !validCountryCode ||
+      !formData.province.trim() ||
       !formData.city.trim() ||
       !formData.address.trim()
     ) {
       setError(
         text("checkoutPage.requiredError", "Please fill in all required fields."),
+      );
+      return;
+    }
+
+    if (!shippingQuoted || shippingError) {
+      setError(
+        text(
+          "checkoutPage.shippingRequired",
+          "Please wait until shipping is calculated.",
+        ),
       );
       return;
     }
@@ -140,7 +209,11 @@ function Checkout() {
           fullName: formData.fullName.trim(),
           email: formData.email.trim(),
           phone: formData.phone.trim(),
+          country: formData.country.trim(),
+          countryCode,
+          province: formData.province.trim(),
           city: formData.city.trim(),
+          postalCode: formData.postalCode.trim(),
           address: formData.address.trim(),
           note: formData.note.trim(),
         },
@@ -148,6 +221,7 @@ function Checkout() {
           productKey: item.key,
           quantity: Number(item.quantity || 1),
         })),
+        logisticName: selectedLogisticName,
         paymentMethod,
       });
 
@@ -173,13 +247,7 @@ function Checkout() {
         <section className="checkoutEmpty">
           <span>🛒</span>
           <h1>{text("checkoutPage.emptyTitle", "Your cart is empty")}</h1>
-          <p>
-            {text(
-              "checkoutPage.emptyText",
-              "Add some products before checkout.",
-            )}
-          </p>
-
+          <p>{text("checkoutPage.emptyText", "Add some products before checkout.")}</p>
           <button
             type="button"
             className="checkoutPrimaryLink"
@@ -209,25 +277,18 @@ function Checkout() {
         <form className="checkoutForm" onSubmit={handleSubmit}>
           <div className="checkoutFormHeader">
             <h2>{text("checkoutPage.deliveryTitle", "Delivery Details")}</h2>
-            <p>
-              {text(
-                "checkoutPage.requiredText",
-                "Required fields are marked with *",
-              )}
-            </p>
+            <p>{text("checkoutPage.requiredText", "Required fields are marked with *")}</p>
           </div>
 
-          {error && <div className="checkoutError">{error}</div>}
+          {error ? <div className="checkoutError">{error}</div> : null}
 
           <div className="checkoutField">
-            <label htmlFor="fullName">
-              {text("checkoutPage.fullName", "Full Name")} *
-            </label>
+            <label htmlFor="fullName">{text("checkoutPage.fullName", "Full Name")} *</label>
             <input
               id="fullName"
               name="fullName"
               type="text"
-              placeholder={text("checkoutPage.fullNamePlaceholder", "John Carter")}
+              placeholder="John Carter"
               value={formData.fullName}
               onChange={handleChange}
               disabled={isSubmitting}
@@ -236,35 +297,24 @@ function Checkout() {
 
           <div className="checkoutTwoColumns">
             <div className="checkoutField">
-              <label htmlFor="email">
-                {text("checkoutPage.email", "Email")} *
-              </label>
+              <label htmlFor="email">{text("checkoutPage.email", "Email")} *</label>
               <input
                 id="email"
                 name="email"
                 type="email"
-                placeholder={text(
-                  "checkoutPage.emailPlaceholder",
-                  "john@example.com",
-                )}
+                placeholder="john@example.com"
                 value={formData.email}
                 onChange={handleChange}
                 disabled={isSubmitting}
               />
             </div>
-
             <div className="checkoutField">
-              <label htmlFor="phone">
-                {text("checkoutPage.phone", "Phone")} *
-              </label>
+              <label htmlFor="phone">{text("checkoutPage.phone", "Phone")} *</label>
               <input
                 id="phone"
                 name="phone"
                 type="tel"
-                placeholder={text(
-                  "checkoutPage.phonePlaceholder",
-                  "+90 555 555 55 55",
-                )}
+                placeholder="+90 555 555 55 55"
                 value={formData.phone}
                 onChange={handleChange}
                 disabled={isSubmitting}
@@ -272,33 +322,87 @@ function Checkout() {
             </div>
           </div>
 
+          <div className="checkoutTwoColumns">
+            <div className="checkoutField">
+              <label htmlFor="country">{text("checkoutPage.country", "Country")} *</label>
+              <input
+                id="country"
+                name="country"
+                type="text"
+                placeholder="Türkiye"
+                value={formData.country}
+                onChange={handleChange}
+                disabled={isSubmitting}
+              />
+            </div>
+            <div className="checkoutField">
+              <label htmlFor="countryCode">
+                {text("checkoutPage.countryCode", "Country code")} *
+              </label>
+              <input
+                id="countryCode"
+                name="countryCode"
+                type="text"
+                maxLength="2"
+                placeholder="TR"
+                value={formData.countryCode}
+                onChange={handleChange}
+                disabled={isSubmitting}
+              />
+            </div>
+          </div>
+
+          <div className="checkoutTwoColumns">
+            <div className="checkoutField">
+              <label htmlFor="province">
+                {text("checkoutPage.province", "Province / State")} *
+              </label>
+              <input
+                id="province"
+                name="province"
+                type="text"
+                placeholder="Antalya"
+                value={formData.province}
+                onChange={handleChange}
+                disabled={isSubmitting}
+              />
+            </div>
+            <div className="checkoutField">
+              <label htmlFor="city">{text("checkoutPage.city", "City")} *</label>
+              <input
+                id="city"
+                name="city"
+                type="text"
+                placeholder="Antalya"
+                value={formData.city}
+                onChange={handleChange}
+                disabled={isSubmitting}
+              />
+            </div>
+          </div>
+
           <div className="checkoutField">
-            <label htmlFor="city">
-              {text("checkoutPage.city", "City")} *
+            <label htmlFor="postalCode">
+              {text("checkoutPage.postalCode", "Postal code")}
             </label>
             <input
-              id="city"
-              name="city"
+              id="postalCode"
+              name="postalCode"
               type="text"
-              placeholder={text("checkoutPage.cityPlaceholder", "Antalya")}
-              value={formData.city}
+              placeholder="07100"
+              value={formData.postalCode}
               onChange={handleChange}
               disabled={isSubmitting}
             />
           </div>
 
           <div className="checkoutField">
-            <label htmlFor="address">
-              {text("checkoutPage.address", "Address")} *
-            </label>
+            <label htmlFor="address">{text("checkoutPage.address", "Address")} *</label>
             <textarea
               id="address"
               name="address"
               rows="4"
-              placeholder={text(
-                "checkoutPage.addressPlaceholder",
-                "Full delivery address",
-              )}
+              placeholder="Full delivery address"
               value={formData.address}
               onChange={handleChange}
               disabled={isSubmitting}
@@ -306,29 +410,66 @@ function Checkout() {
           </div>
 
           <div className="checkoutField">
-            <label htmlFor="note">
-              {text("checkoutPage.note", "Order Note")}
-            </label>
+            <label htmlFor="note">{text("checkoutPage.note", "Order Note")}</label>
             <textarea
               id="note"
               name="note"
               rows="3"
-              placeholder={text(
-                "checkoutPage.notePlaceholder",
-                "Optional note for your order",
-              )}
+              placeholder="Optional note for your order"
               value={formData.note}
               onChange={handleChange}
               disabled={isSubmitting}
             />
           </div>
 
+          <section className="checkoutPaymentSection" aria-labelledby="shipping-title">
+            <div className="checkoutPaymentHeader">
+              <div>
+                <h2 id="shipping-title">
+                  <Truck size={19} /> {text("checkoutPage.shippingMethod", "Shipping Method")}
+                </h2>
+                <p>
+                  {isShippingLoading
+                    ? text("checkoutPage.shippingLoading", "Calculating live shipping...")
+                    : text(
+                        "checkoutPage.shippingLive",
+                        "Shipping price and route are checked live before the order is created.",
+                      )}
+                </p>
+              </div>
+            </div>
+
+            {shippingError ? <div className="checkoutError">{shippingError}</div> : null}
+
+            {shippingOptions.length > 0 ? (
+              <div className="checkoutField">
+                <select
+                  aria-label={text("checkoutPage.shippingMethod", "Shipping Method")}
+                  value={selectedLogisticName}
+                  onChange={(event) => setSelectedLogisticName(event.target.value)}
+                  disabled={isSubmitting || isShippingLoading}
+                >
+                  {shippingOptions.map((option) => (
+                    <option value={option.logisticName} key={option.logisticName}>
+                      {option.logisticName} · {formatPrice(option.price)}
+                      {option.estimatedDays ? ` · ${option.estimatedDays}` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : validCountryCode && !isShippingLoading && !shippingError ? (
+              <p className="checkoutShippingHint">
+                {shippingQuoted
+                  ? text("checkoutPage.shippingIncluded", "Shipping quote is ready.")
+                  : text("checkoutPage.shippingWaiting", "Waiting for shipping quote...")}
+              </p>
+            ) : null}
+          </section>
+
           <section className="checkoutPaymentSection" aria-labelledby="payment-title">
             <div className="checkoutPaymentHeader">
               <div>
-                <h2 id="payment-title">
-                  {text("checkoutPage.paymentTitle", "Payment Method")}
-                </h2>
+                <h2 id="payment-title">{text("checkoutPage.paymentTitle", "Payment Method")}</h2>
                 <p>
                   {text(
                     "checkoutPage.paymentText",
@@ -336,31 +477,22 @@ function Checkout() {
                   )}
                 </p>
               </div>
-
               <span>
-                <ShieldCheck size={16} />
-                {text("checkoutPage.securePayment", "Secure")}
+                <ShieldCheck size={16} /> {text("checkoutPage.securePayment", "Secure")}
               </span>
             </div>
 
             <div className="checkoutPaymentOptions">
               <button
                 type="button"
-                className={`checkoutPaymentOption ${
-                  paymentMethod === "crypto" ? "active" : ""
-                }`}
+                className={`checkoutPaymentOption ${paymentMethod === "crypto" ? "active" : ""}`}
                 onClick={() => setPaymentMethod("crypto")}
                 disabled={isSubmitting}
                 aria-pressed={paymentMethod === "crypto"}
               >
-                <span className="checkoutPaymentIcon">
-                  <WalletCards size={21} />
-                </span>
-
+                <span className="checkoutPaymentIcon"><WalletCards size={21} /></span>
                 <span>
-                  <strong>
-                    {text("checkoutPage.cryptoPayment", "Crypto Payment")}
-                  </strong>
+                  <strong>{text("checkoutPage.cryptoPayment", "Crypto Payment")}</strong>
                   <small>
                     {text(
                       "checkoutPage.cryptoPaymentText",
@@ -368,7 +500,6 @@ function Checkout() {
                     )}
                   </small>
                 </span>
-
                 <em>{text("checkoutPage.availableNow", "Available")}</em>
               </button>
 
@@ -378,10 +509,7 @@ function Checkout() {
                 disabled
                 aria-disabled="true"
               >
-                <span className="checkoutPaymentIcon">
-                  <CreditCard size={21} />
-                </span>
-
+                <span className="checkoutPaymentIcon"><CreditCard size={21} /></span>
                 <span>
                   <strong>{text("checkoutPage.cardPayment", "Card Payment")}</strong>
                   <small>
@@ -391,7 +519,6 @@ function Checkout() {
                     )}
                   </small>
                 </span>
-
                 <em>{text("checkoutPage.comingSoon", "Coming soon")}</em>
               </button>
             </div>
@@ -400,7 +527,13 @@ function Checkout() {
           <button
             type="submit"
             className="checkoutSubmitButton"
-            disabled={isSubmitting}
+            disabled={
+              isSubmitting ||
+              isShippingLoading ||
+              Boolean(shippingError) ||
+              !validCountryCode ||
+              !shippingQuoted
+            }
           >
             {isSubmitting
               ? text("checkoutPage.creatingOrder", "Creating order...")
@@ -411,30 +544,20 @@ function Checkout() {
         <aside className="checkoutSummary">
           <div className="checkoutSummaryHeader">
             <h2>{text("checkoutPage.summaryTitle", "Order Summary")}</h2>
-            <p>
-              {cartItems.length} {text("checkoutPage.itemType", "item type")}
-            </p>
+            <p>{cartItems.length} {text("checkoutPage.itemType", "item type")}</p>
           </div>
 
           <div className="checkoutItems">
             {cartItems.map((item) => (
               <div className="checkoutItem" key={item.key || item.id}>
-                <div className="checkoutItemImage">
-                  <ProductThumbnail item={item} />
-                </div>
-
+                <div className="checkoutItemImage"><ProductThumbnail item={item} /></div>
                 <div className="checkoutItemInfo">
                   <h3>{item.title}</h3>
                   <p>{getCategoryLabel(item)}</p>
-                  <small>
-                    {text("checkoutPage.qty", "Qty")}: {item.quantity}
-                  </small>
+                  <small>{text("checkoutPage.qty", "Qty")}: {item.quantity}</small>
                 </div>
-
                 <strong>
-                  {formatPrice(
-                    Number(item.price || 0) * Number(item.quantity || 1),
-                  )}
+                  {formatPrice(Number(item.price || 0) * Number(item.quantity || 1))}
                 </strong>
               </div>
             ))}
@@ -445,16 +568,18 @@ function Checkout() {
               <span>{text("checkoutPage.subtotal", "Subtotal")}</span>
               <strong>{formatPrice(subtotal)}</strong>
             </div>
-
             <div>
               <span>{text("checkoutPage.shipping", "Shipping")}</span>
               <strong>
-                {shipping === 0
-                  ? text("checkoutPage.freeShipping", "Free")
-                  : formatPrice(shipping)}
+                {isShippingLoading
+                  ? "..."
+                  : selectedShipping
+                    ? formatPrice(shipping)
+                    : shippingQuoted
+                      ? formatPrice(0)
+                      : text("checkoutPage.calculateShipping", "Enter country code")}
               </strong>
             </div>
-
             <div className="checkoutTotalRow">
               <span>{text("checkoutPage.total", "Total")}</span>
               <strong>{formatPrice(total)}</strong>
