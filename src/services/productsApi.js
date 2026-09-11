@@ -171,12 +171,16 @@ export function normalizeProduct(product, requestedLanguage = "en") {
 
   const language = normalizeLanguage(requestedLanguage);
   const translation = getProductTranslation(product, language);
+  const localizedFeatures = Array.isArray(translation?.features)
+    ? translation.features.filter(Boolean)
+    : product.features;
 
   return {
     ...product,
     title: translation?.title || product.title || "",
     description: translation?.description || product.description || "",
     categoryLabel: translation?.categoryLabel || product.categoryLabel || "",
+    features: Array.isArray(localizedFeatures) ? localizedFeatures : [],
     details: localizeDetails(product, language, translation),
     imageUrl: product.imageUrl || product.images?.[0] || "",
   };
