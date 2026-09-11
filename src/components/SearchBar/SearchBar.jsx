@@ -19,7 +19,7 @@ function categoryLabel(categoryKey, t) {
 }
 
 function SearchBar({ initialValue = "" }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState(initialValue);
   const [isFocused, setIsFocused] = useState(false);
@@ -41,7 +41,7 @@ function SearchBar({ initialValue = "" }) {
     }
 
     const timer = window.setTimeout(() => {
-      getStoreProducts({ page: 1, limit: 8, search: query })
+      getStoreProducts({ page: 1, limit: 8, search: query, language })
         .then((data) => {
           if (!isCancelled) {
             setSuggestions(
@@ -61,7 +61,7 @@ function SearchBar({ initialValue = "" }) {
       isCancelled = true;
       window.clearTimeout(timer);
     };
-  }, [query, t]);
+  }, [language, query, t]);
 
   const shouldShowSuggestions = isFocused && suggestions.length > 0;
 

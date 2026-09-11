@@ -8,7 +8,7 @@ import "./PopularProducts.css";
 const HOME_PRODUCT_LIMIT = 100;
 
 function PopularProducts() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -16,7 +16,7 @@ function PopularProducts() {
   useEffect(() => {
     let isCancelled = false;
 
-    getStoreProducts({ page: 1, limit: HOME_PRODUCT_LIMIT, sort: "showcase" })
+    getStoreProducts({ page: 1, limit: HOME_PRODUCT_LIMIT, sort: "showcase", language })
       .then((data) => {
         if (!isCancelled) {
           setProducts(data.products || []);
@@ -36,7 +36,7 @@ function PopularProducts() {
     return () => {
       isCancelled = true;
     };
-  }, []);
+  }, [language]);
 
   return (
     <section className="popularProducts">

@@ -7,7 +7,7 @@ import {
   translateProductBundle,
 } from "./productTranslation.js";
 
-const LEGACY_SOURCES = ["amazon-reviews-2023", "manual"];
+const LEGACY_DEMO_SOURCE = "amazon-reviews-2023";
 
 function parsePositiveInt(value, fallback, max = 100) {
   const parsed = Number.parseInt(value, 10);
@@ -22,6 +22,10 @@ function getMarkupMultiplier() {
 
 function roundMoney(value) {
   return Number(Number(value || 0).toFixed(2));
+}
+
+export function getLegacyCatalogCleanupFilter() {
+  return { source: LEGACY_DEMO_SOURCE };
 }
 
 function cleanText(value, maxLength = 300) {
@@ -183,7 +187,6 @@ async function syncOneProduct(listProduct, options) {
 
     const stockRows = await getCjVariantStock(vid);
     const stock = sumOriginStock(stockRows, options.originCountryCode);
-    if (stock <= 0) continue;
 
     const images = uniqueUrls([variant?.variantImage || "", baseImage]);
     const title = buildVariantTitle(productTitle, variant);
@@ -248,7 +251,7 @@ async function syncOneProduct(listProduct, options) {
           supplierProductId: pid,
           supplierVariantId: vid,
           supplierSku: cleanText(variant?.variantSku, 100),
-          isActive: true,
+          isActive: stock > 0,
         },
       },
       { upsert: true, returnDocument: "after", runValidators: true },
@@ -291,7 +294,9 @@ export async function syncCjCatalog() {
 
   let deletedLegacyCount = 0;
   if (upsertedVariants > 0 && String(process.env.CJ_REPLACE_LEGACY_CATALOG || "true").toLowerCase() !== "false") {
-    const cleanup = await Product.deleteMany({ source: { $in: LEGACY_SOURCES } });
+    // Admin-created products also use source="manual". Never include that source
+    // here: a catalog sync must not be able to erase genuine manual inventory.
+    const cleanup = await Product.deleteMany(getLegacyCatalogCleanupFilter());
     deletedLegacyCount = cleanup.deletedCount || 0;
   }
 

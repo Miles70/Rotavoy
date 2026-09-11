@@ -15,6 +15,19 @@ function getCjItems(order) {
   );
 }
 
+export function getFailureFulfillmentStatus(error) {
+  const statusCode = Number(error?.statusCode || 0);
+
+  // A timeout or upstream/network failure has an unknown outcome: CJ may have
+  // accepted the order before our connection failed. Retrying automatically
+  // could create a duplicate supplier order.
+  if (!statusCode || statusCode === 502 || statusCode === 504) {
+    return "manual_review";
+  }
+
+  return "failed";
+}
+
 export async function fulfillPaidOrder(orderDocument) {
   const order = orderDocument?.toObject ? orderDocument.toObject() : orderDocument;
   if (!order || order.paymentStatus !== "paid") return orderDocument;
@@ -106,12 +119,13 @@ export async function fulfillPaidOrder(orderDocument) {
       { new: true },
     );
   } catch (error) {
+    const failureStatus = getFailureFulfillmentStatus(error);
     await Order.updateOne(
       { _id: claim._id },
       {
         $set: {
           "fulfillment.provider": "cj",
-          "fulfillment.status": "failed",
+          "fulfillment.status": failureStatus,
           "fulfillment.error": String(error.message || "CJ fulfillment failed.").slice(0, 1000),
           "fulfillment.updatedAt": new Date(),
         },

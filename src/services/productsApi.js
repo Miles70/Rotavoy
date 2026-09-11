@@ -99,9 +99,8 @@ const detailLabels = {
   },
 };
 
-function getActiveLanguage() {
-  if (typeof window === "undefined") return "en";
-  const language = String(window.localStorage?.getItem("language") || "en").toLowerCase();
+function normalizeLanguage(value) {
+  const language = String(value || "en").toLowerCase();
   return supportedProductLanguages.includes(language) ? language : "en";
 }
 
@@ -167,51 +166,20 @@ function localizeDetails(product, language, translation) {
   return localized;
 }
 
-function normalizeProduct(product) {
+export function normalizeProduct(product, requestedLanguage = "en") {
   if (!product) return product;
 
-  const normalized = {
+  const language = normalizeLanguage(requestedLanguage);
+  const translation = getProductTranslation(product, language);
+
+  return {
     ...product,
+    title: translation?.title || product.title || "",
+    description: translation?.description || product.description || "",
+    categoryLabel: translation?.categoryLabel || product.categoryLabel || "",
+    details: localizeDetails(product, language, translation),
     imageUrl: product.imageUrl || product.images?.[0] || "",
   };
-
-  Object.defineProperties(normalized, {
-    title: {
-      enumerable: true,
-      configurable: true,
-      get() {
-        const language = getActiveLanguage();
-        return getProductTranslation(product, language)?.title || product.title || "";
-      },
-    },
-    description: {
-      enumerable: true,
-      configurable: true,
-      get() {
-        const language = getActiveLanguage();
-        return getProductTranslation(product, language)?.description || product.description || "";
-      },
-    },
-    categoryLabel: {
-      enumerable: true,
-      configurable: true,
-      get() {
-        const language = getActiveLanguage();
-        return getProductTranslation(product, language)?.categoryLabel || product.categoryLabel || "";
-      },
-    },
-    details: {
-      enumerable: true,
-      configurable: true,
-      get() {
-        const language = getActiveLanguage();
-        const translation = getProductTranslation(product, language);
-        return localizeDetails(product, language, translation);
-      },
-    },
-  });
-
-  return normalized;
 }
 
 async function storeRequest(path) {
@@ -232,6 +200,7 @@ export async function getStoreProducts({
   category = "",
   group = "",
   sort = "popular",
+  language = "en",
 } = {}) {
   const query = new URLSearchParams({
     page: String(page),
@@ -247,15 +216,15 @@ export async function getStoreProducts({
 
   return {
     ...data,
-    products: (data.products || []).map(normalizeProduct),
+    products: (data.products || []).map((product) => normalizeProduct(product, language)),
   };
 }
 
-export async function getStoreProduct(productKey) {
+export async function getStoreProduct(productKey, language = "en") {
   const data = await storeRequest(`/products/${encodeURIComponent(productKey)}`);
 
   return {
     ...data,
-    product: normalizeProduct(data.product),
+    product: normalizeProduct(data.product, language),
   };
 }

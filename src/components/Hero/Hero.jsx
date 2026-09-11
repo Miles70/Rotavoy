@@ -27,13 +27,13 @@ function formatProductCount(count) {
 }
 
 function Hero() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [productCount, setProductCount] = useState(0);
 
   useEffect(() => {
     let isCancelled = false;
 
-    getStoreProducts({ page: 1, limit: 8, sort: "popular" })
+    getStoreProducts({ page: 1, limit: 8, sort: "popular", language })
       .then((data) => {
         if (!isCancelled) {
           setProductCount(Number(data.pagination?.total || 0));
@@ -46,7 +46,7 @@ function Hero() {
     return () => {
       isCancelled = true;
     };
-  }, []);
+  }, [language]);
 
   const stats = [
     {

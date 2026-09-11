@@ -195,6 +195,7 @@ function Categories() {
           limit: 8,
           group: category.key,
           sort: "popular",
+          language,
         }),
       ),
     )
@@ -222,7 +223,7 @@ function Categories() {
     return () => {
       isCancelled = true;
     };
-  }, []);
+  }, [language]);
 
   const totalProducts = useMemo(
     () => categories.reduce((sum, category) => sum + Number(categoryData[category.key]?.total || 0), 0),

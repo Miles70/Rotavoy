@@ -216,7 +216,7 @@ function ProductDetailsLive() {
     setQuantity(1);
     setSelectedImageIndex(0);
 
-    getStoreProduct(productKey)
+    getStoreProduct(productKey, language)
       .then(async (data) => {
         if (isCancelled) return;
 
@@ -227,14 +227,20 @@ function ProductDetailsLive() {
             page: 1,
             limit: 6,
             category: data.product.categoryKey,
+            language,
           });
 
           if (!isCancelled) {
-            setRelatedProducts(
-              (relatedData.products || [])
-                .filter((item) => item.key !== data.product.key)
-                .slice(0, 4),
-            );
+            const seenSupplierProducts = new Set([
+              data.product.supplierProductId || data.product.key,
+            ]);
+            setRelatedProducts((relatedData.products || []).filter((item) => {
+              if (item.key === data.product.key) return false;
+              const groupKey = item.supplierProductId || item.key;
+              if (seenSupplierProducts.has(groupKey)) return false;
+              seenSupplierProducts.add(groupKey);
+              return true;
+            }).slice(0, 4));
           }
         } catch {
           if (!isCancelled) setRelatedProducts([]);
@@ -250,7 +256,7 @@ function ProductDetailsLive() {
     return () => {
       isCancelled = true;
     };
-  }, [productKey]);
+  }, [language, productKey]);
 
   const galleryImages = useMemo(() => {
     if (!product) return [];
@@ -362,7 +368,9 @@ function ProductDetailsLive() {
             ) : null}
 
             {product.badge ? (
-              <span className={`liveProductBadge ${product.badge}`}>{product.badge}</span>
+              <span className={`liveProductBadge ${product.badge}`}>
+                {product.badge === "stock" ? labels.inStock : product.badge}
+              </span>
             ) : null}
           </div>
 

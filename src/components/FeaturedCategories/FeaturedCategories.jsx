@@ -57,6 +57,7 @@ function FeaturedCategories() {
           limit: 3,
           group: category.key,
           sort: "popular",
+          language,
         }),
       ),
     ).then((results) => {
@@ -82,7 +83,7 @@ function FeaturedCategories() {
     return () => {
       isCancelled = true;
     };
-  }, []);
+  }, [language]);
 
   return (
     <section className="featuredCategories">

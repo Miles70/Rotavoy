@@ -89,6 +89,7 @@ function Products() {
       search: searchQuery,
       category: categoryQuery,
       group: groupQuery,
+      language,
     })
       .then((data) => {
         if (isCancelled) return;
@@ -115,7 +116,7 @@ function Products() {
     return () => {
       isCancelled = true;
     };
-  }, [categoryQuery, groupQuery, requestedPage, searchQuery, searchParams, setSearchParams]);
+  }, [categoryQuery, groupQuery, language, requestedPage, searchQuery, searchParams, setSearchParams]);
 
   const pageItems = useMemo(
     () => getPageItems(pagination.page || 1, pagination.totalPages || 1),
