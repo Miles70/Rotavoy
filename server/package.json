@@ -8,6 +8,7 @@
     "start": "node src/index.js",
     "seed": "node src/scripts/seedProducts.js",
     "cj:sync": "node src/scripts/syncCjProducts.js",
+    "content:enrich": "node src/scripts/enrichProductContent.js",
     "test": "node --test"
   },
   "dependencies": {
