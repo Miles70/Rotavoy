@@ -114,6 +114,15 @@ function buildVariantTranslations(bundle, variantIndex, fallback) {
   return translations;
 }
 
+export function hasFreshProfessionalContent(existing, sourceHash) {
+  return Boolean(
+    existing &&
+    existing.contentMeta?.status === "ready" &&
+    existing.contentMeta?.sourceHash === sourceHash &&
+    productTranslationsComplete(existing.translations),
+  );
+}
+
 async function syncOneProduct(listProduct, options) {
   const pid = String(listProduct?.id || listProduct?.pid || "").trim();
   if (!pid) return { upserted: 0, skipped: 1 };
@@ -149,7 +158,17 @@ async function syncOneProduct(listProduct, options) {
       supplierProductId: pid,
       supplierVariantId: { $in: selectedVariantIds },
     })
-      .select({ supplierVariantId: 1, translations: 1, translationMeta: 1 })
+      .select({
+        supplierVariantId: 1,
+        title: 1,
+        description: 1,
+        features: 1,
+        categoryLabel: 1,
+        supplierContent: 1,
+        contentMeta: 1,
+        translations: 1,
+        translationMeta: 1,
+      })
       .lean()
     : [];
 
@@ -194,7 +213,8 @@ async function syncOneProduct(listProduct, options) {
     const price = roundMoney(costPrice * options.markupMultiplier);
     const key = `cj-${vid}`;
     const existing = existingByVariantId.get(vid);
-    const translations = canReuseTranslations
+    const preserveProfessional = hasFreshProfessionalContent(existing, sourceHash);
+    const translations = preserveProfessional || canReuseTranslations
       ? existing.translations
       : buildVariantTranslations(translationBundle, variantIndex, {
         title,
@@ -202,14 +222,34 @@ async function syncOneProduct(listProduct, options) {
         categoryLabel,
         variant: variantLabel,
       });
+    const translationMeta = preserveProfessional || (canReuseTranslations && existing?.translationMeta)
+      ? existing.translationMeta
+      : {
+        provider: "google-translate",
+        sourceHash,
+        sourceLanguage: "en",
+        languages: Object.keys(translations || {}),
+        updatedAt: new Date(),
+      };
+    const contentMeta = preserveProfessional
+      ? existing.contentMeta
+      : {
+        status: "pending",
+        provider: "",
+        model: "",
+        version: "",
+        sourceHash,
+        updatedAt: new Date(),
+        error: "",
+      };
 
     await Product.findOneAndUpdate(
       { key },
       {
         $set: {
-          title,
-          description,
-          features: [],
+          title: preserveProfessional ? (existing.title || title) : title,
+          description: preserveProfessional ? (existing.description ?? description) : description,
+          features: preserveProfessional && Array.isArray(existing.features) ? existing.features : [],
           details: {
             supplier: "CJdropshipping",
             variant: variantLabel,
@@ -217,20 +257,21 @@ async function syncOneProduct(listProduct, options) {
             originCountry: options.originCountryCode,
             weightGrams: Number(variant?.variantWeight || 0),
           },
-          translations,
-          translationMeta: {
-            provider: "google-translate",
-            sourceHash,
-            sourceLanguage: "en",
-            languages: Object.keys(translations || {}),
-            updatedAt: new Date().toISOString(),
+          supplierContent: {
+            title: productTitle,
+            description,
+            categoryLabel,
+            variant: variantLabel,
           },
+          contentMeta,
+          translations,
+          translationMeta,
           sourceLanguage: "en",
           sourceHash,
           brand: cleanText(detail?.supplierName, 120),
           quantity: "",
           categoryKey,
-          categoryLabel,
+          categoryLabel: preserveProfessional ? (existing.categoryLabel || categoryLabel) : categoryLabel,
           price,
           oldPrice: null,
           currency: "USD",
