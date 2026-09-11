@@ -142,7 +142,7 @@ export function productTranslationsComplete(translations) {
       entry &&
       typeof entry === "object" &&
       String(entry.title || "").trim() &&
-      String(entry.description || "").trim() &&
+      Object.prototype.hasOwnProperty.call(entry, "description") &&
       String(entry.categoryLabel || "").trim() &&
       String(entry.variant || "").trim(),
     );
