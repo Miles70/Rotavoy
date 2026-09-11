@@ -70,11 +70,16 @@ function getVariantLabel(variant) {
   );
 }
 
+function appendVariantToTitle(title, variantLabel) {
+  const cleanTitle = cleanText(title, 260);
+  const cleanVariant = cleanText(variantLabel, 160);
+  if (!cleanVariant || cleanVariant.toLowerCase() === "default") return cleanTitle;
+  if (cleanTitle.toLowerCase().includes(cleanVariant.toLowerCase())) return cleanTitle;
+  return `${cleanTitle} - ${cleanVariant}`.slice(0, 300);
+}
+
 function buildVariantTitle(productTitle, variant) {
-  const option = getVariantLabel(variant);
-  if (!option || option === "Default") return productTitle;
-  if (productTitle.toLowerCase().includes(option.toLowerCase())) return productTitle;
-  return `${productTitle} - ${option}`.slice(0, 300);
+  return appendVariantToTitle(productTitle, getVariantLabel(variant));
 }
 
 function uniqueUrls(values) {
@@ -91,11 +96,14 @@ function buildVariantTranslations(bundle, variantIndex, fallback) {
   const translations = {};
 
   for (const [language, localized] of Object.entries(bundle || {})) {
+    const localizedVariant = String(localized?.variants?.[variantIndex] || fallback.variant).trim();
+    const localizedBaseTitle = String(localized?.title || fallback.title).trim();
+
     translations[language] = {
-      title: String(localized?.title || fallback.title).trim(),
-      description: String(localized?.description || fallback.description).trim(),
+      title: appendVariantToTitle(localizedBaseTitle, localizedVariant),
+      description: String(localized?.description ?? fallback.description).trim(),
       categoryLabel: String(localized?.categoryLabel || fallback.categoryLabel).trim(),
-      variant: String(localized?.variants?.[variantIndex] || fallback.variant).trim(),
+      variant: localizedVariant,
     };
   }
 
