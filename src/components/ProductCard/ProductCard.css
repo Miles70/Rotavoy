@@ -249,6 +249,10 @@
   height: 100%;
 }
 
+.liveProductRelated .productImage {
+  height: 240px;
+}
+
 @keyframes productAddedPop {
   0% {
     transform: scale(1);
@@ -266,6 +270,10 @@
 @media (max-width: 1000px) {
   .liveProductRelated .productsGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .liveProductRelated .productImage {
+    height: 230px;
   }
 }
 
@@ -296,5 +304,9 @@
 
   .liveProductRelated .productsGrid {
     grid-template-columns: 1fr;
+  }
+
+  .liveProductRelated .productImage {
+    height: 260px;
   }
 }
