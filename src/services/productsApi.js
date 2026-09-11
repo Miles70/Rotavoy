@@ -206,10 +206,12 @@ export async function getStoreProducts({
   sort = "popular",
   language = "en",
 } = {}) {
+  const normalizedLanguage = normalizeLanguage(language);
   const query = new URLSearchParams({
     page: String(page),
     limit: String(limit),
     sort,
+    language: normalizedLanguage,
   });
 
   if (search) query.set("search", search);
@@ -220,15 +222,17 @@ export async function getStoreProducts({
 
   return {
     ...data,
-    products: (data.products || []).map((product) => normalizeProduct(product, language)),
+    products: (data.products || []).map((product) => normalizeProduct(product, normalizedLanguage)),
   };
 }
 
 export async function getStoreProduct(productKey, language = "en") {
-  const data = await storeRequest(`/products/${encodeURIComponent(productKey)}`);
+  const normalizedLanguage = normalizeLanguage(language);
+  const query = new URLSearchParams({ language: normalizedLanguage });
+  const data = await storeRequest(`/products/${encodeURIComponent(productKey)}?${query.toString()}`);
 
   return {
     ...data,
-    product: normalizeProduct(data.product, language),
+    product: normalizeProduct(data.product, normalizedLanguage),
   };
 }
