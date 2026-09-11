@@ -9,6 +9,8 @@ const productSchema = new mongoose.Schema(
     description: { type: String, trim: true, default: "" },
     features: { type: [String], default: [] },
     details: { type: mongoose.Schema.Types.Mixed, default: {} },
+    supplierContent: { type: mongoose.Schema.Types.Mixed, default: {} },
+    contentMeta: { type: mongoose.Schema.Types.Mixed, default: {} },
     translations: { type: mongoose.Schema.Types.Mixed, default: {} },
     translationMeta: { type: mongoose.Schema.Types.Mixed, default: {} },
     brand: { type: String, trim: true, default: "", index: true },
@@ -47,5 +49,8 @@ productSchema.index({
   description: "text",
   features: "text",
 });
+
+productSchema.index({ source: 1, supplierProductId: 1, isActive: 1 });
+productSchema.index({ source: 1, "contentMeta.status": 1, supplierProductId: 1 });
 
 export const Product = mongoose.model("Product", productSchema);
