@@ -1,10 +1,39 @@
 import { Product } from "../models/Product.js";
 
-const LEGACY_FAKE_SOURCES = ["amazon-reviews-2023", "manual"];
+const LEGACY_DEMO_KEYS = [
+  "macbookPro",
+  "smartWatch",
+  "smartphonePro",
+  "mirrorlessCamera",
+  "wirelessHeadphones",
+  "tabletPro",
+  "bluetoothSpeaker",
+  "basicTshirt",
+  "runningShoes",
+  "classicSunglasses",
+  "urbanBackpack",
+  "premiumHoodie",
+  "leatherJacket",
+  "deskLamp",
+  "officeChair",
+  "modernSofa",
+  "coffeeMaker",
+  "indoorPlant",
+  "woodenTable",
+  "gamingHeadset",
+  "mechanicalKeyboard",
+  "wirelessController",
+  "gamingMouse",
+  "gamingMonitor",
+  "streamingMicrophone",
+];
 
 export async function syncProductsFromCatalog() {
   const cleanupResult = await Product.deleteMany({
-    source: { $in: LEGACY_FAKE_SOURCES },
+    $or: [
+      { source: "amazon-reviews-2023" },
+      { source: "manual", key: { $in: LEGACY_DEMO_KEYS } },
+    ],
   });
 
   return {
