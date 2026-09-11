@@ -276,8 +276,8 @@ async function requestProfessionalContent(source) {
       let parsed;
       try {
         parsed = JSON.parse(text);
-      } catch {
-        throw new Error("OpenAI returned product content that was not valid JSON.");
+      } catch (parseError) {
+        throw new Error("OpenAI returned product content that was not valid JSON.", { cause: parseError });
       }
 
       return {
@@ -287,7 +287,7 @@ async function requestProfessionalContent(source) {
       };
     } catch (error) {
       if (error?.name === "AbortError") {
-        throw new Error("OpenAI product content request timed out.");
+        throw new Error("OpenAI product content request timed out.", { cause: error });
       }
       throw error;
     } finally {
