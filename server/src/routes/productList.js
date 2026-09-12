@@ -24,10 +24,6 @@ const CATEGORY_GROUPS = {
   booksMusicFilmHobby: ["gaming"],
 };
 
-function getStorefrontSources() {
-  return isCjConfigured() ? ["cj"] : LEGACY_SOURCES;
-}
-
 function escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
