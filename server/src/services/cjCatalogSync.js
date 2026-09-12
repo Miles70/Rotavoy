@@ -157,6 +157,15 @@ export function hasFreshProfessionalContent(existing, sourceHash) {
   );
 }
 
+export function shouldPreserveExistingTranslations(existing, translationBundle) {
+  const bundleComplete = getRotavoyProductLanguages().every((language) => translationBundle?.[language]);
+  return Boolean(
+    !bundleComplete &&
+    existing &&
+    productTranslationsComplete(existing.translations),
+  );
+}
+
 async function syncOneProduct(listProduct, options) {
   const pid = String(listProduct?.id || listProduct?.pid || "").trim();
   if (!pid) return { upserted: 0, skipped: 1 };
@@ -254,7 +263,11 @@ async function syncOneProduct(listProduct, options) {
     const key = `cj-${vid}`;
     const existing = existingByVariantId.get(vid);
     const preserveProfessional = hasFreshProfessionalContent(existing, sourceHash);
-    const translations = preserveProfessional || canReuseTranslations
+    const preserveExistingTranslations = !canReuseTranslations && shouldPreserveExistingTranslations(
+      existing,
+      translationBundle,
+    );
+    const translations = preserveProfessional || canReuseTranslations || preserveExistingTranslations
       ? existing.translations
       : buildVariantTranslations(translationBundle, variantIndex, {
         title,
@@ -262,7 +275,9 @@ async function syncOneProduct(listProduct, options) {
         categoryLabel,
         variant: variantLabel,
       });
-    const translationMeta = preserveProfessional || (canReuseTranslations && existing?.translationMeta)
+    const translationMeta = preserveProfessional ||
+      (canReuseTranslations && existing?.translationMeta) ||
+      (preserveExistingTranslations && existing?.translationMeta)
       ? existing.translationMeta
       : {
         provider: "google-translate",
