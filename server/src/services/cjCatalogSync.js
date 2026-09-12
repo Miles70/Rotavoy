@@ -1,6 +1,11 @@
 import { createHash } from "node:crypto";
 import { Product } from "../models/Product.js";
-import { getCjProductDetail, getCjVariantStock, listCjProducts } from "./cjApi.js";
+import {
+  getCjProductDetail,
+  getCjProductInventory,
+  getCjVariantStock,
+  listCjProducts,
+} from "./cjApi.js";
 import {
   getRotavoyProductLanguages,
   productTranslationsComplete,
@@ -9,11 +14,18 @@ import {
 
 const LEGACY_DEMO_SOURCE = "amazon-reviews-2023";
 const MAX_CJ_PRODUCT_IMAGES = 8;
+const MAX_CJ_LIST_PAGE_SIZE = 100;
+const MAX_CJ_LIST_PAGE = 1000;
+const MAX_CATALOG_TARGET = 5_000;
 
 function parsePositiveInt(value, fallback, max = 100) {
   const parsed = Number.parseInt(value, 10);
   if (!Number.isInteger(parsed) || parsed < 1) return fallback;
   return Math.min(parsed, max);
+}
+
+function isTrue(value) {
+  return String(value || "false").toLowerCase() === "true";
 }
 
 function getMarkupMultiplier() {
@@ -60,12 +72,34 @@ function flattenListV2(data) {
   return content.flatMap((entry) => Array.isArray(entry?.productList) ? entry.productList : []);
 }
 
+function getCjProductId(product) {
+  return String(product?.id || product?.pid || "").trim();
+}
+
 function sumOriginStock(rows, originCountryCode) {
   const origin = String(originCountryCode || "CN").toUpperCase();
   return (Array.isArray(rows) ? rows : []).reduce((sum, row) => {
     if (String(row?.countryCode || "").toUpperCase() !== origin) return sum;
-    return sum + Math.max(Number(row?.totalInventoryNum || 0), 0);
+    const quantity = row?.totalInventoryNum ?? row?.totalInventory ?? 0;
+    return sum + Math.max(Number(quantity || 0), 0);
   }, 0);
+}
+
+export function buildCjVariantStockMap(productInventory, originCountryCode = "CN") {
+  const rows = Array.isArray(productInventory?.variantInventories)
+    ? productInventory.variantInventories
+    : Array.isArray(productInventory?.variantInventory)
+      ? productInventory.variantInventory
+      : [];
+  const stockByVariantId = new Map();
+
+  for (const row of rows) {
+    const vid = String(row?.vid || row?.variantId || "").trim();
+    if (!vid) continue;
+    stockByVariantId.set(vid, sumOriginStock(row?.inventory, originCountryCode));
+  }
+
+  return stockByVariantId;
 }
 
 function getVariantLabel(variant) {
@@ -166,15 +200,87 @@ export function shouldPreserveExistingTranslations(existing, translationBundle) 
   );
 }
 
+async function discoverCjProducts({
+  keywords,
+  targetCount,
+  pageSize,
+  maxPagesPerKeyword,
+  excludedProductIds,
+}) {
+  if (targetCount < 1) {
+    return {
+      products: [],
+      pagesFetched: 0,
+      duplicateProductsSkipped: 0,
+      existingProductsSkipped: 0,
+    };
+  }
+
+  const products = [];
+  const seenProductIds = new Set();
+  const exhaustedKeywords = new Set();
+  let pagesFetched = 0;
+  let duplicateProductsSkipped = 0;
+  let existingProductsSkipped = 0;
+
+  for (let page = 1; page <= maxPagesPerKeyword && products.length < targetCount; page += 1) {
+    for (const keyword of keywords) {
+      if (products.length >= targetCount) break;
+      if (exhaustedKeywords.has(keyword)) continue;
+
+      const data = await listCjProducts({ page, size: pageSize, keyWord: keyword });
+      pagesFetched += 1;
+      const pageProducts = flattenListV2(data);
+
+      if (pageProducts.length === 0) {
+        exhaustedKeywords.add(keyword);
+        continue;
+      }
+
+      for (const product of pageProducts) {
+        const pid = getCjProductId(product);
+        if (!pid) continue;
+
+        if (excludedProductIds.has(pid)) {
+          existingProductsSkipped += 1;
+          continue;
+        }
+
+        if (seenProductIds.has(pid)) {
+          duplicateProductsSkipped += 1;
+          continue;
+        }
+
+        seenProductIds.add(pid);
+        products.push(product);
+        if (products.length >= targetCount) break;
+      }
+
+      if (pageProducts.length < pageSize) {
+        exhaustedKeywords.add(keyword);
+      }
+    }
+  }
+
+  return {
+    products,
+    pagesFetched,
+    duplicateProductsSkipped,
+    existingProductsSkipped,
+  };
+}
+
 async function syncOneProduct(listProduct, options) {
-  const pid = String(listProduct?.id || listProduct?.pid || "").trim();
-  if (!pid) return { upserted: 0, skipped: 1 };
+  const pid = getCjProductId(listProduct);
+  if (!pid) return { upserted: 0, activeVariants: 0, skipped: 1 };
 
   const detail = await getCjProductDetail(pid);
   const variants = Array.isArray(detail?.variants) ? detail.variants : [];
   const selectedVariants = variants.slice(0, options.maxVariantsPerProduct);
   const productTitle = cleanText(detail?.productNameEn || detail?.nameEn || listProduct?.nameEn, 260);
-  if (!productTitle || selectedVariants.length === 0) return { upserted: 0, skipped: 1 };
+  if (!productTitle || selectedVariants.length === 0) {
+    return { upserted: 0, activeVariants: 0, skipped: 1 };
+  }
 
   const categoryLabel = cleanText(
     detail?.categoryName || listProduct?.threeCategoryName || listProduct?.twoCategoryName || listProduct?.oneCategoryName || "General",
@@ -239,7 +345,16 @@ async function syncOneProduct(listProduct, options) {
       variants: variantLabels,
     });
 
+  let productStockByVariantId = new Map();
+  try {
+    const productInventory = await getCjProductInventory(pid);
+    productStockByVariantId = buildCjVariantStockMap(productInventory, options.originCountryCode);
+  } catch (error) {
+    console.warn(`CJ product inventory fallback for ${pid}:`, error.message);
+  }
+
   let upserted = 0;
+  let activeVariants = 0;
 
   for (let variantIndex = 0; variantIndex < selectedVariants.length; variantIndex += 1) {
     const variant = selectedVariants[variantIndex];
@@ -249,8 +364,11 @@ async function syncOneProduct(listProduct, options) {
     const costPrice = roundMoney(variant?.variantSellPrice);
     if (!(costPrice > 0)) continue;
 
-    const stockRows = await getCjVariantStock(vid);
-    const stock = sumOriginStock(stockRows, options.originCountryCode);
+    let stock = productStockByVariantId.get(vid);
+    if (stock === undefined) {
+      const stockRows = await getCjVariantStock(vid);
+      stock = sumOriginStock(stockRows, options.originCountryCode);
+    }
 
     const images = uniqueUrls([
       variant?.variantImage || "",
@@ -280,7 +398,7 @@ async function syncOneProduct(listProduct, options) {
       (preserveExistingTranslations && existing?.translationMeta)
       ? existing.translationMeta
       : {
-        provider: "google-translate",
+        provider: options.autoTranslation ? "google-translate" : "source",
         sourceHash,
         sourceLanguage: "en",
         languages: Object.keys(translations || {}),
@@ -354,9 +472,25 @@ async function syncOneProduct(listProduct, options) {
     );
 
     upserted += 1;
+    if (stock > 0) activeVariants += 1;
   }
 
-  return { upserted, skipped: upserted > 0 ? 0 : 1 };
+  if (selectedVariantIds.length > 0) {
+    await Product.updateMany(
+      {
+        source: "cj",
+        supplierProductId: pid,
+        supplierVariantId: { $nin: selectedVariantIds },
+      },
+      { $set: { isActive: false, stock: 0 } },
+    );
+  }
+
+  return {
+    upserted,
+    activeVariants,
+    skipped: upserted > 0 ? 0 : 1,
+  };
 }
 
 export async function syncCjCatalog() {
@@ -364,28 +498,95 @@ export async function syncCjCatalog() {
     .split(",")
     .map((value) => value.trim())
     .filter(Boolean);
-  const maxProductsPerKeyword = parsePositiveInt(process.env.CJ_SYNC_PRODUCTS_PER_KEYWORD, 6, 25);
+  const maxProductsPerKeyword = parsePositiveInt(process.env.CJ_SYNC_PRODUCTS_PER_KEYWORD, 6, MAX_CJ_LIST_PAGE_SIZE);
+  const requestedTarget = parsePositiveInt(process.env.CJ_SYNC_TARGET_PRODUCTS, 0, MAX_CATALOG_TARGET);
+  const targetProducts = requestedTarget || Math.min(keywords.length * maxProductsPerKeyword, MAX_CATALOG_TARGET);
+  const pageSize = parsePositiveInt(
+    process.env.CJ_SYNC_PAGE_SIZE,
+    requestedTarget ? MAX_CJ_LIST_PAGE_SIZE : maxProductsPerKeyword,
+    MAX_CJ_LIST_PAGE_SIZE,
+  );
+  const maxPagesPerKeyword = parsePositiveInt(
+    process.env.CJ_SYNC_MAX_PAGES_PER_KEYWORD,
+    requestedTarget ? 20 : 1,
+    MAX_CJ_LIST_PAGE,
+  );
+  const batchSize = parsePositiveInt(process.env.CJ_SYNC_BATCH_SIZE, 100, 500);
   const maxVariantsPerProduct = parsePositiveInt(process.env.CJ_SYNC_VARIANTS_PER_PRODUCT, 4, 12);
+  const onlyNew = isTrue(process.env.CJ_SYNC_ONLY_NEW);
+  const autoTranslation = String(process.env.CJ_TRANSLATE_PRODUCTS || "true").toLowerCase() !== "false";
   const options = {
     maxVariantsPerProduct,
     markupMultiplier: getMarkupMultiplier(),
     originCountryCode: String(process.env.CJ_FROM_COUNTRY_CODE || "CN").toUpperCase(),
+    autoTranslation,
   };
 
+  const existingProductIds = onlyNew
+    ? new Set((await Product.distinct("supplierProductId", {
+      source: "cj",
+      supplierProductId: { $ne: "" },
+    })).map((value) => String(value || "").trim()).filter(Boolean))
+    : new Set();
+  const existingActiveProductIds = onlyNew
+    ? new Set((await Product.distinct("supplierProductId", {
+      source: "cj",
+      supplierProductId: { $ne: "" },
+      isActive: true,
+      stock: { $gt: 0 },
+    })).map((value) => String(value || "").trim()).filter(Boolean))
+    : new Set();
+
+  const activeProductsNeeded = onlyNew
+    ? Math.max(targetProducts - existingActiveProductIds.size, 0)
+    : targetProducts;
+  const discoveryBuffer = onlyNew && activeProductsNeeded > 0
+    ? Math.max(100, Math.ceil(activeProductsNeeded * 0.35))
+    : 0;
+  const discoveryTarget = Math.min(
+    activeProductsNeeded + discoveryBuffer,
+    MAX_CATALOG_TARGET + Math.max(100, Math.ceil(MAX_CATALOG_TARGET * 0.35)),
+  );
+
+  const discovery = await discoverCjProducts({
+    keywords,
+    targetCount: discoveryTarget,
+    pageSize,
+    maxPagesPerKeyword,
+    excludedProductIds: existingProductIds,
+  });
+
   let importedProducts = 0;
+  let activeImportedProducts = 0;
   let upsertedVariants = 0;
+  let activeVariants = 0;
   let skippedProducts = 0;
+  let failedProducts = 0;
 
-  for (const keyword of keywords) {
-    const data = await listCjProducts({ page: 1, size: maxProductsPerKeyword, keyWord: keyword });
-    const products = flattenListV2(data).slice(0, maxProductsPerKeyword);
+  for (let offset = 0; offset < discovery.products.length; offset += batchSize) {
+    if (onlyNew && activeImportedProducts >= activeProductsNeeded) break;
 
-    for (const product of products) {
-      const result = await syncOneProduct(product, options);
-      importedProducts += 1;
-      upsertedVariants += result.upserted;
-      skippedProducts += result.skipped;
+    const batch = discovery.products.slice(offset, offset + batchSize);
+    for (const product of batch) {
+      if (onlyNew && activeImportedProducts >= activeProductsNeeded) break;
+
+      try {
+        const result = await syncOneProduct(product, options);
+        importedProducts += 1;
+        upsertedVariants += result.upserted;
+        activeVariants += result.activeVariants;
+        skippedProducts += result.skipped;
+        if (result.activeVariants > 0) activeImportedProducts += 1;
+      } catch (error) {
+        failedProducts += 1;
+        console.warn(`CJ product sync skipped for ${getCjProductId(product) || "unknown"}:`, error.message);
+        if ([401, 503].includes(Number(error?.statusCode))) throw error;
+      }
     }
+
+    console.log(
+      `CJ catalog batch complete: ${Math.min(offset + batch.length, discovery.products.length)}/${discovery.products.length} candidates, ${activeImportedProducts} active new products.`,
+    );
   }
 
   let deletedLegacyCount = 0;
@@ -396,15 +597,36 @@ export async function syncCjCatalog() {
     deletedLegacyCount = cleanup.deletedCount || 0;
   }
 
+  const activeCatalogProducts = onlyNew
+    ? existingActiveProductIds.size + activeImportedProducts
+    : null;
+
   return {
     keywords,
+    catalogTarget: targetProducts,
+    activeCatalogProducts,
+    targetReached: onlyNew ? activeCatalogProducts >= targetProducts : null,
+    existingProducts: onlyNew ? existingProductIds.size : null,
+    existingActiveProducts: onlyNew ? existingActiveProductIds.size : null,
+    discoveredCandidates: discovery.products.length,
+    pagesFetched: discovery.pagesFetched,
+    duplicateProductsSkipped: discovery.duplicateProductsSkipped,
+    existingProductsSkipped: discovery.existingProductsSkipped,
     importedProducts,
+    activeImportedProducts,
+    failedProducts,
     upsertedVariants,
+    activeVariants,
     skippedProducts,
     deletedLegacyCount,
+    batchSize,
+    pageSize,
+    maxPagesPerKeyword,
+    maxVariantsPerProduct,
     markupMultiplier: options.markupMultiplier,
     originCountryCode: options.originCountryCode,
     productLanguages: getRotavoyProductLanguages(),
-    autoTranslation: String(process.env.CJ_TRANSLATE_PRODUCTS || "true").toLowerCase() !== "false",
+    autoTranslation,
+    onlyNew,
   };
 }
