@@ -4,18 +4,12 @@ import {
   extractCjDescriptionImageUrls,
   getLegacyCatalogCleanupFilter,
   hasFreshProfessionalContent,
+  shouldPreserveExistingTranslations,
 } from "../src/services/cjCatalogSync.js";
 import { getFailureFulfillmentStatus } from "../src/services/cjFulfillment.js";
 
-test("CJ catalog cleanup never targets manually created products", () => {
-  const filter = getLegacyCatalogCleanupFilter();
-
-  assert.deepEqual(filter, { source: "amazon-reviews-2023" });
-  assert.notEqual(filter.source, "manual");
-});
-
-test("CJ sync preserves professional copy only while supplier source is unchanged", () => {
-  const translations = Object.fromEntries(
+function completeTranslations() {
+  return Object.fromEntries(
     ["en", "tr", "ru", "ar", "zh", "es", "pt", "fr", "de", "it"].map((language) => [
       language,
       {
@@ -26,13 +20,38 @@ test("CJ sync preserves professional copy only while supplier source is unchange
       },
     ]),
   );
+}
+
+test("CJ catalog cleanup never targets manually created products", () => {
+  const filter = getLegacyCatalogCleanupFilter();
+
+  assert.deepEqual(filter, { source: "amazon-reviews-2023" });
+  assert.notEqual(filter.source, "manual");
+});
+
+test("CJ sync preserves professional copy only while supplier source is unchanged", () => {
   const existing = {
     contentMeta: { status: "ready", sourceHash: "same-hash" },
-    translations,
+    translations: completeTranslations(),
   };
 
   assert.equal(hasFreshProfessionalContent(existing, "same-hash"), true);
   assert.equal(hasFreshProfessionalContent(existing, "changed-hash"), false);
+});
+
+test("CJ sync keeps existing complete translations when translation provider returns a partial bundle", () => {
+  const existing = { translations: completeTranslations() };
+  const throttledBundle = {
+    en: {
+      title: "New title",
+      description: "New description",
+      categoryLabel: "New category",
+      variants: ["Default"],
+    },
+  };
+
+  assert.equal(shouldPreserveExistingTranslations(existing, throttledBundle), true);
+  assert.equal(shouldPreserveExistingTranslations(existing, completeTranslations()), false);
 });
 
 test("CJ gallery extraction keeps description images, removes duplicates and ignores unsafe URLs", () => {
