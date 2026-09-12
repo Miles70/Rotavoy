@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Heart } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useLanguage } from "../../i18n/LanguageContext";
 import { useCart } from "../../context/CartContext";
 import { useCustomerAuth } from "../../context/CustomerAuthContext";
@@ -14,60 +14,70 @@ const badgeTranslations = {
     stock: "In Stock",
     add: "Add to cart",
     added: "Added to cart",
+    options: "Choose options",
   },
   tr: {
     new: "Yeni",
     stock: "Stokta",
     add: "Sepete ekle",
     added: "Sepete eklendi",
+    options: "Seçenekleri gör",
   },
   ru: {
     new: "Новинка",
     stock: "В наличии",
     add: "Добавить в корзину",
     added: "Добавлено",
+    options: "Выбрать вариант",
   },
   ar: {
     new: "جديد",
     stock: "متوفر",
     add: "أضف إلى السلة",
     added: "تمت الإضافة",
+    options: "اختر الخيار",
   },
   zh: {
     new: "新品",
     stock: "有货",
     add: "加入购物车",
     added: "已加入购物车",
+    options: "选择规格",
   },
   es: {
     new: "Nuevo",
     stock: "En stock",
     add: "Añadir al carrito",
     added: "Añadido al carrito",
+    options: "Elegir opciones",
   },
   pt: {
     new: "Novo",
     stock: "Em estoque",
     add: "Adicionar ao carrinho",
     added: "Adicionado ao carrinho",
+    options: "Escolher opções",
   },
   fr: {
     new: "Nouveau",
     stock: "En stock",
     add: "Ajouter au panier",
     added: "Ajouté au panier",
+    options: "Choisir les options",
   },
   de: {
     new: "Neu",
     stock: "Auf Lager",
     add: "In den Warenkorb",
     added: "Zum Warenkorb hinzugefügt",
+    options: "Optionen wählen",
   },
   it: {
     new: "Nuovo",
     stock: "Disponibile",
     add: "Aggiungi al carrello",
     added: "Aggiunto al carrello",
+    options: "Scegli opzioni",
   },
 };
 
@@ -105,12 +115,14 @@ function ProductCard({ product }) {
   const { addToCart } = useCart();
   const { isAuthenticated, openAuthModal } = useCustomerAuth();
   const { isFavorite, toggleFavorite } = useCustomerAccount();
+  const navigate = useNavigate();
   const [isAdded, setIsAdded] = useState(false);
 
   const labels = badgeTranslations[language] || badgeTranslations.en;
   const numberLocale = numberLocales[language] || numberLocales.en;
   const productPath = `/products/${product.key}`;
   const favorite = isFavorite(product.key);
+  const hasMultipleVariants = Number(product.variantCount || 0) > 1;
 
   const text = (key, fallback) => {
     const value = t(key);
@@ -118,6 +130,11 @@ function ProductCard({ product }) {
   };
 
   function handleAddToCart() {
+    if (hasMultipleVariants) {
+      navigate(productPath);
+      return;
+    }
+
     addToCart(product);
     setIsAdded(true);
 
@@ -161,7 +178,11 @@ function ProductCard({ product }) {
     return labels[product.badge] || "";
   }
 
-  const buttonLabel = isAdded ? labels.added : labels.add;
+  const buttonLabel = hasMultipleVariants
+    ? labels.options
+    : isAdded
+      ? labels.added
+      : labels.add;
   const favoriteLabel = favorite
     ? text("account.removeFavorite", "Remove from favorites")
     : text("account.addFavorite", "Add to favorites");
@@ -169,9 +190,14 @@ function ProductCard({ product }) {
   const badgeLabel = getBadgeLabel();
   const categoryLabel = getCategoryLabel(product, t);
   const displayOldPrice =
-    Number(product.oldPrice || 0) > Number(product.price || 0)
+    !hasMultipleVariants && Number(product.oldPrice || 0) > Number(product.price || 0)
       ? Number(product.oldPrice)
       : null;
+  const minimumPrice = Number(product.priceMin ?? product.price ?? 0);
+  const maximumPrice = Number(product.priceMax ?? product.price ?? 0);
+  const displayPrice = maximumPrice > minimumPrice
+    ? `${formatPrice(minimumPrice)} – ${formatPrice(maximumPrice)}`
+    : formatPrice(product.price);
 
   return (
     <article className={isAdded ? "productCard added" : "productCard"}>
@@ -227,7 +253,7 @@ function ProductCard({ product }) {
 
         <div className="productBottom">
           <Link to={productPath} className="productPriceBlock">
-            <strong>{formatPrice(product.price)}</strong>
+            <strong>{displayPrice}</strong>
             {displayOldPrice ? <del>{formatPrice(displayOldPrice)}</del> : null}
           </Link>
 
@@ -238,7 +264,7 @@ function ProductCard({ product }) {
             aria-label={buttonLabel}
             title={buttonLabel}
           >
-            {isAdded ? (
+            {isAdded && !hasMultipleVariants ? (
               <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path
                   d="M5 12.5L9.2 16.5L19 6.5"
