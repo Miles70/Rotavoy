@@ -198,6 +198,12 @@ export async function getCjProductDetail(pid) {
   return authenticatedRequest("/product/query", { query: { pid } });
 }
 
+export async function getCjProductInventory(pid) {
+  return authenticatedRequest("/product/stock/getInventoryByPid", {
+    query: { pid },
+  });
+}
+
 export async function getCjVariantStock(vid) {
   return authenticatedRequest("/product/stock/queryByVid", {
     query: { vid },
