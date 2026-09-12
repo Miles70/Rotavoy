@@ -8,6 +8,7 @@ import {
 } from "./productTranslation.js";
 
 const LEGACY_DEMO_SOURCE = "amazon-reviews-2023";
+const MAX_CJ_PRODUCT_IMAGES = 8;
 
 function parsePositiveInt(value, fallback, max = 100) {
   const parsed = Number.parseInt(value, 10);
@@ -86,8 +87,41 @@ function buildVariantTitle(productTitle, variant) {
   return appendVariantToTitle(productTitle, getVariantLabel(variant));
 }
 
-function uniqueUrls(values) {
-  return [...new Set(values.filter((value) => /^https?:\/\//i.test(String(value || ""))))];
+function normalizeImageUrl(value) {
+  const url = String(value || "")
+    .trim()
+    .replace(/&amp;/gi, "&");
+  return /^https?:\/\//i.test(url) ? url : "";
+}
+
+function uniqueUrls(values, limit = MAX_CJ_PRODUCT_IMAGES) {
+  const unique = [];
+  const seen = new Set();
+
+  for (const value of values) {
+    const url = normalizeImageUrl(value);
+    if (!url || seen.has(url)) continue;
+    seen.add(url);
+    unique.push(url);
+    if (unique.length >= limit) break;
+  }
+
+  return unique;
+}
+
+export function extractCjDescriptionImageUrls(html) {
+  const source = String(html || "");
+  const urls = [];
+  const imageTags = source.match(/<img\b[^>]*>/gi) || [];
+  const imageAttributePattern = /\s(?:src|data-src|data-original|data-lazy-src)\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s"'=<>`]+))/i;
+
+  for (const imageTag of imageTags) {
+    const match = imageTag.match(imageAttributePattern);
+    const url = match?.[1] || match?.[2] || match?.[3] || "";
+    if (url) urls.push(url);
+  }
+
+  return uniqueUrls(urls);
 }
 
 function createTranslationSourceHash({ title, description, categoryLabel, variants }) {
@@ -138,8 +172,10 @@ async function syncOneProduct(listProduct, options) {
     160,
   );
   const categoryKey = normalizeCategory(categoryLabel);
-  const description = cleanText(detail?.description || listProduct?.description, 1800);
+  const rawDescription = String(detail?.description || listProduct?.description || "");
+  const description = cleanText(rawDescription, 1800);
   const baseImage = detail?.productImage || detail?.bigImage || listProduct?.bigImage || "";
+  const descriptionImages = extractCjDescriptionImageUrls(rawDescription);
   const variantLabels = selectedVariants.map(getVariantLabel);
   const sourceHash = createTranslationSourceHash({
     title: productTitle,
@@ -207,7 +243,11 @@ async function syncOneProduct(listProduct, options) {
     const stockRows = await getCjVariantStock(vid);
     const stock = sumOriginStock(stockRows, options.originCountryCode);
 
-    const images = uniqueUrls([variant?.variantImage || "", baseImage]);
+    const images = uniqueUrls([
+      variant?.variantImage || "",
+      baseImage,
+      ...descriptionImages,
+    ]);
     const title = buildVariantTitle(productTitle, variant);
     const variantLabel = variantLabels[variantIndex] || "Default";
     const price = roundMoney(costPrice * options.markupMultiplier);
