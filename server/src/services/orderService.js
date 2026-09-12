@@ -2,7 +2,11 @@ import crypto from "node:crypto";
 import { getPublicCryptoPaymentConfig } from "../config/cryptoPayment.js";
 import { Order } from "../models/Order.js";
 import { Product } from "../models/Product.js";
-import { calculateCjFreight, getCjVariantStock } from "./cjApi.js";
+import {
+  calculateCjFreight,
+  getCjProductDetail,
+  getCjVariantStock,
+} from "./cjApi.js";
 import { runWithOptionalMongoTransaction } from "./mongoTransactions.js";
 
 const MAX_ORDER_ITEMS = 50;
@@ -17,6 +21,34 @@ function cleanText(value, maxLength) {
 function parsePositiveInteger(value, fallback) {
   const parsed = Number.parseInt(value, 10);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function getMarkupMultiplier() {
+  const parsed = Number(process.env.CJ_PRICE_MARKUP || 1.65);
+  return Number.isFinite(parsed) && parsed >= 1 ? parsed : 1.65;
+}
+
+function roundMoney(value) {
+  return Number(Number(value || 0).toFixed(2));
+}
+
+export function calculateCjRetailPrice(costPrice, markupMultiplier = getMarkupMultiplier()) {
+  const cost = Number(costPrice);
+  const markup = Number(markupMultiplier);
+  if (!(cost > 0) || !(markup >= 1)) return null;
+  return roundMoney(cost * markup);
+}
+
+export function extractCjVariantCost(detail, variantId) {
+  const requestedVariantId = String(variantId || "").trim();
+  if (!requestedVariantId) return null;
+
+  const variants = Array.isArray(detail?.variants) ? detail.variants : [];
+  const variant = variants.find(
+    (candidate) => String(candidate?.vid || "").trim() === requestedVariantId,
+  );
+  const cost = roundMoney(variant?.variantSellPrice);
+  return cost > 0 ? cost : null;
 }
 
 function getOriginCountryCode() {
@@ -167,6 +199,14 @@ function createAvailabilityError(productKey, product) {
   return error;
 }
 
+function createPricingError(product) {
+  const error = new Error(
+    `Live supplier pricing is unavailable for ${product?.title || "this product"}. Please refresh checkout.`,
+  );
+  error.statusCode = 409;
+  return error;
+}
+
 async function loadRequestedProducts(requestedItems) {
   const keys = requestedItems.map((item) => item.productKey);
   const products = await Product.find({
@@ -180,6 +220,38 @@ async function loadRequestedProducts(requestedItems) {
     if (!product) throw createAvailabilityError(item.productKey, null);
     return { ...item, product };
   });
+}
+
+async function refreshSupplierPricing(lines) {
+  const detailsByProductId = new Map();
+
+  for (const line of lines) {
+    const product = line.product;
+    if (product.supplier !== "cj") continue;
+
+    const pid = String(product.supplierProductId || "").trim();
+    const vid = String(product.supplierVariantId || "").trim();
+    if (!pid || !vid) throw createPricingError(product);
+
+    let detail = detailsByProductId.get(pid);
+    if (!detail) {
+      detail = await getCjProductDetail(pid);
+      detailsByProductId.set(pid, detail);
+    }
+
+    const liveCostPrice = extractCjVariantCost(detail, vid);
+    const liveRetailPrice = calculateCjRetailPrice(liveCostPrice);
+    if (!(liveCostPrice > 0) || !(liveRetailPrice > 0)) {
+      throw createPricingError(product);
+    }
+
+    await Product.updateOne(
+      { _id: product._id, supplierVariantId: vid },
+      { $set: { costPrice: liveCostPrice, price: liveRetailPrice } },
+    );
+    product.costPrice = liveCostPrice;
+    product.price = liveRetailPrice;
+  }
 }
 
 function sumOriginStock(rows) {
@@ -207,6 +279,23 @@ async function refreshSupplierStock(lines) {
       throw createAvailabilityError(product.key, product);
     }
   }
+}
+
+function buildLivePricingSummary(lines) {
+  const items = lines.map((line) => {
+    const unitPrice = roundMoney(line.product.price);
+    const lineTotal = roundMoney(unitPrice * line.quantity);
+    return {
+      productKey: line.product.key,
+      unitPrice,
+      quantity: line.quantity,
+      lineTotal,
+    };
+  });
+  const subtotal = roundMoney(
+    items.reduce((sum, item) => sum + item.lineTotal, 0),
+  );
+  return { items, subtotal };
 }
 
 function normalizeFreightOptions(rows) {
@@ -296,11 +385,22 @@ export async function getOrderShippingQuote(payload = {}) {
   }
 
   const lines = await loadRequestedProducts(requestedItems);
-  return calculateShipping(
+  await refreshSupplierPricing(lines);
+  await refreshSupplierStock(lines);
+
+  const shippingQuote = await calculateShipping(
     lines,
     { countryCode, postalCode },
     payload.logisticName,
   );
+  const pricing = buildLivePricingSummary(lines);
+
+  return {
+    ...shippingQuote,
+    ...pricing,
+    total: roundMoney(pricing.subtotal + Number(shippingQuote.selected?.price || 0)),
+    currency: "USD",
+  };
 }
 
 async function reserveRequestedProducts(
@@ -522,7 +622,23 @@ export async function createOrder(payload = {}) {
   const requestedItems = normalizeRequestedItems(payload.items);
   const lines = await loadRequestedProducts(requestedItems);
 
+  await refreshSupplierPricing(lines);
   await refreshSupplierStock(lines);
+
+  const pricing = buildLivePricingSummary(lines);
+  const hasExpectedSubtotal = payload.expectedSubtotal !== undefined && payload.expectedSubtotal !== null;
+  const expectedSubtotal = Number(payload.expectedSubtotal);
+  if (
+    hasExpectedSubtotal &&
+    Number.isFinite(expectedSubtotal) &&
+    Math.abs(roundMoney(expectedSubtotal) - pricing.subtotal) >= 0.01
+  ) {
+    const error = new Error(
+      "Product prices changed since the checkout quote. Please review the refreshed total and try again.",
+    );
+    error.statusCode = 409;
+    throw error;
+  }
 
   const shippingQuote = await calculateShipping(
     lines,
