@@ -30,6 +30,7 @@ const copy = {
     inStock: "In stock",
     outOfStock: "Out of stock",
     quantity: "Quantity",
+    variant: "Variant",
     add: "Add to cart",
     added: "Added to cart",
     delivery: "Fast delivery",
@@ -57,6 +58,7 @@ const copy = {
     inStock: "Stokta",
     outOfStock: "Stokta yok",
     quantity: "Adet",
+    variant: "Varyant",
     add: "Sepete ekle",
     added: "Sepete eklendi",
     delivery: "Hızlı teslimat",
@@ -84,6 +86,7 @@ const copy = {
     inStock: "В наличии",
     outOfStock: "Нет в наличии",
     quantity: "Количество",
+    variant: "Вариант",
     add: "Добавить в корзину",
     added: "Добавлено",
     delivery: "Быстрая доставка",
@@ -111,6 +114,7 @@ const copy = {
     inStock: "متوفر",
     outOfStock: "غير متوفر",
     quantity: "الكمية",
+    variant: "الخيار",
     add: "أضف إلى السلة",
     added: "تمت الإضافة",
     delivery: "توصيل سريع",
@@ -138,6 +142,7 @@ const copy = {
     inStock: "有货",
     outOfStock: "缺货",
     quantity: "数量",
+    variant: "规格",
     add: "加入购物车",
     added: "已加入购物车",
     delivery: "快速配送",
@@ -199,6 +204,7 @@ function ProductDetailsLive() {
   const labels = regionalProductDetailsTranslations[language] || copy[language] || copy.en;
   const numberLocale = numberLocales[language] || numberLocales.en;
   const [product, setProduct] = useState(null);
+  const [variants, setVariants] = useState([]);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [quantity, setQuantity] = useState(1);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -212,6 +218,7 @@ function ProductDetailsLive() {
     setIsLoading(true);
     setError("");
     setProduct(null);
+    setVariants([]);
     setRelatedProducts([]);
     setQuantity(1);
     setSelectedImageIndex(0);
@@ -221,6 +228,7 @@ function ProductDetailsLive() {
         if (isCancelled) return;
 
         setProduct(data.product);
+        setVariants(data.variants || []);
 
         try {
           const relatedData = await getStoreProducts({
@@ -417,6 +425,25 @@ function ProductDetailsLive() {
               <del>{formatPrice(product.oldPrice, numberLocale)}</del>
             ) : null}
           </div>
+
+          {variants.length > 1 ? (
+            <section className="liveProductVariants" aria-label={labels.variant}>
+              <span>{labels.variant}</span>
+              <div>
+                {variants.map((variant) => (
+                  <Link
+                    key={variant.key}
+                    to={`/products/${variant.key}`}
+                    className={variant.key === product.key ? "is-active" : ""}
+                    aria-current={variant.key === product.key ? "true" : undefined}
+                  >
+                    <strong>{variant.variantLabel || variant.title}</strong>
+                    <small>{formatPrice(variant.price, numberLocale)}</small>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          ) : null}
 
           <p className="liveProductDescription">
             {product.description || labels.fallbackDescription}
