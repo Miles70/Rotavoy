@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  buildCjVariantStockMap,
   extractCjDescriptionImageUrls,
   getLegacyCatalogCleanupFilter,
   hasFreshProfessionalContent,
@@ -68,6 +69,30 @@ test("CJ gallery extraction keeps description images, removes duplicates and ign
     "https://cdn.example.com/one.jpg",
     "https://cdn.example.com/two.jpg?x=1&y=2",
   ]);
+});
+
+test("CJ product-level inventory maps stock to the correct variant and origin country", () => {
+  const stock = buildCjVariantStockMap({
+    variantInventories: [
+      {
+        vid: "vid-black",
+        inventory: [
+          { countryCode: "CN", totalInventory: 12 },
+          { countryCode: "US", totalInventory: 30 },
+        ],
+      },
+      {
+        vid: "vid-red",
+        inventory: [
+          { countryCode: "CN", totalInventory: 7 },
+          { countryCode: "CN", totalInventory: 5 },
+        ],
+      },
+    ],
+  }, "CN");
+
+  assert.equal(stock.get("vid-black"), 12);
+  assert.equal(stock.get("vid-red"), 12);
 });
 
 test("ambiguous CJ fulfillment failures require manual review", () => {
