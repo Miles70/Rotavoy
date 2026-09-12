@@ -2,6 +2,7 @@ import { Router } from "express";
 import { Product } from "../models/Product.js";
 import { isCjConfigured } from "../services/cjApi.js";
 import {
+  buildGroupedStorefrontProduct,
   getLocalizedSearchFields,
   normalizeStorefrontLanguage,
   STOREFRONT_PRIVATE_FIELDS,
@@ -31,6 +32,71 @@ function escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+function getCjGroupIdExpression() {
+  return {
+    $cond: [
+      {
+        $and: [
+          { $ne: ["$supplierProductId", null] },
+          { $ne: ["$supplierProductId", ""] },
+        ],
+      },
+      "$supplierProductId",
+      "$key",
+    ],
+  };
+}
+
+async function getGroupedCjCatalog({ filter, sortMode, requestedPage, limit, language }) {
+  const groupId = getCjGroupIdExpression();
+  const totalRows = await Product.aggregate([
+    { $match: filter },
+    { $group: { _id: groupId } },
+    { $count: "total" },
+  ]);
+  const total = Number(totalRows?.[0]?.total || 0);
+  const totalPages = Math.max(Math.ceil(total / limit), 1);
+  const page = Math.min(Math.max(requestedPage, 1), totalPages);
+  const skip = (page - 1) * limit;
+
+  // Keep fulfillment data at variant level, but choose one active variant as the
+  // catalog representative. The cheapest active variant is a predictable card
+  // entry point; the detail page exposes all active sibling variants.
+  const parentSort = sortMode === "newest"
+    ? { "product.createdAt": -1, "product.key": 1 }
+    : { "product.popularity": -1, "product.createdAt": -1, "product.key": 1 };
+
+  const groups = await Product.aggregate([
+    { $match: filter },
+    { $sort: { supplierProductId: 1, price: 1, key: 1 } },
+    {
+      $group: {
+        _id: groupId,
+        product: { $first: "$$ROOT" },
+        variantCount: { $sum: 1 },
+        priceMin: { $min: "$price" },
+        priceMax: { $max: "$price" },
+        stockTotal: { $sum: "$stock" },
+      },
+    },
+    { $sort: parentSort },
+    { $skip: skip },
+    { $limit: limit },
+  ]);
+
+  return {
+    products: groups.map((group) => buildGroupedStorefrontProduct(group, language)),
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages,
+      hasPreviousPage: page > 1,
+      hasNextPage: page < totalPages,
+    },
+  };
+}
+
 productListRouter.get("/", async (request, response, next) => {
   try {
     const requestedPage = Number.parseInt(request.query.page, 10) || 1;
@@ -41,9 +107,10 @@ productListRouter.get("/", async (request, response, next) => {
     const group = String(request.query.group || "").trim();
     const sortMode = String(request.query.sort || "popular").trim().toLowerCase();
     const language = normalizeStorefrontLanguage(request.query.language);
+    const cjConfigured = isCjConfigured();
     const filter = {
       isActive: true,
-      source: { $in: getStorefrontSources() },
+      source: { $in: cjConfigured ? ["cj"] : LEGACY_SOURCES },
       stock: { $gt: 0 },
     };
 
@@ -67,6 +134,21 @@ productListRouter.get("/", async (request, response, next) => {
       ];
     }
 
+    if (cjConfigured) {
+      const grouped = await getGroupedCjCatalog({
+        filter,
+        sortMode,
+        requestedPage,
+        limit,
+        language,
+      });
+
+      return response.json({
+        ...grouped,
+        source: "cj",
+      });
+    }
+
     const total = await Product.countDocuments(filter);
     const totalPages = Math.max(Math.ceil(total / limit), 1);
     const page = Math.min(Math.max(requestedPage, 1), totalPages);
@@ -82,7 +164,7 @@ productListRouter.get("/", async (request, response, next) => {
       .limit(limit)
       .lean();
 
-    response.json({
+    return response.json({
       products: products.map((product) => trimStorefrontTranslations(product, language)),
       pagination: {
         page,
@@ -92,9 +174,9 @@ productListRouter.get("/", async (request, response, next) => {
         hasPreviousPage: page > 1,
         hasNextPage: page < totalPages,
       },
-      source: isCjConfigured() ? "cj" : "legacy",
+      source: "legacy",
     });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
