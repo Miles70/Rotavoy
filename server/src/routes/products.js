@@ -44,10 +44,11 @@ productsRouter.get("/", async (request, response, next) => {
 productsRouter.get("/:productKey", async (request, response, next) => {
   try {
     const language = normalizeStorefrontLanguage(request.query.language);
+    const storefrontSources = getStorefrontSources();
     const product = await Product.findOne({
       key: request.params.productKey,
       isActive: true,
-      source: { $in: getStorefrontSources() },
+      source: { $in: storefrontSources },
     })
       .select(STOREFRONT_PRIVATE_FIELDS)
       .lean();
@@ -56,8 +57,22 @@ productsRouter.get("/:productKey", async (request, response, next) => {
       return response.status(404).json({ message: "Product not found." });
     }
 
+    let variants = [];
+    if (product.source === "cj" && product.supplierProductId) {
+      variants = await Product.find({
+        source: "cj",
+        supplierProductId: product.supplierProductId,
+        isActive: true,
+        stock: { $gt: 0 },
+      })
+        .select(STOREFRONT_PRIVATE_FIELDS)
+        .sort({ price: 1, key: 1 })
+        .lean();
+    }
+
     return response.json({
       product: trimStorefrontTranslations(product, language),
+      variants: variants.map((variant) => trimStorefrontTranslations(variant, language)),
     });
   } catch (error) {
     return next(error);
