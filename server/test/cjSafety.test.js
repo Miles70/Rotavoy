@@ -8,6 +8,10 @@ import {
   shouldPreserveExistingTranslations,
 } from "../src/services/cjCatalogSync.js";
 import { getFailureFulfillmentStatus } from "../src/services/cjFulfillment.js";
+import {
+  calculateCjRetailPrice,
+  extractCjVariantCost,
+} from "../src/services/orderService.js";
 
 function completeTranslations() {
   return Object.fromEntries(
@@ -93,6 +97,24 @@ test("CJ product-level inventory maps stock to the correct variant and origin co
 
   assert.equal(stock.get("vid-black"), 12);
   assert.equal(stock.get("vid-red"), 12);
+});
+
+test("checkout pricing extracts the exact CJ variant cost", () => {
+  const detail = {
+    variants: [
+      { vid: "vid-black", variantSellPrice: 10.25 },
+      { vid: "vid-red", variantSellPrice: 12.5 },
+    ],
+  };
+
+  assert.equal(extractCjVariantCost(detail, "vid-red"), 12.5);
+  assert.equal(extractCjVariantCost(detail, "missing"), null);
+});
+
+test("checkout pricing applies Rotavoy markup to live CJ cost", () => {
+  assert.equal(calculateCjRetailPrice(10, 1.65), 16.5);
+  assert.equal(calculateCjRetailPrice(12.5, 1.65), 20.63);
+  assert.equal(calculateCjRetailPrice(0, 1.65), null);
 });
 
 test("ambiguous CJ fulfillment failures require manual review", () => {
