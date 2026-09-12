@@ -53,6 +53,9 @@ function Checkout() {
   const [isShippingLoading, setIsShippingLoading] = useState(false);
   const [shippingError, setShippingError] = useState("");
   const [shippingQuoted, setShippingQuoted] = useState(false);
+  const [livePricingItems, setLivePricingItems] = useState([]);
+  const [liveSubtotal, setLiveSubtotal] = useState(null);
+  const [quoteRefreshKey, setQuoteRefreshKey] = useState(0);
 
   const text = (key, fallback) => {
     const value = t(key);
@@ -72,13 +75,20 @@ function Checkout() {
   }, [defaultAddress, profile]);
 
   const hasItems = cartItems.length > 0;
-  const subtotal = useMemo(() => {
+  const cartSubtotal = useMemo(() => {
     if (typeof cartTotal === "number") return cartTotal;
     return cartItems.reduce(
-      (total, item) => total + Number(item.price || 0) * Number(item.quantity || 1),
+      (totalValue, item) => totalValue + Number(item.price || 0) * Number(item.quantity || 1),
       0,
     );
   }, [cartItems, cartTotal]);
+  const livePricingByKey = useMemo(
+    () => new Map(
+      livePricingItems.map((item) => [String(item.productKey || ""), item]),
+    ),
+    [livePricingItems],
+  );
+  const subtotal = Number.isFinite(liveSubtotal) ? liveSubtotal : cartSubtotal;
 
   const selectedShipping = useMemo(
     () =>
@@ -98,6 +108,8 @@ function Checkout() {
       setSelectedLogisticName("");
       setShippingError("");
       setShippingQuoted(false);
+      setLivePricingItems([]);
+      setLiveSubtotal(null);
       return undefined;
     }
 
@@ -118,16 +130,22 @@ function Checkout() {
         .then((quote) => {
           if (cancelled) return;
           const options = Array.isArray(quote?.options) ? quote.options : [];
+          const quotedItems = Array.isArray(quote?.items) ? quote.items : [];
+          const quotedSubtotal = Number(quote?.subtotal);
           setShippingOptions(options);
           setSelectedLogisticName(
             quote?.selected?.logisticName || options[0]?.logisticName || "",
           );
+          setLivePricingItems(quotedItems);
+          setLiveSubtotal(Number.isFinite(quotedSubtotal) ? quotedSubtotal : null);
           setShippingQuoted(true);
         })
         .catch((quoteError) => {
           if (cancelled) return;
           setShippingOptions([]);
           setSelectedLogisticName("");
+          setLivePricingItems([]);
+          setLiveSubtotal(null);
           setShippingQuoted(false);
           setShippingError(
             quoteError.message || "Shipping could not be calculated.",
@@ -142,7 +160,14 @@ function Checkout() {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [cartItems, countryCode, formData.postalCode, hasItems, validCountryCode]);
+  }, [
+    cartItems,
+    countryCode,
+    formData.postalCode,
+    hasItems,
+    quoteRefreshKey,
+    validCountryCode,
+  ]);
 
   const formatPrice = (price) => `$${Number(price || 0).toFixed(2)}`;
 
@@ -223,12 +248,14 @@ function Checkout() {
         })),
         logisticName: selectedLogisticName,
         paymentMethod,
+        expectedSubtotal: subtotal,
       });
 
       saveOrder(order);
       rememberCheckoutDetails(formData);
       navigate("/order-success");
     } catch (submitError) {
+      setQuoteRefreshKey((value) => value + 1);
       setError(
         submitError.message ||
           text(
@@ -548,19 +575,24 @@ function Checkout() {
           </div>
 
           <div className="checkoutItems">
-            {cartItems.map((item) => (
-              <div className="checkoutItem" key={item.key || item.id}>
-                <div className="checkoutItemImage"><ProductThumbnail item={item} /></div>
-                <div className="checkoutItemInfo">
-                  <h3>{item.title}</h3>
-                  <p>{getCategoryLabel(item)}</p>
-                  <small>{text("checkoutPage.qty", "Qty")}: {item.quantity}</small>
+            {cartItems.map((item) => {
+              const liveItem = livePricingByKey.get(String(item.key || ""));
+              const lineTotal = liveItem
+                ? Number(liveItem.lineTotal || 0)
+                : Number(item.price || 0) * Number(item.quantity || 1);
+
+              return (
+                <div className="checkoutItem" key={item.key || item.id}>
+                  <div className="checkoutItemImage"><ProductThumbnail item={item} /></div>
+                  <div className="checkoutItemInfo">
+                    <h3>{item.title}</h3>
+                    <p>{getCategoryLabel(item)}</p>
+                    <small>{text("checkoutPage.qty", "Qty")}: {item.quantity}</small>
+                  </div>
+                  <strong>{formatPrice(lineTotal)}</strong>
                 </div>
-                <strong>
-                  {formatPrice(Number(item.price || 0) * Number(item.quantity || 1))}
-                </strong>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="checkoutTotals">
