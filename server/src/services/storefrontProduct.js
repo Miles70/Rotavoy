@@ -103,3 +103,56 @@ export function buildGroupedStorefrontProduct(group, language) {
     stock,
   };
 }
+
+function compareCatalogRepresentatives(left, right) {
+  return Number(left.price || 0) - Number(right.price || 0) ||
+    String(left.key || "").localeCompare(String(right.key || ""));
+}
+
+export function buildCatalogGroupSummaries(rows, sortMode = "popular") {
+  const groups = new Map();
+
+  for (const row of Array.isArray(rows) ? rows : []) {
+    const groupKey = String(row?.supplierProductId || row?.key || "").trim();
+    if (!groupKey) continue;
+
+    const price = Number(row?.price || 0);
+    const stock = Math.max(Number(row?.stock || 0), 0);
+    const existing = groups.get(groupKey);
+
+    if (!existing) {
+      groups.set(groupKey, {
+        groupKey,
+        representative: row,
+        variantCount: 1,
+        priceMin: price,
+        priceMax: price,
+        stockTotal: stock,
+      });
+      continue;
+    }
+
+    existing.variantCount += 1;
+    existing.priceMin = Math.min(existing.priceMin, price);
+    existing.priceMax = Math.max(existing.priceMax, price);
+    existing.stockTotal += stock;
+    if (compareCatalogRepresentatives(row, existing.representative) < 0) {
+      existing.representative = row;
+    }
+  }
+
+  return [...groups.values()].sort((left, right) => {
+    const leftProduct = left.representative;
+    const rightProduct = right.representative;
+    const createdDifference = new Date(rightProduct?.createdAt || 0).getTime() -
+      new Date(leftProduct?.createdAt || 0).getTime();
+
+    if (sortMode === "newest") {
+      return createdDifference || String(leftProduct?.key || "").localeCompare(String(rightProduct?.key || ""));
+    }
+
+    return Number(rightProduct?.popularity || 0) - Number(leftProduct?.popularity || 0) ||
+      createdDifference ||
+      String(leftProduct?.key || "").localeCompare(String(rightProduct?.key || ""));
+  });
+}

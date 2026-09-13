@@ -1,12 +1,30 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  buildCatalogGroupSummaries,
   buildGroupedStorefrontProduct,
   getLocalizedSearchFields,
   normalizeStorefrontLanguage,
   sanitizeStorefrontProduct,
   trimStorefrontTranslations,
 } from "../src/services/storefrontProduct.js";
+
+test("catalog grouping selects the cheapest variant and sorts lightweight parent summaries", () => {
+  const rows = [
+    { _id: "a-expensive", key: "a-2", supplierProductId: "a", price: 9, stock: 2, popularity: 10, createdAt: "2026-01-01" },
+    { _id: "b", key: "b-1", supplierProductId: "b", price: 7, stock: 4, popularity: 20, createdAt: "2026-01-02" },
+    { _id: "a-cheap", key: "a-1", supplierProductId: "a", price: 5, stock: 3, popularity: 30, createdAt: "2026-01-03" },
+  ];
+
+  const groups = buildCatalogGroupSummaries(rows, "popular");
+  assert.equal(groups.length, 2);
+  assert.equal(groups[0].groupKey, "a");
+  assert.equal(groups[0].representative._id, "a-cheap");
+  assert.equal(groups[0].variantCount, 2);
+  assert.equal(groups[0].priceMin, 5);
+  assert.equal(groups[0].priceMax, 9);
+  assert.equal(groups[0].stockTotal, 5);
+});
 
 test("storefront language is constrained to Rotavoy languages", () => {
   assert.equal(normalizeStorefrontLanguage("TR"), "tr");

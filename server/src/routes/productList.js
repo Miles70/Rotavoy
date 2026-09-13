@@ -3,6 +3,7 @@ import { Product } from "../models/Product.js";
 import { isCjConfigured } from "../services/cjApi.js";
 import {
   buildGroupedStorefrontProduct,
+  buildCatalogGroupSummaries,
   getLocalizedSearchFields,
   normalizeStorefrontLanguage,
   STOREFRONT_PRIVATE_FIELDS,
@@ -28,58 +29,35 @@ function escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function getCjGroupIdExpression() {
-  return {
-    $cond: [
-      {
-        $and: [
-          { $ne: ["$supplierProductId", null] },
-          { $ne: ["$supplierProductId", ""] },
-        ],
-      },
-      "$supplierProductId",
-      "$key",
-    ],
-  };
-}
-
 async function getGroupedCjCatalog({ filter, sortMode, requestedPage, limit, language }) {
-  const groupId = getCjGroupIdExpression();
-  const totalRows = await Product.aggregate([
-    { $match: filter },
-    { $project: { groupId } },
-    { $group: { _id: "$groupId" } },
-    { $count: "total" },
-  ]).allowDiskUse(true);
-  const total = Number(totalRows?.[0]?.total || 0);
+  // Pull only lightweight fields, then group and sort parent products in Node.
+  // Sorting complete product documents in Mongo can exceed Atlas' 32 MB
+  // in-memory limit because every variant contains large translation bundles.
+  const rows = await Product.find(filter)
+    .select("_id key supplierProductId price popularity createdAt stock")
+    .lean();
+  const summaries = buildCatalogGroupSummaries(rows, sortMode);
+  const total = summaries.length;
   const totalPages = Math.max(Math.ceil(total / limit), 1);
   const page = Math.min(Math.max(requestedPage, 1), totalPages);
   const skip = (page - 1) * limit;
-
-  // Keep fulfillment data at variant level, but choose one active variant as the
-  // catalog representative. The cheapest active variant is a predictable card
-  // entry point; the detail page exposes all active sibling variants.
-  const parentSort = sortMode === "newest"
-    ? { "product.createdAt": -1, "product.key": 1 }
-    : { "product.popularity": -1, "product.createdAt": -1, "product.key": 1 };
-
-  const groups = await Product.aggregate([
-    { $match: filter },
-    { $sort: { supplierProductId: 1, price: 1, key: 1 } },
-    {
-      $group: {
-        _id: groupId,
-        product: { $first: "$$ROOT" },
-        variantCount: { $sum: 1 },
-        priceMin: { $min: "$price" },
-        priceMax: { $max: "$price" },
-        stockTotal: { $sum: "$stock" },
-      },
-    },
-    { $sort: parentSort },
-    { $skip: skip },
-    { $limit: limit },
-  ]).allowDiskUse(true);
+  const pageSummaries = summaries.slice(skip, skip + limit);
+  const representativeIds = pageSummaries.map((summary) => summary.representative._id);
+  const representativeProducts = await Product.find({ _id: { $in: representativeIds } })
+    .select(STOREFRONT_PRIVATE_FIELDS)
+    .lean();
+  const productsById = new Map(
+    representativeProducts.map((product) => [String(product._id), product]),
+  );
+  const groups = pageSummaries
+    .map((summary) => ({
+      product: productsById.get(String(summary.representative._id)),
+      variantCount: summary.variantCount,
+      priceMin: summary.priceMin,
+      priceMax: summary.priceMax,
+      stockTotal: summary.stockTotal,
+    }))
+    .filter((group) => group.product);
 
   return {
     products: groups.map((group) => buildGroupedStorefrontProduct(group, language)),
