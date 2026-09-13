@@ -90,7 +90,7 @@ export function createApp() {
 
     const statusCode = Number(error.statusCode) || 500;
     if (statusCode >= 500) {
-      console.error(error);
+      console.error(`[${request.method} ${request.originalUrl}]`, error);
     }
     const message =
       statusCode >= 500 && process.env.NODE_ENV === "production"

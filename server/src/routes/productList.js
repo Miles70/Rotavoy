@@ -47,9 +47,10 @@ async function getGroupedCjCatalog({ filter, sortMode, requestedPage, limit, lan
   const groupId = getCjGroupIdExpression();
   const totalRows = await Product.aggregate([
     { $match: filter },
-    { $group: { _id: groupId } },
+    { $project: { groupId } },
+    { $group: { _id: "$groupId" } },
     { $count: "total" },
-  ]);
+  ]).allowDiskUse(true);
   const total = Number(totalRows?.[0]?.total || 0);
   const totalPages = Math.max(Math.ceil(total / limit), 1);
   const page = Math.min(Math.max(requestedPage, 1), totalPages);

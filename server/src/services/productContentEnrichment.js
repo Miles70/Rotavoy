@@ -446,7 +446,7 @@ async function getPendingSupplierProductIds(limit) {
     { $group: { _id: "$supplierProductId" } },
     { $sort: { _id: 1 } },
     { $limit: limit },
-  ]);
+  ]).allowDiskUse(true);
 
   return rows.map((row) => String(row._id || "").trim()).filter(Boolean);
 }
