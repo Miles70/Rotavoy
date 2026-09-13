@@ -78,7 +78,7 @@ async function getGroupedCjCatalog({ filter, sortMode, requestedPage, limit, lan
     { $sort: parentSort },
     { $skip: skip },
     { $limit: limit },
-  ]);
+  ]).allowDiskUse(true);
 
   return {
     products: groups.map((group) => buildGroupedStorefrontProduct(group, language)),
