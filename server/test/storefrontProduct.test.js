@@ -21,19 +21,30 @@ test("localized search targets only the active translation branch", () => {
   assert.equal(fields.some((field) => field.includes("translations.de")), false);
 });
 
-test("storefront payload keeps requested translation and English fallback only", () => {
+test("storefront payload applies requested translation and keeps English fallback only", () => {
   const product = {
     key: "cj-1",
+    title: "Gloves",
+    description: "Warm gloves",
+    categoryLabel: "Fashion",
     translations: {
-      en: { title: "Gloves" },
-      tr: { title: "Eldiven" },
+      en: { title: "Gloves", description: "Warm gloves", categoryLabel: "Fashion" },
+      tr: {
+        title: "Eldiven",
+        description: "Sıcak tutan eldiven",
+        categoryLabel: "Moda",
+        features: ["Yumuşak"],
+      },
       de: { title: "Handschuhe" },
     },
   };
 
   const trimmed = trimStorefrontTranslations(product, "tr");
   assert.deepEqual(Object.keys(trimmed.translations).sort(), ["en", "tr"]);
-  assert.equal(trimmed.translations.tr.title, "Eldiven");
+  assert.equal(trimmed.title, "Eldiven");
+  assert.equal(trimmed.description, "Sıcak tutan eldiven");
+  assert.equal(trimmed.categoryLabel, "Moda");
+  assert.deepEqual(trimmed.features, ["Yumuşak"]);
   assert.equal(trimmed.translations.de, undefined);
 });
 
@@ -54,7 +65,7 @@ test("storefront sanitization removes supplier-only identifiers and cost", () =>
   assert.equal(sanitized.supplierContent, undefined);
 });
 
-test("grouped storefront product exposes parent-level variant summary", () => {
+test("grouped storefront product exposes parent-level variant summary with localized title", () => {
   const grouped = buildGroupedStorefrontProduct({
     product: {
       key: "cj-cheapest-vid",
@@ -75,6 +86,7 @@ test("grouped storefront product exposes parent-level variant summary", () => {
   }, "tr");
 
   assert.equal(grouped.key, "cj-cheapest-vid");
+  assert.equal(grouped.title, "SKMEI Saat - Altın");
   assert.equal(grouped.variantCount, 4);
   assert.equal(grouped.priceMin, 8);
   assert.equal(grouped.priceMax, 11);
