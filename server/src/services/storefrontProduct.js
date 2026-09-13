@@ -62,6 +62,11 @@ export function trimStorefrontTranslations(product, language) {
     : {};
   const localized = translations[safeLanguage];
   const english = translations.en;
+  const activeTranslation = localized && typeof localized === "object"
+    ? localized
+    : english && typeof english === "object"
+      ? english
+      : null;
   const selectedTranslations = {};
 
   if (localized && typeof localized === "object") {
@@ -73,6 +78,12 @@ export function trimStorefrontTranslations(product, language) {
 
   return {
     ...product,
+    ...(activeTranslation?.title ? { title: activeTranslation.title } : {}),
+    ...(activeTranslation?.description ? { description: activeTranslation.description } : {}),
+    ...(activeTranslation?.categoryLabel ? { categoryLabel: activeTranslation.categoryLabel } : {}),
+    ...(Array.isArray(activeTranslation?.features)
+      ? { features: activeTranslation.features }
+      : {}),
     translations: selectedTranslations,
   };
 }
