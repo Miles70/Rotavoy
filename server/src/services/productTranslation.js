@@ -91,7 +91,10 @@ async function requestGoogleTranslation(text, language) {
       });
 
       if (!response.ok) {
-        throw new Error(`Translation request failed with ${response.status}.`);
+        const error = new Error(`Translation request failed with ${response.status}.`);
+        error.statusCode = response.status;
+        error.retryAfter = String(response.headers.get("retry-after") || "").trim();
+        throw error;
       }
 
       const payload = await response.json();
@@ -178,6 +181,10 @@ export async function translateProductBundle({
         variants: normalizedVariants.map((variant, index) => values[index + 3] || variant),
       };
     } catch (error) {
+      // A 429 applies to the caller/IP, not just this language. Propagate it so
+      // batch jobs stop immediately instead of hammering every remaining
+      // language and product with requests that cannot succeed.
+      if (Number(error?.statusCode) === 429) throw error;
       console.warn(`Product translation skipped for ${language}:`, error.message);
     }
   }

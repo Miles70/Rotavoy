@@ -613,7 +613,7 @@ export async function syncCjCatalog() {
       } catch (error) {
         failedProducts += 1;
         console.warn(`CJ product sync skipped for ${getCjProductId(product) || "unknown"}:`, error.message);
-        if ([401, 503].includes(Number(error?.statusCode))) throw error;
+        if ([401, 429, 503].includes(Number(error?.statusCode))) throw error;
       }
     }
 

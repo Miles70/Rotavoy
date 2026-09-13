@@ -38,6 +38,10 @@ export function translationBundleComplete(bundle) {
   });
 }
 
+export function isTranslationRateLimitError(error) {
+  return Number(error?.statusCode) === 429;
+}
+
 function buildVariantTranslations(bundle, variantIndex, fallbackVariant) {
   return Object.fromEntries(
     Object.entries(bundle).map(([language, entry]) => {
@@ -126,6 +130,7 @@ export async function backfillMissingProductTranslations({ limit } = {}) {
   const safeLimit = parseLimit(limit ?? process.env.PRODUCT_TRANSLATION_BACKFILL_LIMIT);
   const supplierProductIds = await findPendingSupplierProductIds(safeLimit);
   const results = [];
+  let rateLimited = false;
 
   for (const supplierProductId of supplierProductIds) {
     try {
@@ -136,6 +141,10 @@ export async function backfillMissingProductTranslations({ limit } = {}) {
         supplierProductId,
         error: cleanText(error?.message || "Translation failed.", 500),
       });
+      if (isTranslationRateLimitError(error)) {
+        rateLimited = true;
+        break;
+      }
     }
   }
 
@@ -144,6 +153,8 @@ export async function backfillMissingProductTranslations({ limit } = {}) {
     translated: results.filter((result) => result.status === "translated").length,
     failed: results.filter((result) => result.status === "failed").length,
     skipped: results.filter((result) => result.status === "skipped").length,
+    rateLimited,
+    stoppedEarly: results.length < supplierProductIds.length,
     results,
   };
 }

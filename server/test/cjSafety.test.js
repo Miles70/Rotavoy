@@ -13,7 +13,10 @@ import {
   calculateCjRetailPrice,
   extractCjVariantCost,
 } from "../src/services/orderService.js";
-import { translationBundleComplete } from "../src/services/productTranslationBackfill.js";
+import {
+  isTranslationRateLimitError,
+  translationBundleComplete,
+} from "../src/services/productTranslationBackfill.js";
 
 function completeTranslations() {
   return Object.fromEntries(
@@ -155,4 +158,9 @@ test("translation backfill rejects partial language bundles", () => {
   assert.equal(translationBundleComplete(complete), true);
   delete complete.tr;
   assert.equal(translationBundleComplete(complete), false);
+});
+
+test("translation backfill recognizes provider rate limits as a batch stop condition", () => {
+  assert.equal(isTranslationRateLimitError({ statusCode: 429 }), true);
+  assert.equal(isTranslationRateLimitError({ statusCode: 503 }), false);
 });
