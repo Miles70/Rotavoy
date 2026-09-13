@@ -120,7 +120,7 @@ async function getCategorySlides(excludedGroupKeys = [], language = "en") {
     },
     { $sort: { popularity: -1, count: -1, _id: 1 } },
     { $limit: 12 },
-  ]);
+  ]).allowDiskUse(true);
 
   const slides = [];
   const usedGroupKeys = new Set(excludedGroupKeys);
