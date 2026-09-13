@@ -15,11 +15,9 @@ const DEFAULT_BOOTSTRAP_KEYWORDS = [
   "gaming",
 ].join(",");
 
-// Bootstrap deliberately skips the old anonymous Google translation fallback.
-// New products remain on their English source copy until the separate Rotavoy
-// AI enrichment worker produces professional localized content. Existing
-// professional translations are preserved by the catalog sync service.
-process.env.CJ_TRANSLATE_PRODUCTS = "false";
+// Respect CJ_TRANSLATE_PRODUCTS from the server environment. Disabling it here
+// made newly bootstrapped products permanently fall back to English even when
+// the storefront language was Turkish (or another supported language).
 process.env.ROTAVOY_CONTENT_ENRICH_ON_SYNC = "false";
 process.env.CJ_SYNC_ONLY_NEW = "true";
 process.env.CJ_SYNC_TARGET_PRODUCTS = process.env.CJ_BOOTSTRAP_TARGET_PRODUCTS || "500";

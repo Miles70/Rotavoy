@@ -9,6 +9,7 @@
     "seed": "node src/scripts/seedProducts.js",
     "cj:sync": "node src/scripts/syncCjProducts.js",
     "cj:bootstrap": "node src/scripts/bootstrapCjCatalog.js",
+    "content:translate": "node src/scripts/backfillProductTranslations.js",
     "content:enrich": "node src/scripts/enrichProductContent.js",
     "test": "node --test"
   },

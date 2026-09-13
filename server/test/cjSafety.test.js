@@ -12,6 +12,7 @@ import {
   calculateCjRetailPrice,
   extractCjVariantCost,
 } from "../src/services/orderService.js";
+import { translationBundleComplete } from "../src/services/productTranslationBackfill.js";
 
 function completeTranslations() {
   return Object.fromEntries(
@@ -125,4 +126,17 @@ test("ambiguous CJ fulfillment failures require manual review", () => {
 
 test("definitive CJ rejection remains retryable after correction", () => {
   assert.equal(getFailureFulfillmentStatus({ statusCode: 400 }), "failed");
+});
+
+test("translation backfill rejects partial language bundles", () => {
+  const complete = Object.fromEntries(
+    ["en", "tr", "ru", "ar", "zh", "es", "pt", "fr", "de", "it"].map((language) => [
+      language,
+      { title: "Title", description: "Description", categoryLabel: "Category", variants: ["Default"] },
+    ]),
+  );
+
+  assert.equal(translationBundleComplete(complete), true);
+  delete complete.tr;
+  assert.equal(translationBundleComplete(complete), false);
 });
