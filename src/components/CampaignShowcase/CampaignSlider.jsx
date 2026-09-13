@@ -43,16 +43,20 @@ function localizeSlide(slide, dictionary, t) {
     };
   }
 
+  const legacyDefaultDescriptions = new Set([
+    "Discover popular products picked for this week's Rotavoy campaign.",
+    "Discover popular products picked for this week's Gabaloo campaign.",
+  ]);
+
   return {
     ...slide,
     eyebrow:
       slide.eyebrow === "LIMITED-TIME DROP" ? dictionary.defaultEyebrow : slide.eyebrow,
     title:
       slide.title === "Big finds. Better prices." ? dictionary.defaultTitle : slide.title,
-    description:
-      slide.description === "Discover popular products picked for this week's Rotavoy campaign."
-        ? dictionary.defaultDescription
-        : slide.description,
+    description: legacyDefaultDescriptions.has(slide.description)
+      ? dictionary.defaultDescription
+      : slide.description,
     buttonLabel: slide.buttonLabel === "Shop now" ? dictionary.shopNow : slide.buttonLabel,
   };
 }
