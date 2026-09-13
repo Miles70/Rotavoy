@@ -76,6 +76,28 @@ function getCjProductId(product) {
   return String(product?.id || product?.pid || "").trim();
 }
 
+function getCjDemandScore(product) {
+  return Math.max(0, ...[
+    product?.listedNum,
+    product?.listNum,
+    product?.sellCount,
+    product?.saleCount,
+  ].map((value) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }));
+}
+
+export function rankCjProductsByDemand(products) {
+  return [...(Array.isArray(products) ? products : [])]
+    .map((product, index) => ({ product, index }))
+    .sort((left, right) => (
+      getCjDemandScore(right.product) - getCjDemandScore(left.product) ||
+      left.index - right.index
+    ))
+    .map(({ product }) => product);
+}
+
 function sumOriginStock(rows, originCountryCode) {
   const origin = String(originCountryCode || "CN").toUpperCase();
   return (Array.isArray(rows) ? rows : []).reduce((sum, row) => {
@@ -205,6 +227,7 @@ async function discoverCjProducts({
   targetCount,
   pageSize,
   maxPagesPerKeyword,
+  maxProductsPerKeyword,
   excludedProductIds,
 }) {
   if (targetCount < 1) {
@@ -219,6 +242,7 @@ async function discoverCjProducts({
   const products = [];
   const seenProductIds = new Set();
   const exhaustedKeywords = new Set();
+  const selectedByKeyword = new Map(keywords.map((keyword) => [keyword, 0]));
   let pagesFetched = 0;
   let duplicateProductsSkipped = 0;
   let existingProductsSkipped = 0;
@@ -230,14 +254,20 @@ async function discoverCjProducts({
 
       const data = await listCjProducts({ page, size: pageSize, keyWord: keyword });
       pagesFetched += 1;
-      const pageProducts = flattenListV2(data);
+      const pageProducts = rankCjProductsByDemand(flattenListV2(data));
 
       if (pageProducts.length === 0) {
         exhaustedKeywords.add(keyword);
         continue;
       }
 
+      let selectedForKeyword = selectedByKeyword.get(keyword) || 0;
       for (const product of pageProducts) {
+        if (selectedForKeyword >= maxProductsPerKeyword) {
+          exhaustedKeywords.add(keyword);
+          break;
+        }
+
         const pid = getCjProductId(product);
         if (!pid) continue;
 
@@ -253,8 +283,10 @@ async function discoverCjProducts({
 
         seenProductIds.add(pid);
         products.push(product);
+        selectedForKeyword += 1;
         if (products.length >= targetCount) break;
       }
+      selectedByKeyword.set(keyword, selectedForKeyword);
 
       if (pageProducts.length < pageSize) {
         exhaustedKeywords.add(keyword);
@@ -553,6 +585,7 @@ export async function syncCjCatalog() {
     targetCount: discoveryTarget,
     pageSize,
     maxPagesPerKeyword,
+    maxProductsPerKeyword,
     excludedProductIds: existingProductIds,
   });
 

@@ -5,6 +5,7 @@ import {
   extractCjDescriptionImageUrls,
   getLegacyCatalogCleanupFilter,
   hasFreshProfessionalContent,
+  rankCjProductsByDemand,
   shouldPreserveExistingTranslations,
 } from "../src/services/cjCatalogSync.js";
 import { getFailureFulfillmentStatus } from "../src/services/cjFulfillment.js";
@@ -33,6 +34,21 @@ test("CJ catalog cleanup never targets manually created products", () => {
 
   assert.deepEqual(filter, { source: "amazon-reviews-2023" });
   assert.notEqual(filter.source, "manual");
+});
+
+test("CJ discovery ranks stronger demand signals first without mutating the API response", () => {
+  const products = [
+    { pid: "low", listedNum: 4 },
+    { pid: "high", listedNum: 900 },
+    { pid: "middle", sellCount: 25 },
+  ];
+
+  assert.deepEqual(rankCjProductsByDemand(products).map((product) => product.pid), [
+    "high",
+    "middle",
+    "low",
+  ]);
+  assert.deepEqual(products.map((product) => product.pid), ["low", "high", "middle"]);
 });
 
 test("CJ sync preserves professional copy only while supplier source is unchanged", () => {
