@@ -2,10 +2,17 @@ import { Router } from "express";
 import { requireAdmin } from "../middleware/requireAdmin.js";
 import { HomeCampaign } from "../models/HomeCampaign.js";
 import { Product } from "../models/Product.js";
+import {
+  getCampaignProductGroupKey,
+  localizeCampaignProduct,
+  normalizeCampaignLanguage,
+  pickUniqueCampaignProducts,
+} from "../services/campaignProduct.js";
 
 const CAMPAIGN_KEY = "home-main";
 const MAX_PRODUCT_KEYS = 3;
 const MAX_CATEGORY_SLIDES = 3;
+const CAMPAIGN_CANDIDATE_LIMIT = 60;
 
 const defaults = {
   key: CAMPAIGN_KEY,
@@ -71,25 +78,30 @@ async function getCampaign() {
   ).lean();
 }
 
-async function getCampaignProducts(productKeys = []) {
+async function getCampaignProducts(productKeys = [], language = "en") {
   const keys = productKeys.filter(Boolean).slice(0, MAX_PRODUCT_KEYS);
 
   if (keys.length > 0) {
     const products = await Product.find({ key: { $in: keys }, isActive: true }).lean();
     const byKey = new Map(products.map((product) => [product.key, product]));
-    return keys.map((key) => byKey.get(key)).filter(Boolean);
+    const ordered = keys.map((key) => byKey.get(key)).filter(Boolean);
+    return pickUniqueCampaignProducts(ordered, { limit: MAX_PRODUCT_KEYS })
+      .map((product) => localizeCampaignProduct(product, language));
   }
 
-  return Product.find({
+  const candidates = await Product.find({
     isActive: true,
     $or: [{ imageUrl: { $ne: "" } }, { images: { $exists: true, $ne: [] } }],
   })
     .sort({ popularity: -1, createdAt: -1 })
-    .limit(MAX_PRODUCT_KEYS)
+    .limit(CAMPAIGN_CANDIDATE_LIMIT)
     .lean();
+
+  return pickUniqueCampaignProducts(candidates, { limit: MAX_PRODUCT_KEYS })
+    .map((product) => localizeCampaignProduct(product, language));
 }
 
-async function getCategorySlides(excludedProductKeys = []) {
+async function getCategorySlides(excludedGroupKeys = [], language = "en") {
   const categoryGroups = await Product.aggregate([
     {
       $match: {
@@ -111,31 +123,38 @@ async function getCategorySlides(excludedProductKeys = []) {
   ]);
 
   const slides = [];
-  const usedProductKeys = new Set(excludedProductKeys);
+  const usedGroupKeys = new Set(excludedGroupKeys);
   const themes = ["electric", "sunset", "midnight"];
 
   for (const category of categoryGroups) {
     if (slides.length >= MAX_CATEGORY_SLIDES) break;
 
-    const products = await Product.find({
+    const candidates = await Product.find({
       isActive: true,
       categoryKey: category._id,
-      key: { $nin: [...usedProductKeys] },
       $or: [{ imageUrl: { $ne: "" } }, { images: { $exists: true, $ne: [] } }],
     })
       .sort({ popularity: -1, rating: -1, createdAt: -1 })
-      .limit(MAX_PRODUCT_KEYS)
+      .limit(CAMPAIGN_CANDIDATE_LIMIT)
       .lean();
+
+    const products = pickUniqueCampaignProducts(candidates, {
+      limit: MAX_PRODUCT_KEYS,
+      excludedGroupKeys: [...usedGroupKeys],
+    }).map((product) => localizeCampaignProduct(product, language));
 
     if (products.length === 0) continue;
 
-    products.forEach((product) => usedProductKeys.add(product.key));
+    products.forEach((product) => usedGroupKeys.add(getCampaignProductGroupKey(product)));
 
-    const categoryLabel = formatCategoryLabel(category.label || category._id);
+    const categoryLabel = formatCategoryLabel(
+      products[0]?.categoryLabel || category.label || category._id,
+    );
     const heroImage = products[0]?.imageUrl || products[0]?.images?.[0] || "";
 
     slides.push({
       id: `category-${category._id}`,
+      categoryKey: category._id,
       theme: themes[slides.length % themes.length],
       eyebrow: "CATEGORY SPOTLIGHT",
       title: categoryLabel,
@@ -171,10 +190,13 @@ function isCampaignVisible(campaign) {
   return true;
 }
 
-async function serializeCampaign(campaign) {
-  const products = await getCampaignProducts(campaign.productKeys || []);
+async function serializeCampaign(campaign, language = "en") {
+  const products = await getCampaignProducts(campaign.productKeys || [], language);
   const serializedProducts = products.map(serializeProduct);
-  const categorySlides = await getCategorySlides(products.map((product) => product.key));
+  const categorySlides = await getCategorySlides(
+    products.map((product) => getCampaignProductGroupKey(product)),
+    language,
+  );
 
   const mainSlide = {
     id: "main-campaign",
@@ -207,7 +229,8 @@ homeCampaignRouter.get("/", async (request, response, next) => {
       return response.json({ campaign: null });
     }
 
-    return response.json({ campaign: await serializeCampaign(campaign) });
+    const language = normalizeCampaignLanguage(request.query.language);
+    return response.json({ campaign: await serializeCampaign(campaign, language) });
   } catch (error) {
     return next(error);
   }
@@ -218,7 +241,8 @@ adminHomeCampaignRouter.use(requireAdmin);
 adminHomeCampaignRouter.get("/", async (request, response, next) => {
   try {
     const campaign = await getCampaign();
-    return response.json({ campaign: await serializeCampaign(campaign) });
+    const language = normalizeCampaignLanguage(request.query.language);
+    return response.json({ campaign: await serializeCampaign(campaign, language) });
   } catch (error) {
     return next(error);
   }
@@ -266,7 +290,8 @@ adminHomeCampaignRouter.patch("/", async (request, response, next) => {
       { new: true, runValidators: true },
     ).lean();
 
-    return response.json({ campaign: await serializeCampaign(campaign) });
+    const language = normalizeCampaignLanguage(request.query.language);
+    return response.json({ campaign: await serializeCampaign(campaign, language) });
   } catch (error) {
     return next(error);
   }
