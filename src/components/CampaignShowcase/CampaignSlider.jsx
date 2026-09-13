@@ -22,14 +22,23 @@ function interpolate(value, params = {}) {
   );
 }
 
-function localizeSlide(slide, dictionary) {
+function localizeSlide(slide, dictionary, t) {
   const isCategorySlide = String(slide.id || "").startsWith("category-");
 
   if (isCategorySlide) {
+    const categoryKey = String(slide.categoryKey || "").trim();
+    const translationKey = categoryKey ? `categories.${categoryKey}.title` : "";
+    const translatedCategory = translationKey ? t(translationKey) : "";
+    const categoryTitle =
+      translatedCategory && translatedCategory !== translationKey
+        ? translatedCategory
+        : slide.title;
+
     return {
       ...slide,
       eyebrow: dictionary.categoryEyebrow,
-      description: interpolate(dictionary.categoryDescription, { category: slide.title }),
+      title: categoryTitle,
+      description: interpolate(dictionary.categoryDescription, { category: categoryTitle }),
       buttonLabel: dictionary.shopCategory,
     };
   }
@@ -82,16 +91,16 @@ function SlideButton({ slide, tabIndex }) {
 }
 
 function CampaignSlider({ campaign }) {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const dictionary = campaignTranslations[language] || campaignTranslations.en;
   const slides = useMemo(
     () => {
       const rawSlides = campaign.slides?.length ? campaign.slides : [campaign];
       return rawSlides.map((slide) =>
-        localizeSlide(slide, dictionary.campaignSlider),
+        localizeSlide(slide, dictionary.campaignSlider, t),
       );
     },
-    [campaign, dictionary.campaignSlider],
+    [campaign, dictionary.campaignSlider, t],
   );
   const [activeIndex, setActiveIndex] = useState(0);
   const [previousIndex, setPreviousIndex] = useState(null);
