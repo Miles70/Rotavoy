@@ -176,11 +176,10 @@ function ProductCard({ product }) {
     !hasMultipleVariants && Number(product.oldPrice || 0) > Number(product.price || 0)
       ? Number(product.oldPrice)
       : null;
-  const minimumPrice = Number(product.priceMin ?? product.price ?? 0);
-  const maximumPrice = Number(product.priceMax ?? product.price ?? 0);
-  const displayPrice = maximumPrice > minimumPrice
-    ? `${formatPrice(minimumPrice)} – ${formatPrice(maximumPrice)}`
-    : formatPrice(product.price);
+  // Grouped CJ cards point to one concrete active variant (the cheapest one,
+  // selected by the backend). Show that variant's actual sale price as a
+  // single amount; other variant prices remain visible after opening details.
+  const displayPrice = formatPrice(product.price);
 
   return (
     <article className={isAdded ? "productCard added" : "productCard"}>
