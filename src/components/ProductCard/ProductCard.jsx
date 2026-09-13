@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Heart } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useLanguage } from "../../i18n/LanguageContext";
+import { getCategoryGroupText } from "../../i18n/categoryGroupText";
 import { useCart } from "../../context/CartContext";
 import { useCustomerAuth } from "../../context/CustomerAuthContext";
 import { useCustomerAccount } from "../../context/CustomerAccountContext";
@@ -94,20 +95,53 @@ const numberLocales = {
   it: "it-IT",
 };
 
-function getCategoryLabel(product, t) {
-  if (product?.categoryLabel) return product.categoryLabel;
+const categoryGroupByProductCategory = {
+  electronics: "electronics",
+  mobile: "electronics",
+  fashion: "fashion",
+  home: "homeLivingOffice",
+  office: "homeLivingOffice",
+  appliances: "homeLivingOffice",
+  automotive: "autoGardenTools",
+  tools: "autoGardenTools",
+  baby: "motherBabyToys",
+  toys: "motherBabyToys",
+  sports: "sportsOutdoor",
+  beauty: "beautyCare",
+  pets: "supermarketPets",
+  gaming: "booksMusicFilmHobby",
+};
 
-  const categoryKey = product?.categoryKey;
-  if (!categoryKey) return "General";
+function getLeafCategoryLabel(value) {
+  return String(value || "")
+    .split(/\s*(?:>|\/)\s*/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .pop() || "";
+}
 
-  const translationKey = `categories.${categoryKey}.title`;
-  const translated = t(translationKey);
+function getCategoryLabel(product, t, language) {
+  const categoryKey = String(product?.categoryKey || "").trim();
+  const groupKey = categoryGroupByProductCategory[categoryKey];
 
-  if (translated !== translationKey) return translated;
+  if (groupKey) {
+    return getCategoryGroupText(language, groupKey, "title");
+  }
+
+  if (categoryKey) {
+    const translationKey = `categories.${categoryKey}.title`;
+    const translated = t(translationKey);
+    if (translated && translated !== translationKey) return translated;
+  }
+
+  const leafCategory = getLeafCategoryLabel(product?.categoryLabel);
+  if (leafCategory) return leafCategory;
 
   return categoryKey
-    .replace(/[-_]+/g, " ")
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+    ? categoryKey
+        .replace(/[-_]+/g, " ")
+        .replace(/\b\w/g, (letter) => letter.toUpperCase())
+    : "General";
 }
 
 function ProductCard({ product }) {
@@ -188,7 +222,7 @@ function ProductCard({ product }) {
     : text("account.addFavorite", "Add to favorites");
   const fallbackLetter = product.title?.charAt(0)?.toUpperCase() || "G";
   const badgeLabel = getBadgeLabel();
-  const categoryLabel = getCategoryLabel(product, t);
+  const categoryLabel = getCategoryLabel(product, t, language);
   const displayOldPrice =
     !hasMultipleVariants && Number(product.oldPrice || 0) > Number(product.price || 0)
       ? Number(product.oldPrice)
