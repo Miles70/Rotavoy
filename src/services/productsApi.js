@@ -183,7 +183,12 @@ export function normalizeProduct(product, requestedLanguage = "en") {
   // Logical CJ groups can represent different capacities, bundle sizes or
   // packaging under one supplier parent. Keep the representative variant in
   // the title so separate storefront cards never look like duplicates.
-  const title = localizedTitle;
+  const usefulVariant = variantLabel && variantLabel.toLowerCase() !== "default";
+  const title = usefulVariant && !localizedTitle.toLocaleLowerCase().includes(
+    variantLabel.toLocaleLowerCase(),
+  )
+    ? `${localizedTitle} - ${variantLabel}`
+    : localizedTitle;
 
   return {
     ...product,
@@ -247,4 +252,17 @@ export async function getStoreProduct(productKey, language = "en") {
     product: normalizeProduct(data.product, normalizedLanguage),
     variants: (data.variants || []).map((variant) => normalizeProduct(variant, normalizedLanguage)),
   };
+}
+
+export async function getRelatedStoreProducts(productKey, language = "en", limit = 8) {
+  const normalizedLanguage = normalizeLanguage(language);
+  const query = new URLSearchParams({
+    language: normalizedLanguage,
+    limit: String(limit),
+  });
+  const data = await storeRequest(
+    `/products/${encodeURIComponent(productKey)}/related?${query.toString()}`,
+  );
+
+  return (data.products || []).map((product) => normalizeProduct(product, normalizedLanguage));
 }
