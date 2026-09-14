@@ -26,6 +26,16 @@ test("catalog grouping selects the cheapest variant and sorts lightweight parent
   assert.equal(groups[0].stockTotal, 5);
 });
 
+test("popular catalog prioritizes video products without changing newest sorting", () => {
+  const rows = [
+    { _id: "popular", key: "popular", supplierProductId: "popular", price: 5, stock: 1, popularity: 999, hasVideo: false, createdAt: "2026-02-01" },
+    { _id: "video", key: "video", supplierProductId: "video", price: 6, stock: 1, popularity: 1, hasVideo: true, createdAt: "2026-01-01" },
+  ];
+
+  assert.equal(buildCatalogGroupSummaries(rows, "popular")[0].groupKey, "video");
+  assert.equal(buildCatalogGroupSummaries(rows, "newest")[0].groupKey, "popular");
+});
+
 test("storefront language is constrained to Rotavoy languages", () => {
   assert.equal(normalizeStorefrontLanguage("TR"), "tr");
   assert.equal(normalizeStorefrontLanguage("de"), "de");
