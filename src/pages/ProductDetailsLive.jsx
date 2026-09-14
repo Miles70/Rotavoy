@@ -5,6 +5,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Minus,
+  Play,
   Plus,
   RotateCcw,
   ShieldCheck,
@@ -17,7 +18,11 @@ import ProductCard from "../components/ProductCard/ProductCard";
 import { useCart } from "../context/CartContext";
 import { useLanguage } from "../i18n/LanguageContext";
 import regionalProductDetailsTranslations from "../i18n/regionalProductDetailsTranslations";
-import { getStoreProduct, getStoreProducts } from "../services/productsApi";
+import {
+  getProductVideoUrl,
+  getStoreProduct,
+  getStoreProducts,
+} from "../services/productsApi";
 import "./ProductDetailsLive.css";
 
 const copy = {
@@ -208,6 +213,7 @@ function ProductDetailsLive() {
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [quantity, setQuantity] = useState(1);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [videoFailed, setVideoFailed] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -222,6 +228,7 @@ function ProductDetailsLive() {
     setRelatedProducts([]);
     setQuantity(1);
     setSelectedImageIndex(0);
+    setVideoFailed(false);
 
     getStoreProduct(productKey, language)
       .then(async (data) => {
@@ -266,19 +273,30 @@ function ProductDetailsLive() {
     };
   }, [language, productKey]);
 
-  const galleryImages = useMemo(() => {
+  const galleryItems = useMemo(() => {
     if (!product) return [];
 
-    return [
+    const images = [
       ...(Array.isArray(product.images) ? product.images : []),
       product.imageUrl,
     ]
       .filter(Boolean)
       .filter((url, index, array) => array.indexOf(url) === index)
       .slice(0, 6);
-  }, [product]);
 
-  const selectedImage = galleryImages[selectedImageIndex] || "";
+    return [
+      ...(product.hasVideo && product.videoUrl && !videoFailed
+        ? [{
+          type: "video",
+          url: getProductVideoUrl(product.key),
+          poster: product.videoPosterUrl || product.imageUrl || images[0] || "",
+        }]
+        : []),
+      ...images.map((url) => ({ type: "image", url })),
+    ];
+  }, [product, videoFailed]);
+
+  const selectedMedia = galleryItems[selectedImageIndex] || null;
   const category = product ? categoryLabel(product, t) : "";
   const isInStock = Number(product?.stock || 0) > 0;
   const features = Array.isArray(product?.features)
@@ -290,10 +308,10 @@ function ProductDetailsLive() {
       : [];
 
   function changeImage(direction) {
-    if (galleryImages.length < 2) return;
+    if (galleryItems.length < 2) return;
 
     setSelectedImageIndex((current) => {
-      return (current + direction + galleryImages.length) % galleryImages.length;
+      return (current + direction + galleryItems.length) % galleryItems.length;
     });
   }
 
@@ -340,10 +358,27 @@ function ProductDetailsLive() {
               {product.title?.charAt(0)?.toUpperCase() || "K"}
             </div>
 
-            {selectedImage ? (
+            {selectedMedia?.type === "video" ? (
+              <video
+                key={selectedMedia.url}
+                className="liveProductVideo"
+                src={selectedMedia.url}
+                poster={selectedMedia.poster}
+                autoPlay
+                muted
+                loop
+                playsInline
+                controls
+                preload="metadata"
+                onError={() => {
+                  setVideoFailed(true);
+                  setSelectedImageIndex(0);
+                }}
+              />
+            ) : selectedMedia?.type === "image" ? (
               <img
-                key={selectedImage}
-                src={selectedImage}
+                key={selectedMedia.url}
+                src={selectedMedia.url}
                 alt={product.title}
                 onError={(event) => {
                   event.currentTarget.style.display = "none";
@@ -351,7 +386,7 @@ function ProductDetailsLive() {
               />
             ) : null}
 
-            {galleryImages.length > 1 ? (
+            {galleryItems.length > 1 ? (
               <>
                 <button
                   type="button"
@@ -370,7 +405,7 @@ function ProductDetailsLive() {
                   <ChevronRight size={24} />
                 </button>
                 <span className="liveProductGalleryCounter">
-                  {selectedImageIndex + 1} / {galleryImages.length}
+                  {selectedImageIndex + 1} / {galleryItems.length}
                 </span>
               </>
             ) : null}
@@ -382,17 +417,22 @@ function ProductDetailsLive() {
             ) : null}
           </div>
 
-          {galleryImages.length > 1 ? (
+          {galleryItems.length > 1 ? (
             <div className="liveProductThumbnails">
-              {galleryImages.map((imageUrl, index) => (
+              {galleryItems.map((item, index) => (
                 <button
                   type="button"
-                  key={imageUrl}
+                  key={`${item.type}-${item.url}`}
                   className={index === selectedImageIndex ? "is-active" : ""}
                   onClick={() => setSelectedImageIndex(index)}
-                  aria-label={`${product.title} ${index + 1}`}
+                  aria-label={item.type === "video" ? `${product.title} video` : `${product.title} ${index + 1}`}
                 >
-                  <img src={imageUrl} alt="" loading="lazy" />
+                  <img src={item.type === "video" ? item.poster : item.url} alt="" loading="lazy" />
+                  {item.type === "video" ? (
+                    <span className="liveProductVideoThumbnailIcon" aria-hidden="true">
+                      <Play size={18} fill="currentColor" />
+                    </span>
+                  ) : null}
                 </button>
               ))}
             </div>
