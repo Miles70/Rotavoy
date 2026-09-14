@@ -291,7 +291,7 @@ function ProductDetailsLive() {
   const category = product ? categoryLabel(product, t) : "";
   const isInStock = Number(product?.stock || 0) > 0;
   const features = Array.isArray(product?.features)
-    ? product.features.filter(Boolean).slice(0, 8)
+    ? product.features.filter(Boolean)
     : [];
   const detailEntries =
     product?.details && typeof product.details === "object" && !Array.isArray(product.details)
