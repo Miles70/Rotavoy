@@ -59,12 +59,17 @@ productsRouter.get("/:productKey", async (request, response, next) => {
 
     let variants = [];
     if (product.source === "cj" && product.supplierProductId) {
-      variants = await Product.find({
+      const variantFilter = {
         source: "cj",
         supplierProductId: product.supplierProductId,
         isActive: true,
         stock: { $gt: 0 },
-      })
+      };
+      if (product.variantGroupKey) {
+        variantFilter.variantGroupKey = product.variantGroupKey;
+      }
+
+      variants = await Product.find(variantFilter)
         .select(STOREFRONT_PRIVATE_FIELDS)
         .sort({ price: 1, key: 1 })
         .lean();
