@@ -434,7 +434,7 @@ async function syncOneProduct(listProduct, options) {
       (preserveExistingTranslations && existing?.translationMeta)
       ? existing.translationMeta
       : {
-        provider: options.autoTranslation ? "google-translate" : "source",
+        provider: "source",
         sourceHash,
         sourceLanguage: "en",
         languages: Object.keys(translations || {}),
@@ -558,12 +558,13 @@ export async function syncCjCatalog() {
   const batchSize = parsePositiveInt(process.env.CJ_SYNC_BATCH_SIZE, 100, 500);
   const maxVariantsPerProduct = parsePositiveInt(process.env.CJ_SYNC_VARIANTS_PER_PRODUCT, 4, 12);
   const onlyNew = isTrue(process.env.CJ_SYNC_ONLY_NEW);
-  const autoTranslation = String(process.env.CJ_TRANSLATE_PRODUCTS || "true").toLowerCase() !== "false";
+  // Localization is owned exclusively by the Luna content pipeline.
+  // CJ sync keeps only the untouched English source as a pending fallback.
+  const autoTranslation = false;
   const options = {
     maxVariantsPerProduct,
     markupMultiplier: getMarkupMultiplier(),
     originCountryCode: String(process.env.CJ_FROM_COUNTRY_CODE || "CN").toUpperCase(),
-    autoTranslation,
   };
 
   const existingProductIds = onlyNew
