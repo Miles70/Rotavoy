@@ -146,7 +146,7 @@ function ProductCard({ product }) {
   }
 
   function handleVideoEnter() {
-    if (!hasVideo || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    if (!hasVideo) return;
     setVideoRequested(true);
     window.requestAnimationFrame(() => {
       videoRef.current?.play().catch(() => undefined);
