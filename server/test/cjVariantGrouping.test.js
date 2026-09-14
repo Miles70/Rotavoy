@@ -12,6 +12,11 @@ test("CJ variant kinds separate bundles, sets and simple packaging", () => {
   assert.equal(getCjVariantKind({ variantKey: "Blue 380ml" }), "standard");
 });
 
+test("CJ variant grouping recognizes mixed white and pink combo packages", () => {
+  assert.equal(getCjVariantKind({ variantKey: "White pink" }), "pack-2-mixed");
+  assert.equal(getCjVariantKind({ variantKey: "Beyaz + Pembe" }), "pack-2-mixed");
+});
+
 test("CJ variant grouping separates extreme prices inside the same kind", () => {
   const groups = buildCjVariantGroupMap([
     { vid: "blue-380", variantKey: "Blue 380ml", variantSellPrice: 1.73 },
