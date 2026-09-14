@@ -19,6 +19,9 @@ export function getCjVariantKind(variant) {
   );
 
   if (/\b(?:2|two)\s*(?:pcs?|pieces?|pack)\b|\bx\s*2\b/.test(label)) return "pack-2";
+  if (/\b(?:white\s*[-+&/]?\s*pink|beyaz\s*[-+&/]?\s*pembe)\b/.test(label)) {
+    return "pack-2-mixed";
+  }
   if (/\bset\s*\d*\b/.test(label)) return "set";
   if (/simple packaging|basic packaging|simple package|without box|no box/.test(label)) {
     return "simple-packaging";
