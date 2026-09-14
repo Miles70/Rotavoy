@@ -33,10 +33,36 @@ function distinctParents(items) {
   return new Set(items.map((item) => clean(item.supplierProductId) || clean(item.key))).size;
 }
 
+function storefrontGroupKey(row) {
+  const parent = clean(row?.supplierProductId);
+  const logical = clean(row?.variantGroupKey);
+  return parent ? (logical ? `${parent}:${logical}` : parent) : clean(row?.key);
+}
+
+function storefrontTitle(row) {
+  return clean(row?.translations?.tr?.title || row?.title);
+}
+
+function storefrontRepresentatives(rows) {
+  const groups = new Map();
+  for (const row of rows) {
+    const groupKey = storefrontGroupKey(row);
+    if (!groupKey) continue;
+    const existing = groups.get(groupKey);
+    if (!existing || Number(row.price || 0) < Number(existing.price || 0)) {
+      groups.set(groupKey, row);
+    }
+  }
+  return [...groups.values()];
+}
+
 function summarize(items) {
   return items.map((item) => ({
     key: item.key,
     title: item.title,
+    storefrontTitle: storefrontTitle(item),
+    storefrontGroupKey: storefrontGroupKey(item),
+    primaryImage: item.imageUrl || item.images?.[0] || "",
     supplierProductId: item.supplierProductId,
     supplierVariantId: item.supplierVariantId,
     variantGroupKey: item.variantGroupKey,
@@ -61,15 +87,12 @@ try {
   await connectDatabase();
 
   const rows = await Product.find({})
-    .select("key title supplierProductId supplierVariantId variantGroupKey sourceUrl imageUrl images price stock source isActive supplierContent")
+    .select("key title translations supplierProductId supplierVariantId variantGroupKey sourceUrl imageUrl images price stock source isActive supplierContent")
     .lean();
 
   const active = rows.filter((row) => row.isActive);
-  const storefrontGroups = new Set(active.map((row) => {
-    const parent = clean(row.supplierProductId);
-    const logical = clean(row.variantGroupKey);
-    return parent ? (logical ? `${parent}:${logical}` : parent) : clean(row.key);
-  }).filter(Boolean));
+  const representatives = storefrontRepresentatives(active);
+  const storefrontGroups = new Set(representatives.map(storefrontGroupKey));
 
   const duplicateVariantIds = groupBy(rows, (row) => row.supplierVariantId);
   const duplicateSourceUrls = groupBy(active, (row) => row.sourceUrl)
@@ -80,6 +103,22 @@ try {
     active,
     (row) => normalizedTitle(row.supplierContent?.title || row.title),
   ).filter(([, items]) => distinctParents(items) > 1);
+  const duplicateStorefrontTitleAndImage = groupBy(
+    representatives,
+    (row) => {
+      const title = storefrontTitle(row).toLocaleLowerCase("tr-TR");
+      const image = clean(row.imageUrl || row.images?.[0]);
+      return title && image ? `${title} || ${image}` : "";
+    },
+  );
+  const duplicateStorefrontTitles = groupBy(
+    representatives,
+    (row) => storefrontTitle(row).toLocaleLowerCase("tr-TR"),
+  );
+  const duplicateStorefrontImages = groupBy(
+    representatives,
+    (row) => row.imageUrl || row.images?.[0],
+  );
 
   const highConfidenceKeys = new Set();
   for (const groups of [duplicateVariantIds, duplicateSourceUrls, duplicateImages]) {
@@ -99,8 +138,14 @@ try {
     duplicateSourceUrlGroups: duplicateSourceUrls.length,
     duplicatePrimaryImageGroups: duplicateImages.length,
     suspiciousSimilarTitleGroups: duplicateSupplierTitles.length,
+    visibleSameTitleAndImageGroups: duplicateStorefrontTitleAndImage.length,
+    visibleSameTitleGroups: duplicateStorefrontTitles.length,
+    visibleSameImageGroups: duplicateStorefrontImages.length,
   }, null, 2));
 
+  printSection("VİTRİN: Aynı başlık ve aynı görselle görünen kartlar", duplicateStorefrontTitleAndImage);
+  printSection("VİTRİN: Aynı başlıkla görünen kartlar", duplicateStorefrontTitles);
+  printSection("VİTRİN: Aynı ana görselle görünen kartlar", duplicateStorefrontImages);
   printSection("KESİN: Aynı tedarikçi varyant kimliği", duplicateVariantIds);
   printSection("KESİN: Farklı ürün kimliği ama aynı kaynak adresi", duplicateSourceUrls);
   printSection("GÜÇLÜ ŞÜPHE: Farklı ürün kimliği ama aynı ana görsel", duplicateImages);
