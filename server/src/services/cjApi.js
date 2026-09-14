@@ -188,14 +188,23 @@ export async function listCjProducts({
       page,
       size,
       keyWord,
-      features: ["enable_category", "enable_description"],
+      features: ["enable_category", "enable_description", "enable_video"],
       verifiedWarehouse: 1,
     },
   });
 }
 
 export async function getCjProductDetail(pid) {
-  return authenticatedRequest("/product/query", { query: { pid } });
+  return authenticatedRequest("/product/query", {
+    query: { pid, features: ["enable_video"] },
+  });
+}
+
+export async function getCjProductVideos(productId) {
+  return authenticatedRequest("/product/queryVideosByProductId", {
+    method: "POST",
+    body: { productId },
+  });
 }
 
 export async function getCjProductInventory(pid) {
