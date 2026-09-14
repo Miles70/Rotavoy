@@ -2,7 +2,10 @@ import { Router } from "express";
 import { Product } from "../models/Product.js";
 import { isCjConfigured } from "../services/cjApi.js";
 import {
+  buildCatalogGroupSummaries,
+  buildGroupedStorefrontProduct,
   normalizeStorefrontLanguage,
+  rankRelatedCatalogGroups,
   STOREFRONT_PRIVATE_FIELDS,
   trimStorefrontTranslations,
 } from "../services/storefrontProduct.js";
@@ -38,6 +41,70 @@ productsRouter.get("/", async (request, response, next) => {
     });
   } catch (error) {
     next(error);
+  }
+});
+
+productsRouter.get("/:productKey/related", async (request, response, next) => {
+  try {
+    const language = normalizeStorefrontLanguage(request.query.language);
+    const requestedLimit = Number.parseInt(request.query.limit, 10) || 8;
+    const limit = Math.min(Math.max(requestedLimit, 1), 12);
+    const storefrontSources = getStorefrontSources();
+    const product = await Product.findOne({
+      key: request.params.productKey,
+      isActive: true,
+      source: { $in: storefrontSources },
+    })
+      .select("key source title brand categoryKey supplierProductId variantGroupKey")
+      .lean();
+
+    if (!product) {
+      return response.status(404).json({ message: "Product not found." });
+    }
+
+    const relationshipFilter = {
+      isActive: true,
+      source: { $in: storefrontSources },
+      stock: { $gt: 0 },
+      $or: [
+        { categoryKey: product.categoryKey },
+        ...(product.supplierProductId
+          ? [{ supplierProductId: product.supplierProductId }]
+          : []),
+      ],
+    };
+    const rows = await Product.find(relationshipFilter)
+      .select("_id key title brand categoryKey supplierProductId variantGroupKey price popularity createdAt stock hasVideo")
+      .lean();
+    const rankedGroups = rankRelatedCatalogGroups(
+      product,
+      buildCatalogGroupSummaries(rows, "popular"),
+      limit,
+    );
+    const representativeIds = rankedGroups.map((group) => group.representative._id);
+    const representatives = await Product.find({ _id: { $in: representativeIds } })
+      .select(STOREFRONT_PRIVATE_FIELDS)
+      .lean();
+    const productsById = new Map(
+      representatives.map((item) => [String(item._id), item]),
+    );
+    const products = rankedGroups
+      .map((group) => ({
+        group,
+        product: productsById.get(String(group.representative._id)),
+      }))
+      .filter((entry) => entry.product)
+      .map(({ group, product: relatedProduct }) => buildGroupedStorefrontProduct({
+        product: relatedProduct,
+        variantCount: group.variantCount,
+        priceMin: group.priceMin,
+        priceMax: group.priceMax,
+        stockTotal: group.stockTotal,
+      }, language));
+
+    return response.json({ products });
+  } catch (error) {
+    return next(error);
   }
 });
 
