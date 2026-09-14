@@ -1,7 +1,7 @@
 import { Product } from "../models/Product.js";
 import { getRotavoyProductLanguages } from "./productTranslation.js";
 
-export const PRODUCT_CONTENT_VERSION = "rotavoy-ai-copy-v1";
+export const PRODUCT_CONTENT_VERSION = "rotavoy-ai-copy-v2";
 
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 const DEFAULT_MODEL = "gpt-5.6-luna";
@@ -79,8 +79,8 @@ function getResponseSchema() {
     type: "object",
     additionalProperties: false,
     properties: {
-      title: { type: "string", minLength: 2, maxLength: 140 },
-      description: { type: "string", minLength: 20, maxLength: 900 },
+      title: { type: "string", minLength: 2, maxLength: 80 },
+      description: { type: "string", minLength: 20, maxLength: 360 },
       features: {
         type: "array",
         minItems: 2,
@@ -130,8 +130,11 @@ function buildInstructions() {
     "Never invent materials, certifications, dimensions, compatibility, waterproofing, performance claims, use cases or benefits that are not supported by the source.",
     "Remove empty supplier fluff such as 'good material', 'unique design', 'stylish and beautiful', repeated words and awkward keyword stuffing.",
     "Keep model numbers, brand names, sizes and technical identifiers exact when they matter.",
-    "The base title must NOT include a variant value; Rotavoy appends the localized variant separately.",
-    "Descriptions should read like a professional retailer wrote them, not like a literal machine translation. Prefer 1-3 compact sentences.",
+    "Write a clean base title of 3-8 words whenever possible and never exceed 80 characters.",
+    "Start titles with the product's plain everyday name. Remove SEO filler such as hot selling, new, fashion, gadget, products, household, for home, gift and repeated category words unless essential to identify the item.",
+    "The base title must NOT include color, size, capacity, quantity, pack count or another variant value; Rotavoy displays the localized variant separately.",
+    "Descriptions must be 1-2 compact sentences and never exceed 360 characters. State what the product is and its most useful source-supported facts without repeating the title or variant.",
+    "Variant labels must be concise and customer-friendly while preserving every factual distinction such as color, dimensions, capacity, model, pack count, plug type and packaging.",
     "Features must be short factual bullets directly supported by source data. Do not add a feature merely because it is common for that product type.",
     "Translate category hierarchy naturally while preserving its levels and > separators.",
     "Variant arrays must preserve the exact input order and item count in every language.",
@@ -197,8 +200,8 @@ export function normalizeContentBundle(bundle, expectedVariantCount) {
       throw new Error(`AI product content returned an invalid ${language} variant list.`);
     }
 
-    const title = cleanText(entry.title, 140);
-    const description = cleanText(entry.description, 900);
+    const title = cleanText(entry.title, 80);
+    const description = cleanText(entry.description, 360);
     const categoryLabel = cleanText(entry.categoryLabel, 220);
     const features = uniqueStrings(entry.features, 6, 120);
 
