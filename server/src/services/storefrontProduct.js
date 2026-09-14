@@ -167,3 +167,61 @@ export function buildCatalogGroupSummaries(rows, sortMode = "popular") {
       String(leftProduct?.key || "").localeCompare(String(rightProduct?.key || ""));
   });
 }
+
+function recommendationTokens(value) {
+  return new Set(
+    String(value || "")
+      .toLocaleLowerCase("en-US")
+      .replace(/[^\p{L}\p{N}]+/gu, " ")
+      .split(/\s+/)
+      .filter((token) => token.length >= 3),
+  );
+}
+
+export function rankRelatedCatalogGroups(product, summaries, limit = 8) {
+  const currentSupplierId = String(product?.supplierProductId || "").trim();
+  const currentVariantGroup = String(product?.variantGroupKey || "").trim();
+  const currentGroupKey = currentSupplierId
+    ? currentVariantGroup
+      ? `${currentSupplierId}:${currentVariantGroup}`
+      : currentSupplierId
+    : String(product?.key || "").trim();
+  const currentTokens = recommendationTokens(product?.title);
+  const currentBrand = String(product?.brand || "").trim().toLocaleLowerCase("en-US");
+  const currentCategory = String(product?.categoryKey || "").trim();
+
+  return (Array.isArray(summaries) ? summaries : [])
+    .filter((summary) => summary?.groupKey && summary.groupKey !== currentGroupKey)
+    .map((summary) => {
+      const candidate = summary.representative || {};
+      const sameSupplier = Boolean(
+        currentSupplierId && String(candidate.supplierProductId || "").trim() === currentSupplierId,
+      );
+      const sameCategory = Boolean(
+        currentCategory && String(candidate.categoryKey || "").trim() === currentCategory,
+      );
+      const candidateBrand = String(candidate.brand || "").trim().toLocaleLowerCase("en-US");
+      const candidateTokens = recommendationTokens(candidate.title);
+      let sharedTokens = 0;
+      for (const token of candidateTokens) {
+        if (currentTokens.has(token)) sharedTokens += 1;
+      }
+
+      return {
+        ...summary,
+        recommendationScore:
+          (sameSupplier ? 10_000 : 0) +
+          (sameCategory ? 1_000 : 0) +
+          (currentBrand && candidateBrand === currentBrand ? 100 : 0) +
+          sharedTokens * 20 +
+          (summary.hasVideo ? 5 : 0) +
+          Math.min(Number(candidate.popularity || 0), 100) / 100,
+      };
+    })
+    .filter((summary) => summary.recommendationScore >= 1_000)
+    .sort((left, right) =>
+      right.recommendationScore - left.recommendationScore ||
+      String(left.groupKey).localeCompare(String(right.groupKey)),
+    )
+    .slice(0, Math.max(Number(limit) || 8, 1));
+}
