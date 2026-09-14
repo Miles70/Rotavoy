@@ -5,7 +5,7 @@ export const PRODUCT_CONTENT_VERSION = "rotavoy-ai-copy-v8";
 
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 const DEFAULT_MODEL = "gpt-5.6-luna";
-const DEFAULT_TIMEOUT_MS = 60_000;
+const DEFAULT_TIMEOUT_MS = 120_000;
 const DEFAULT_REQUEST_INTERVAL_MS = 750;
 const DEFAULT_BATCH_SIZE = 20;
 
@@ -130,6 +130,7 @@ function buildInstructions() {
     "Remove empty supplier fluff such as 'good material', 'unique design', 'stylish and beautiful', repeated words and awkward keyword stuffing.",
     "Keep model numbers, brand names, sizes and technical identifiers exact when they matter.",
     "Treat networking standards such as Cat5, Cat5e, Cat6, Cat6a, Cat7 and Cat8 as critical customer-facing specifications. Preserve them when present, including malformed supplier wording such as CATE 6; normalize CATE 6 to Cat6 rather than dropping it.",
+    "Preserve explicit customer-facing option counts such as 6 colors, 6 types, 26 letters, 12 sizes or similar counts when the supplier source states them. These counts are real product facts and must appear naturally in the title, description or feature bullets even when the individual variants are also listed separately.",
     "Write a clean base title of 3-8 words whenever possible and never exceed 80 characters.",
     "Use natural ecommerce title order in every language. When known, place brand first, then model, then the everyday product type; for example Turkish must be 'SKMEI 1251 Dijital Spor Saat', never 'Spor Saat SKMEI 1251'.",
     "Start titles with the product's plain everyday name. Remove SEO filler such as hot selling, new, fashion, gadget, products, household, for home, gift and repeated category words unless essential to identify the item.",
