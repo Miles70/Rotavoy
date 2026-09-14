@@ -200,6 +200,9 @@
 }
 
 .liveProductDescription { margin: 22px 0 0; color: var(--color-text-secondary); font-size: 16px; line-height: 1.75; }
+.liveProductVariantNotice { display: flex; flex-direction: column; gap: 4px; margin-top: 18px; padding: 12px 14px; border: 1px solid rgba(232, 50, 103, 0.22); border-radius: 14px; background: rgba(255, 244, 248, 0.86); color: #27304a; }
+.liveProductVariantNotice strong { font-size: 0.9rem; }
+.liveProductVariantNotice span { color: #697087; font-size: 0.8rem; line-height: 1.45; }
 
 .liveProductBuyRow {
   display: grid;
