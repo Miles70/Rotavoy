@@ -90,7 +90,6 @@ function getResponseSchema() {
       variants: {
         type: "array",
         minItems: 1,
-        maxItems: 12,
         items: { type: "string", minLength: 1, maxLength: 120 },
       },
     },

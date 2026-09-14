@@ -342,9 +342,11 @@ async function syncOneProduct(listProduct, options) {
 
   const detail = await getCjProductDetail(pid);
   const variants = Array.isArray(detail?.variants) ? detail.variants : [];
-  const selectedVariants = variants.slice(0, options.maxVariantsPerProduct);
-  const variantGroupById = buildCjVariantGroupMap(selectedVariants);
+  const selectedVariants = variants;
   const productTitle = cleanText(detail?.productNameEn || detail?.nameEn || listProduct?.nameEn, 260);
+  const variantGroupById = buildCjVariantGroupMap(selectedVariants, {
+    productTitle,
+  });
   if (!productTitle || selectedVariants.length === 0) {
     return { upserted: 0, activeVariants: 0, skipped: 1 };
   }
@@ -545,7 +547,7 @@ async function syncOneProduct(listProduct, options) {
           supplier: "cj",
           supplierProductId: pid,
           supplierVariantId: vid,
-          variantGroupKey: variantGroupById.get(vid) || "standard-band-1",
+          variantGroupKey: variantGroupById.get(vid) || "product",
           supplierSku: cleanText(variant?.variantSku, 100),
           isActive: stock > 0,
         },
@@ -594,13 +596,13 @@ export async function syncCjCatalog() {
     MAX_CJ_LIST_PAGE,
   );
   const batchSize = parsePositiveInt(process.env.CJ_SYNC_BATCH_SIZE, 100, 500);
-  const maxVariantsPerProduct = parsePositiveInt(process.env.CJ_SYNC_VARIANTS_PER_PRODUCT, 4, 12);
+
   const onlyNew = isTrue(process.env.CJ_SYNC_ONLY_NEW);
   // Localization is owned exclusively by the Luna content pipeline.
   // CJ sync keeps only the untouched English source as a pending fallback.
   const autoTranslation = false;
   const options = {
-    maxVariantsPerProduct,
+
     markupMultiplier: getMarkupMultiplier(),
     originCountryCode: String(process.env.CJ_FROM_COUNTRY_CODE || "CN").toUpperCase(),
   };

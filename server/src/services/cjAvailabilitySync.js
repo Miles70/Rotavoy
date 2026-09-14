@@ -81,7 +81,7 @@ export function buildCjAvailabilityChanges(
             hasVideo: videoMedia.hasVideo,
           }
           : {}),
-        variantGroupKey: variantGroupById.get(variantId) || product.variantGroupKey || "standard-band-1",
+        variantGroupKey: variantGroupById.get(variantId) || product.variantGroupKey || "product",
       };
     }
 
@@ -105,7 +105,7 @@ export function buildCjAvailabilityChanges(
           hasVideo: videoMedia.hasVideo,
         }
         : {}),
-      variantGroupKey: variantGroupById.get(variantId) || product.variantGroupKey || "standard-band-1",
+      variantGroupKey: variantGroupById.get(variantId) || product.variantGroupKey || "product",
     };
   });
 }
@@ -148,6 +148,9 @@ async function syncSupplierProduct(supplierProductId) {
   );
   const variantGroupById = buildCjVariantGroupMap(
     supplierVariants.filter((variant) => storedVariantIds.has(String(variant?.vid || "").trim())),
+    {
+      productTitle: detail?.productNameEn || detail?.nameEn || "",
+    },
   );
   const stockByVariantId = buildCjVariantStockMap(
     inventory,

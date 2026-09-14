@@ -10,24 +10,32 @@ import {
   trimStorefrontTranslations,
 } from "../src/services/storefrontProduct.js";
 
-test("related products prioritize separated groups from the same supplier family", () => {
+test("related products prioritize semantic accessories from the same supplier family", () => {
   const current = {
-    key: "blue-380",
-    title: "Portable Blender Blue 380ml",
+    key: "purifier-white",
+    title: "A1 Air Purifier",
     categoryKey: "appliances",
-    supplierProductId: "blender",
-    variantGroupKey: "standard-band-1",
+    supplierProductId: "purifier",
+    variantGroupKey: "product",
   };
+
   const rows = [
-    { _id: "current", key: "blue-380", title: current.title, categoryKey: "appliances", supplierProductId: "blender", variantGroupKey: "standard-band-1", price: 2.85, stock: 2 },
-    { _id: "pack", key: "two-white", title: "Portable Blender 2 Pieces White", categoryKey: "appliances", supplierProductId: "blender", variantGroupKey: "pack-2-band-1", price: 42.16, stock: 2 },
-    { _id: "lamp", key: "night-lamp", title: "LED Night Lamp", categoryKey: "appliances", supplierProductId: "lamp", variantGroupKey: "standard-band-1", price: 8, stock: 2, popularity: 999 },
+    { _id: "current", key: "purifier-white", title: current.title, categoryKey: "appliances", supplierProductId: "purifier", variantGroupKey: "product", price: 28, stock: 2 },
+    { _id: "filter", key: "replacement-filter", title: "A1 Replacement Filter", categoryKey: "appliances", supplierProductId: "purifier", variantGroupKey: "accessory-filter", price: 4, stock: 2 },
+    { _id: "lamp", key: "night-lamp", title: "LED Night Lamp", categoryKey: "appliances", supplierProductId: "lamp", variantGroupKey: "product", price: 8, stock: 2, popularity: 999 },
   ];
 
-  const ranked = rankRelatedCatalogGroups(current, buildCatalogGroupSummaries(rows), 8);
-  assert.equal(ranked[0].groupKey, "blender:pack-2-band-1");
-  assert.equal(ranked.some((group) => group.groupKey === "blender:standard-band-1"), false);
-  assert.equal(ranked.some((group) => group.groupKey === "lamp:standard-band-1"), true);
+  const ranked = rankRelatedCatalogGroups(
+    current,
+    buildCatalogGroupSummaries(rows),
+    8,
+  );
+
+  assert.equal(ranked[0].groupKey, "purifier:accessory-filter");
+  assert.equal(
+    ranked.some((group) => group.groupKey === "purifier:product"),
+    false,
+  );
 });
 
 test("catalog grouping selects the cheapest variant and sorts lightweight parent summaries", () => {
@@ -57,18 +65,26 @@ test("popular catalog prioritizes video products without changing newest sorting
   assert.equal(buildCatalogGroupSummaries(rows, "newest")[0].groupKey, "popular");
 });
 
-test("catalog grouping keeps logical groups from one CJ parent separate", () => {
+test("catalog grouping keeps ordinary variants on one card and accessories separate", () => {
   const rows = [
-    { _id: "blue-380", key: "blue-380", supplierProductId: "blender", variantGroupKey: "standard-band-1", price: 2.85, stock: 2 },
-    { _id: "blue-420", key: "blue-420", supplierProductId: "blender", variantGroupKey: "standard-band-1", price: 2.87, stock: 2 },
-    { _id: "white", key: "white", supplierProductId: "blender", variantGroupKey: "standard-band-2", price: 21.09, stock: 2 },
-    { _id: "black", key: "black", supplierProductId: "blender", variantGroupKey: "standard-band-3", price: 47.88, stock: 2 },
-    { _id: "two-white", key: "two-white", supplierProductId: "blender", variantGroupKey: "pack-2-band-1", price: 42.16, stock: 2 },
+    { _id: "small", key: "small", supplierProductId: "mat", variantGroupKey: "product", price: 3.05, stock: 2 },
+    { _id: "medium", key: "medium", supplierProductId: "mat", variantGroupKey: "product", price: 6.24, stock: 2 },
+    { _id: "large", key: "large", supplierProductId: "mat", variantGroupKey: "product", price: 13.22, stock: 2 },
+    { _id: "pack", key: "pack", supplierProductId: "mat", variantGroupKey: "product", price: 20, stock: 2 },
+    { _id: "filter", key: "filter", supplierProductId: "mat", variantGroupKey: "accessory-filter", price: 2, stock: 2 },
   ];
 
   const groups = buildCatalogGroupSummaries(rows);
-  assert.equal(groups.length, 4);
-  assert.equal(groups.find((group) => group.groupKey.endsWith("standard-band-1")).variantCount, 2);
+
+  assert.equal(groups.length, 2);
+  assert.equal(
+    groups.find((group) => group.groupKey === "mat:product").variantCount,
+    4,
+  );
+  assert.equal(
+    groups.find((group) => group.groupKey === "mat:accessory-filter").variantCount,
+    1,
+  );
 });
 
 test("storefront language is constrained to Rotavoy languages", () => {

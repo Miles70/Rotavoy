@@ -41,10 +41,15 @@ export async function groupExistingCjVariants() {
 
   const operations = [];
   for (const siblings of bySupplierProduct.values()) {
-    const groupByVariantId = buildCjVariantGroupMap(siblings.map(toGroupingVariant));
+    const groupByVariantId = buildCjVariantGroupMap(
+      siblings.map(toGroupingVariant),
+      {
+        productTitle: siblings[0]?.supplierContent?.title || "",
+      },
+    );
     for (const product of siblings) {
       const variantId = String(product.supplierVariantId || "").trim();
-      const variantGroupKey = groupByVariantId.get(variantId) || "standard-band-1";
+      const variantGroupKey = groupByVariantId.get(variantId) || "product";
       if (product.variantGroupKey === variantGroupKey) continue;
       operations.push({
         updateOne: {

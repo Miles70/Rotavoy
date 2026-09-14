@@ -42,7 +42,6 @@ process.env.CJ_SYNC_PRODUCTS_PER_KEYWORD = process.env.CJ_BOOTSTRAP_PRODUCTS_PER
 process.env.CJ_SYNC_PAGE_SIZE = process.env.CJ_BOOTSTRAP_PAGE_SIZE || "100";
 process.env.CJ_SYNC_MAX_PAGES_PER_KEYWORD = process.env.CJ_BOOTSTRAP_MAX_PAGES_PER_KEYWORD || "20";
 process.env.CJ_SYNC_BATCH_SIZE = process.env.CJ_BOOTSTRAP_BATCH_SIZE || "100";
-process.env.CJ_SYNC_VARIANTS_PER_PRODUCT = process.env.CJ_BOOTSTRAP_VARIANTS_PER_PRODUCT || "12";
 
 const [{ connectDatabase, disconnectDatabase }, { syncCjCatalog }] = await Promise.all([
   import("../config/database.js"),
