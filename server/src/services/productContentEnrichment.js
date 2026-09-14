@@ -1,4 +1,4 @@
-import { Product } from "../models/Product.js";
+﻿import { Product } from "../models/Product.js";
 import { getRotavoyProductLanguages } from "./productTranslation.js";
 
 export const PRODUCT_CONTENT_VERSION = "rotavoy-ai-copy-v8";
@@ -130,12 +130,13 @@ function buildInstructions() {
     "Never invent materials, certifications, dimensions, compatibility, waterproofing, performance claims, use cases or benefits that are not supported by the source.",
     "Remove empty supplier fluff such as 'good material', 'unique design', 'stylish and beautiful', repeated words and awkward keyword stuffing.",
     "Keep model numbers, brand names, sizes and technical identifiers exact when they matter.",
+    "Treat networking standards such as Cat5, Cat5e, Cat6, Cat6a, Cat7 and Cat8 as critical customer-facing specifications. Preserve them when present, including malformed supplier wording such as CATE 6; normalize CATE 6 to Cat6 rather than dropping it.",
     "Write a clean base title of 3-8 words whenever possible and never exceed 80 characters.",
     "Use natural ecommerce title order in every language. When known, place brand first, then model, then the everyday product type; for example Turkish must be 'SKMEI 1251 Dijital Spor Saat', never 'Spor Saat SKMEI 1251'.",
     "Start titles with the product's plain everyday name. Remove SEO filler such as hot selling, new, fashion, gadget, products, household, for home, gift and repeated category words unless essential to identify the item.",
     "The base title must NOT include color, size, capacity, quantity, pack count or another variant value; Rotavoy displays the localized variant separately.",
     "Use a warm, fluent retail voice that sounds naturally written by a helpful shop assistant, never like a technical specification sheet, customs declaration or literal translation.",
-    "Prefer the words customers actually use in each market. In Turkish use 'dijital ekran' rather than 'sayısal ekran', '50 metre suya dayanıklılık' rather than 'su geçirmezlik performansı', and concise active phrasing rather than repeated 'sahiptir' sentences.",
+    "Prefer the words customers actually use in each market. In Turkish use 'dijital ekran' rather than 'sayÄ±sal ekran', '50 metre suya dayanÄ±klÄ±lÄ±k' rather than 'su geÃ§irmezlik performansÄ±', and concise active phrasing rather than repeated 'sahiptir' sentences.",
     "Do not address the customer with commands such as 'takip et' inside descriptions; describe the benefit naturally.",
     "Descriptions must be 1-3 compact sentences and never exceed 360 characters. Explain naturally what the product helps the customer do, then summarize its distinguishing source-supported details without turning the paragraph into a specification dump.",
     "Do not dump dimensions, materials and functions into a comma-separated sentence. Exact technical details belong in the feature bullets.",
@@ -148,12 +149,12 @@ function buildInstructions() {
     "Do not discard a real differentiating specification merely to make the copy shorter. Shorten wording and combine closely related facts instead.",
     "Remove only repetition, empty marketing filler, irrelevant supplier language and facts already communicated by the selected variant label.",
     "Combine only facts that naturally belong together. Keep unrelated measurements and materials in separate bullets.",
-    "Omit standalone model numbers and generic labels such as 'electronic mechanism'. Rewrite awkward material order naturally in each language; for example Turkish should say 'PC kasalı, plastik camlı tasarım' instead of 'Plastik camlı PC kasa'.",
-    "Prefer '49 mm kadran çapı' and '15 mm kasa kalınlığı' as separate Turkish bullets instead of joining them to a vague mechanism claim, unless space requires one concise measurement bullet.",
+    "Omit standalone model numbers and generic labels such as 'electronic mechanism'. Rewrite awkward material order naturally in each language; for example Turkish should say 'PC kasalÄ±, plastik camlÄ± tasarÄ±m' instead of 'Plastik camlÄ± PC kasa'.",
+    "Prefer '49 mm kadran Ã§apÄ±' and '15 mm kasa kalÄ±nlÄ±ÄŸÄ±' as separate Turkish bullets instead of joining them to a vague mechanism claim, unless space requires one concise measurement bullet.",
     "Never repeat the same fact in multiple bullets.",
     "Features must remain directly supported by source data. Do not add a feature merely because it is common for that product type.",
-    "Good Turkish style example: 'Günlük kullanım ve antrenman için tasarlanan bu dijital spor saat, zamanı kolayca takip etmeni sağlar. Aydınlatmalı ekranı ve 50 metre suya dayanıklı yapısıyla gün boyu yanında.'",
-    "Bad style example: '49 mm kadranlı ve 15 mm kalınlığında elektronik saat. Alarm, kronograf, geri sayım, PU kayış ve çelik tokaya sahiptir.'",
+    "Good Turkish style example: 'GÃ¼nlÃ¼k kullanÄ±m ve antrenman iÃ§in tasarlanan bu dijital spor saat, zamanÄ± kolayca takip etmeni saÄŸlar. AydÄ±nlatmalÄ± ekranÄ± ve 50 metre suya dayanÄ±klÄ± yapÄ±sÄ±yla gÃ¼n boyu yanÄ±nda.'",
+    "Bad style example: '49 mm kadranlÄ± ve 15 mm kalÄ±nlÄ±ÄŸÄ±nda elektronik saat. Alarm, kronograf, geri sayÄ±m, PU kayÄ±ÅŸ ve Ã§elik tokaya sahiptir.'",
     "Translate category hierarchy naturally while preserving its levels and > separators.",
     "Variant arrays must preserve the exact input order and item count in every language.",
     `Return native professional copy for exactly these languages: ${languageList}.`,
@@ -568,3 +569,4 @@ export async function enrichPendingProductContent({ limit } = {}) {
     results,
   };
 }
+
