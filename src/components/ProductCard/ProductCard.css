@@ -111,12 +111,6 @@
   transform: translateY(4px);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .productHoverVideo {
-    display: none;
-  }
-}
-
 .productImageFallback {
   position: absolute;
   inset: 0;
