@@ -1,7 +1,7 @@
 import { Product } from "../models/Product.js";
 import { getRotavoyProductLanguages } from "./productTranslation.js";
 
-export const PRODUCT_CONTENT_VERSION = "rotavoy-ai-copy-v7";
+export const PRODUCT_CONTENT_VERSION = "rotavoy-ai-copy-v8";
 
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 const DEFAULT_MODEL = "gpt-5.6-luna";
@@ -83,7 +83,7 @@ function getResponseSchema() {
       description: { type: "string", minLength: 20, maxLength: 600 },
       features: {
         type: "array",
-        minItems: 3,
+        minItems: 1,
         maxItems: 20,
         items: { type: "string", minLength: 2, maxLength: 120 },
       },
@@ -126,7 +126,7 @@ function buildInstructions() {
   return [
     "You are Rotavoy's ecommerce catalog editor.",
     "Rewrite low-quality supplier copy into concise, professional marketplace copy and localize it natively.",
-    "Use ONLY facts explicitly present in the supplied title, description, category path, variant names and attributes.",
+    "Use ONLY facts explicitly present in the supplied title, description, category path, variant names, structuredFacts and attributes.",
     "Never invent materials, certifications, dimensions, compatibility, waterproofing, performance claims, use cases or benefits that are not supported by the source.",
     "Remove empty supplier fluff such as 'good material', 'unique design', 'stylish and beautiful', repeated words and awkward keyword stuffing.",
     "Keep model numbers, brand names, sizes and technical identifiers exact when they matter.",
@@ -141,7 +141,7 @@ function buildInstructions() {
     "Do not dump dimensions, materials and functions into a comma-separated sentence. Exact technical details belong in the feature bullets.",
     "Avoid stiff phrases equivalent to 'it has', 'it is equipped with' and 'this product features' when a simpler natural sentence works.",
     "Variant labels must be concise and customer-friendly while preserving every factual distinction such as color, dimensions, capacity, model, pack count, plug type and packaging.",
-    "Return 3-8 useful feature bullets written as natural customer-facing noun phrases, not raw supplier fragments or full mechanical sentences.",
+    "Return 1-20 useful feature bullets, matching the real amount of source information. Never invent filler merely to reach a count. Write natural customer-facing noun phrases, not raw supplier fragments or full mechanical sentences.",
     "Preserve EVERY unique factual claim supported by the supplier source, including dimensions, weight, capacity, materials, power, battery, charging, functions, controls, compatibility, water-resistance rating, included pieces, package quantity, care instructions and safety information.",
     "Before returning JSON, compare the source with the proposed description and feature bullets fact by fact. If any unique supported fact is missing, add it to the most natural feature bullet.",
     "Completeness is mandatory: concise means removing redundant wording, not removing information.",
@@ -223,7 +223,7 @@ export function normalizeContentBundle(bundle, expectedVariantCount) {
     const categoryLabel = cleanText(entry.categoryLabel, 220);
     const features = uniqueStrings(entry.features, 20, 160);
 
-    if (!title || !description || !categoryLabel || features.length < 3) {
+    if (!title || !description || !categoryLabel || features.length < 1) {
       throw new Error(`AI product content returned incomplete ${language} copy.`);
     }
 
@@ -237,6 +237,51 @@ export function normalizeContentBundle(bundle, expectedVariantCount) {
   }
 
   return normalized;
+}
+
+function collectCriticalSourceNumbers(value, path = "", output = new Set()) {
+  if (value === null || value === undefined) return output;
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => collectCriticalSourceNumbers(item, `${path}.${index}`, output));
+    return output;
+  }
+  if (typeof value === "object") {
+    for (const [key, nested] of Object.entries(value)) {
+      if (/sku|id|price|stock|inventory|popularity/i.test(key)) continue;
+      collectCriticalSourceNumbers(nested, `${path}.${key}`, output);
+    }
+    return output;
+  }
+
+  const text = String(value);
+  for (const match of text.matchAll(/\b\d+(?:[.,]\d+)?\b/g)) {
+    output.add(match[0].replace(",", "."));
+  }
+  return output;
+}
+
+export function validateCriticalSourceFacts(source, translations) {
+  const criticalNumbers = collectCriticalSourceNumbers({
+    title: source?.title,
+    structuredFacts: source?.structuredFacts,
+  });
+  if (!criticalNumbers.size) return true;
+
+  const english = translations?.en || {};
+  const haystack = [
+    english.title,
+    english.description,
+    ...(Array.isArray(english.features) ? english.features : []),
+    ...(Array.isArray(english.variants) ? english.variants : []),
+  ].join(" ").replace(/,/g, ".");
+
+  const missing = [...criticalNumbers].filter((number) => (
+    !new RegExp(`(^|\\D)${number.replace(".", "\\.")}(?=\\D|$)`).test(haystack)
+  ));
+  if (missing.length) {
+    throw new Error(`AI product content omitted critical source values: ${missing.join(", ")}.`);
+  }
+  return true;
 }
 
 async function requestProfessionalContent(source) {
@@ -301,8 +346,11 @@ async function requestProfessionalContent(source) {
         throw new Error("OpenAI returned product content that was not valid JSON.", { cause: parseError });
       }
 
+      const translations = normalizeContentBundle(parsed, source.variants.length);
+      validateCriticalSourceFacts(source, translations);
+
       return {
-        translations: normalizeContentBundle(parsed, source.variants.length),
+        translations,
         model,
         usage: payload?.usage || {},
       };
@@ -327,6 +375,10 @@ function getSupplierContent(product) {
     description: cleanText(raw.description || product?.description, 6_000),
     categoryLabel: cleanText(raw.categoryLabel || product?.categoryLabel || "General", 220),
     variant: cleanText(raw.variant || product?.details?.variant || product?.supplierSku || "Default", 120),
+    brand: cleanText(product?.brand || raw.brand, 160),
+    quantity: cleanText(product?.quantity || raw.quantity, 120),
+    details: product?.details && typeof product.details === "object" ? product.details : {},
+    supplierFacts: raw.facts && typeof raw.facts === "object" ? raw.facts : {},
   };
 }
 
@@ -367,6 +419,13 @@ async function enrichSupplierProduct(supplierProductId) {
     description: rawEntries[0].description,
     categoryLabel: rawEntries[0].categoryLabel,
     variants: rawEntries.map((entry) => entry.variant),
+    structuredFacts: rawEntries.map((entry) => ({
+      variant: entry.variant,
+      brand: entry.brand,
+      quantity: entry.quantity,
+      details: entry.details,
+      supplierFacts: entry.supplierFacts,
+    })),
   };
 
   if (!source.title || !source.description || !source.categoryLabel || source.variants.some((value) => !value)) {
