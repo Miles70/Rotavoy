@@ -1,7 +1,7 @@
 import { Product } from "../models/Product.js";
 import { getRotavoyProductLanguages } from "./productTranslation.js";
 
-export const PRODUCT_CONTENT_VERSION = "rotavoy-ai-copy-v3";
+export const PRODUCT_CONTENT_VERSION = "rotavoy-ai-copy-v4";
 
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 const DEFAULT_MODEL = "gpt-5.6-luna";
@@ -138,7 +138,11 @@ function buildInstructions() {
     "Do not dump dimensions, materials and functions into a comma-separated sentence. Exact technical details belong in the feature bullets.",
     "Avoid stiff phrases equivalent to 'it has', 'it is equipped with' and 'this product features' when a simpler natural sentence works.",
     "Variant labels must be concise and customer-friendly while preserving every factual distinction such as color, dimensions, capacity, model, pack count, plug type and packaging.",
-    "Return 3-5 useful feature bullets. Combine closely related facts, omit standalone model numbers and generic labels such as 'electronic mechanism', and never repeat the same fact in multiple bullets.",
+    "Return 3-5 useful feature bullets written as natural customer-facing noun phrases, not raw supplier fragments or full mechanical sentences.",
+    "Combine only facts that naturally belong together. Keep unrelated measurements and materials in separate bullets.",
+    "Omit standalone model numbers and generic labels such as 'electronic mechanism'. Rewrite awkward material order naturally in each language; for example Turkish should say 'PC kasalı, plastik camlı tasarım' instead of 'Plastik camlı PC kasa'.",
+    "Prefer '49 mm kadran çapı' and '15 mm kasa kalınlığı' as separate Turkish bullets instead of joining them to a vague mechanism claim, unless space requires one concise measurement bullet.",
+    "Never repeat the same fact in multiple bullets.",
     "Features must remain directly supported by source data. Do not add a feature merely because it is common for that product type.",
     "Good Turkish style example: 'Günlük kullanım ve antrenman için tasarlanan bu dijital spor saat, zamanı kolayca takip etmeni sağlar. Aydınlatmalı ekranı ve 50 metre suya dayanıklı yapısıyla gün boyu yanında.'",
     "Bad style example: '49 mm kadranlı ve 15 mm kalınlığında elektronik saat. Alarm, kronograf, geri sayım, PU kayış ve çelik tokaya sahiptir.'",
