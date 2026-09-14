@@ -247,7 +247,7 @@ function collectCriticalSourceNumbers(value, path = "", output = new Set()) {
   }
   if (typeof value === "object") {
     for (const [key, nested] of Object.entries(value)) {
-      if (/sku|id|price|stock|inventory|popularity/i.test(key)) continue;
+      if (/sku|id|price|stock|inventory|popularity|weight/i.test(key)) continue;
       collectCriticalSourceNumbers(nested, `${path}.${key}`, output);
     }
     return output;
