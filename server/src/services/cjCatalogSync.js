@@ -11,6 +11,7 @@ import {
   productTranslationsComplete,
   translateProductBundle,
 } from "./productTranslation.js";
+import { getCjProductVideoMedia } from "./cjProductVideo.js";
 
 const LEGACY_DEMO_SOURCE = "amazon-reviews-2023";
 const MAX_CJ_PRODUCT_IMAGES = 8;
@@ -330,6 +331,7 @@ async function syncOneProduct(listProduct, options) {
     categoryLabel,
     variants: variantLabels,
   });
+  const videoMedia = await getCjProductVideoMedia(detail, pid);
 
   const selectedVariantIds = selectedVariants
     .map((variant) => String(variant?.vid || "").trim())
@@ -485,6 +487,13 @@ async function syncOneProduct(listProduct, options) {
           image: "🛍️",
           imageUrl: images[0] || "",
           images,
+          ...(videoMedia.checked
+            ? {
+              videoUrl: videoMedia.videoUrl,
+              videoPosterUrl: videoMedia.videoPosterUrl,
+              hasVideo: videoMedia.hasVideo,
+            }
+            : {}),
           stock,
           rating: 0,
           reviewCount: 0,
