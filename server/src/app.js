@@ -14,6 +14,7 @@ import { customerAccountRouter } from "./routes/customerAccount.js";
 import { customerAuthRouter } from "./routes/customerAuth.js";
 import { ordersRouter } from "./routes/orders.js";
 import { productListRouter } from "./routes/productList.js";
+import { productMediaRouter } from "./routes/productMedia.js";
 import { productsRouter } from "./routes/products.js";
 
 function getAllowedOrigins() {
@@ -74,6 +75,7 @@ export function createApp() {
   app.use("/api/admin/products", adminProductCreateRouter);
   app.use("/api/admin", adminRouter);
   app.use("/api/campaign", homeCampaignRouter);
+  app.use("/api/products", productMediaRouter);
   app.use("/api/products", productListRouter);
   app.use("/api/products", productsRouter);
   app.use("/api/orders", ordersRouter);
