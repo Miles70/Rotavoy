@@ -11,7 +11,8 @@
     "cj:bootstrap": "node src/scripts/bootstrapCjCatalog.js",
     "content:translate": "node src/scripts/backfillProductTranslations.js",
     "content:enrich": "node src/scripts/enrichProductContent.js",
-    "test": "node --test"
+    "test": "node --test",
+    "catalog:audit-duplicates": "node src/scripts/auditProductDuplicates.js"
   },
   "dependencies": {
     "cors": "^2.8.6",
