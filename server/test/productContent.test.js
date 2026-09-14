@@ -77,3 +77,16 @@ test("critical structured source values cannot silently disappear", () => {
   translations.en.features.push("79 g weight", "50 m water resistance");
   assert.equal(validateCriticalSourceFacts(source, translations), true);
 });
+
+test("logistics weights remain source-of-truth fields and do not pollute shared copy", () => {
+  const translations = normalizeContentBundle(makeBundle(), 2);
+  const source = {
+    title: "Travel Organizer",
+    structuredFacts: [
+      { details: { weightGrams: 667 }, supplierFacts: { variantWeightGrams: 609 } },
+      { details: { weightGrams: 406 }, supplierFacts: { variantWeightGrams: 328 } },
+    ],
+  };
+
+  assert.equal(validateCriticalSourceFacts(source, translations), true);
+});
