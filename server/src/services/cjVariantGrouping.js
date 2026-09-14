@@ -18,7 +18,9 @@ export function getCjVariantKind(variant) {
     variant?.variantKey || variant?.variantNameEn || variant?.variantSku,
   );
 
-  if (/\b(?:2|two)\s*(?:pcs?|pieces?|pack)\b|\bx\s*2\b/.test(label)) return "pack-2";
+  const packMatch = label.match(/\b(\d+)\s*(?:pcs?|pieces?|pack|adet)\b/);
+  if (packMatch && Number(packMatch[1]) > 1) return `pack-${Number(packMatch[1])}`;
+  if (/\btwo\s*(?:pcs?|pieces?|pack)\b|\bx\s*2\b/.test(label)) return "pack-2";
   if (/\b(?:white\s*[-+&/]?\s*pink|beyaz\s*[-+&/]?\s*pembe)\b/.test(label)) {
     return "pack-2-mixed";
   }
