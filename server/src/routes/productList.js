@@ -34,7 +34,7 @@ async function getGroupedCjCatalog({ filter, sortMode, requestedPage, limit, lan
   // Sorting complete product documents in Mongo can exceed Atlas' 32 MB
   // in-memory limit because every variant contains large translation bundles.
   const rows = await Product.find(filter)
-    .select("_id key supplierProductId price popularity createdAt stock hasVideo")
+    .select("_id key supplierProductId variantGroupKey price popularity createdAt stock hasVideo")
     .lean();
   const summaries = buildCatalogGroupSummaries(rows, sortMode);
   const total = summaries.length;
