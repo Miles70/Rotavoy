@@ -5,9 +5,30 @@ import {
   buildGroupedStorefrontProduct,
   getLocalizedSearchFields,
   normalizeStorefrontLanguage,
+  rankRelatedCatalogGroups,
   sanitizeStorefrontProduct,
   trimStorefrontTranslations,
 } from "../src/services/storefrontProduct.js";
+
+test("related products prioritize separated groups from the same supplier family", () => {
+  const current = {
+    key: "blue-380",
+    title: "Portable Blender Blue 380ml",
+    categoryKey: "appliances",
+    supplierProductId: "blender",
+    variantGroupKey: "standard-band-1",
+  };
+  const rows = [
+    { _id: "current", key: "blue-380", title: current.title, categoryKey: "appliances", supplierProductId: "blender", variantGroupKey: "standard-band-1", price: 2.85, stock: 2 },
+    { _id: "pack", key: "two-white", title: "Portable Blender 2 Pieces White", categoryKey: "appliances", supplierProductId: "blender", variantGroupKey: "pack-2-band-1", price: 42.16, stock: 2 },
+    { _id: "lamp", key: "night-lamp", title: "LED Night Lamp", categoryKey: "appliances", supplierProductId: "lamp", variantGroupKey: "standard-band-1", price: 8, stock: 2, popularity: 999 },
+  ];
+
+  const ranked = rankRelatedCatalogGroups(current, buildCatalogGroupSummaries(rows), 8);
+  assert.equal(ranked[0].groupKey, "blender:pack-2-band-1");
+  assert.equal(ranked.some((group) => group.groupKey === "blender:standard-band-1"), false);
+  assert.equal(ranked.some((group) => group.groupKey === "lamp:standard-band-1"), true);
+});
 
 test("catalog grouping selects the cheapest variant and sorts lightweight parent summaries", () => {
   const rows = [
