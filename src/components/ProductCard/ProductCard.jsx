@@ -111,6 +111,8 @@ function ProductCard({ product }) {
   const productPath = `/products/${product.key}`;
   const favorite = isFavorite(product.key);
   const hasMultipleVariants = Number(product.variantCount || 0) > 1;
+  const variantLabel = String(product.variantLabel || "").trim();
+  const showVariantLabel = variantLabel && variantLabel.toLowerCase() !== "default";
   const hasVideo = Boolean(product.hasVideo && product.videoUrl && !videoFailed);
 
   const text = (key, fallback) => {
@@ -275,6 +277,11 @@ function ProductCard({ product }) {
       </div>
 
       <div className="productContent">
+        {showVariantLabel ? (
+          <Link to={productPath} className="productVariantSummary" title={variantLabel}>
+            {variantLabel}
+          </Link>
+        ) : null}
         <Link to={productPath} className="productTitleLink">
           <h3>{product.title}</h3>
         </Link>
