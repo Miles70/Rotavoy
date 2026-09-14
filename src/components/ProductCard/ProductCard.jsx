@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Heart } from "lucide-react";
+import { useRef, useState } from "react";
+import { Heart, Play } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useLanguage } from "../../i18n/LanguageContext";
 import { useCart } from "../../context/CartContext";
@@ -101,12 +101,16 @@ function ProductCard({ product }) {
   const { isFavorite, toggleFavorite } = useCustomerAccount();
   const navigate = useNavigate();
   const [isAdded, setIsAdded] = useState(false);
+  const [videoRequested, setVideoRequested] = useState(false);
+  const [videoFailed, setVideoFailed] = useState(false);
+  const videoRef = useRef(null);
 
   const labels = badgeTranslations[language] || badgeTranslations.en;
   const numberLocale = numberLocales[language] || numberLocales.en;
   const productPath = `/products/${product.key}`;
   const favorite = isFavorite(product.key);
   const hasMultipleVariants = Number(product.variantCount || 0) > 1;
+  const hasVideo = Boolean(product.hasVideo && product.videoUrl && !videoFailed);
 
   const text = (key, fallback) => {
     const value = t(key);
@@ -138,6 +142,21 @@ function ProductCard({ product }) {
 
   function handleImageError(event) {
     event.currentTarget.classList.add("imageError");
+  }
+
+  function handleVideoEnter() {
+    if (!hasVideo || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    setVideoRequested(true);
+    window.requestAnimationFrame(() => {
+      videoRef.current?.play().catch(() => undefined);
+    });
+  }
+
+  function handleVideoLeave() {
+    const video = videoRef.current;
+    if (!video) return;
+    video.pause();
+    video.currentTime = 0;
   }
 
   function formatPrice(price) {
@@ -183,7 +202,11 @@ function ProductCard({ product }) {
 
   return (
     <article className={isAdded ? "productCard added" : "productCard"}>
-      <div className="productImageShell">
+      <div
+        className={`productImageShell${hasVideo ? " hasVideo" : ""}`}
+        onMouseEnter={handleVideoEnter}
+        onMouseLeave={handleVideoLeave}
+      >
         <Link
           to={productPath}
           className="productImageLink"
@@ -202,6 +225,29 @@ function ProductCard({ product }) {
                 decoding="async"
                 onError={handleImageError}
               />
+            )}
+
+            {hasVideo && videoRequested && (
+              <video
+                ref={videoRef}
+                className="productHoverVideo"
+                src={product.videoUrl}
+                poster={product.videoPosterUrl || product.imageUrl}
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                aria-hidden="true"
+                onCanPlay={(event) => event.currentTarget.play().catch(() => undefined)}
+                onError={() => setVideoFailed(true)}
+              />
+            )}
+
+            {hasVideo && (
+              <span className="productVideoBadge" aria-hidden="true">
+                <Play size={12} fill="currentColor" />
+                Video
+              </span>
             )}
 
             {badgeLabel && (
