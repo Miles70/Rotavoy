@@ -323,7 +323,7 @@ async function syncOneProduct(listProduct, options) {
   );
   const categoryKey = normalizeCategory(categoryLabel);
   const rawDescription = String(detail?.description || listProduct?.description || "");
-  const description = cleanText(rawDescription, 1800);
+  const description = cleanText(rawDescription, 6000);
   const baseImage = detail?.productImage || detail?.bigImage || listProduct?.bigImage || "";
   const descriptionImages = extractCjDescriptionImageUrls(rawDescription);
   const variantLabels = selectedVariants.map(getVariantLabel);
