@@ -5,11 +5,18 @@ import { cleanCatalogQuality } from "./services/catalogQualityCleanup.js";
 import { migrateLegacyOrderNumbers } from "./services/orderNumberMigration.js";
 import { syncProductsFromCatalog } from "./services/productSync.js";
 import { releaseExpiredOrderReservations } from "./services/stockReservation.js";
+import {
+  getCjAvailabilityInitialDelayMs,
+  getCjAvailabilityIntervalMs,
+  syncCjAvailability,
+} from "./services/cjAvailabilitySync.js";
 
 const port = Number(process.env.PORT) || 5000;
 const app = createApp();
 let server;
 let reservationSweepTimer;
+let cjAvailabilityInitialTimer;
+let cjAvailabilityTimer;
 
 function getReservationSweepMs() {
   const parsed = Number.parseInt(process.env.ORDER_RESERVATION_SWEEP_MS, 10);
@@ -32,6 +39,23 @@ async function sweepExpiredReservations() {
     }
   } catch (error) {
     console.error("Expired order reservation cleanup failed:", error);
+  }
+}
+
+async function refreshCjAvailability() {
+  try {
+    const result = await syncCjAvailability();
+    if (result.skipped) return;
+
+    console.log(
+      `CJ availability refreshed: ${result.checkedProducts}/${result.catalogProducts} products, ${result.updatedVariants} variants updated, ${result.deactivatedVariants} unavailable.`,
+    );
+
+    if (result.failedProducts > 0) {
+      console.warn(`CJ availability refresh failed for ${result.failedProducts} products.`);
+    }
+  } catch (error) {
+    console.error("CJ availability refresh failed:", error);
   }
 }
 
@@ -92,6 +116,18 @@ async function startServer() {
     getReservationSweepMs()
   );
   reservationSweepTimer.unref?.();
+
+  cjAvailabilityInitialTimer = setTimeout(
+    refreshCjAvailability,
+    getCjAvailabilityInitialDelayMs(),
+  );
+  cjAvailabilityInitialTimer.unref?.();
+
+  cjAvailabilityTimer = setInterval(
+    refreshCjAvailability,
+    getCjAvailabilityIntervalMs(),
+  );
+  cjAvailabilityTimer.unref?.();
 }
 
 async function shutdown(signal) {
@@ -99,6 +135,14 @@ async function shutdown(signal) {
 
   if (reservationSweepTimer) {
     clearInterval(reservationSweepTimer);
+  }
+
+  if (cjAvailabilityInitialTimer) {
+    clearTimeout(cjAvailabilityInitialTimer);
+  }
+
+  if (cjAvailabilityTimer) {
+    clearInterval(cjAvailabilityTimer);
   }
 
   if (server) {
