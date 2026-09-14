@@ -12,6 +12,7 @@ import {
   translateProductBundle,
 } from "./productTranslation.js";
 import { getCjProductVideoMedia } from "./cjProductVideo.js";
+import { buildCjVariantGroupMap } from "./cjVariantGrouping.js";
 
 const LEGACY_DEMO_SOURCE = "amazon-reviews-2023";
 const MAX_CJ_PRODUCT_IMAGES = 8;
@@ -310,6 +311,7 @@ async function syncOneProduct(listProduct, options) {
   const detail = await getCjProductDetail(pid);
   const variants = Array.isArray(detail?.variants) ? detail.variants : [];
   const selectedVariants = variants.slice(0, options.maxVariantsPerProduct);
+  const variantGroupById = buildCjVariantGroupMap(selectedVariants);
   const productTitle = cleanText(detail?.productNameEn || detail?.nameEn || listProduct?.nameEn, 260);
   if (!productTitle || selectedVariants.length === 0) {
     return { upserted: 0, activeVariants: 0, skipped: 1 };
@@ -505,6 +507,7 @@ async function syncOneProduct(listProduct, options) {
           supplier: "cj",
           supplierProductId: pid,
           supplierVariantId: vid,
+          variantGroupKey: variantGroupById.get(vid) || "standard-band-1",
           supplierSku: cleanText(variant?.variantSku, 100),
           isActive: stock > 0,
         },
