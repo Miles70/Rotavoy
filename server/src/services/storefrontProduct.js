@@ -128,6 +128,7 @@ export function buildCatalogGroupSummaries(rows, sortMode = "popular") {
         priceMin: price,
         priceMax: price,
         stockTotal: stock,
+        hasVideo: Boolean(row?.hasVideo),
       });
       continue;
     }
@@ -136,6 +137,7 @@ export function buildCatalogGroupSummaries(rows, sortMode = "popular") {
     existing.priceMin = Math.min(existing.priceMin, price);
     existing.priceMax = Math.max(existing.priceMax, price);
     existing.stockTotal += stock;
+    existing.hasVideo = existing.hasVideo || Boolean(row?.hasVideo);
     if (compareCatalogRepresentatives(row, existing.representative) < 0) {
       existing.representative = row;
     }
@@ -151,7 +153,10 @@ export function buildCatalogGroupSummaries(rows, sortMode = "popular") {
       return createdDifference || String(leftProduct?.key || "").localeCompare(String(rightProduct?.key || ""));
     }
 
-    return Number(rightProduct?.popularity || 0) - Number(leftProduct?.popularity || 0) ||
+    const videoDifference = Number(Boolean(right.hasVideo)) - Number(Boolean(left.hasVideo));
+
+    return videoDifference ||
+      Number(rightProduct?.popularity || 0) - Number(leftProduct?.popularity || 0) ||
       createdDifference ||
       String(leftProduct?.key || "").localeCompare(String(rightProduct?.key || ""));
   });
