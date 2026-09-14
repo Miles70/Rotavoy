@@ -7,6 +7,9 @@ import {
 
 test("CJ variant kinds separate bundles, sets and simple packaging", () => {
   assert.equal(getCjVariantKind({ variantKey: "2pcs White" }), "pack-2");
+  assert.equal(getCjVariantKind({ variantKey: "Black-3PCS" }), "pack-3");
+  assert.equal(getCjVariantKind({ variantKey: "Gray-100PCS" }), "pack-100");
+  assert.equal(getCjVariantKind({ variantKey: "Siyah 200 adet" }), "pack-200");
   assert.equal(getCjVariantKind({ variantKey: "Set2" }), "set");
   assert.equal(getCjVariantKind({ variantKey: "Pink Simple Packaging" }), "simple-packaging");
   assert.equal(getCjVariantKind({ variantKey: "Blue 380ml" }), "standard");
