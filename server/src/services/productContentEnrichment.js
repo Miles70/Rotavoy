@@ -1,7 +1,7 @@
 import { Product } from "../models/Product.js";
 import { getRotavoyProductLanguages } from "./productTranslation.js";
 
-export const PRODUCT_CONTENT_VERSION = "rotavoy-ai-copy-v6";
+export const PRODUCT_CONTENT_VERSION = "rotavoy-ai-copy-v7";
 
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 const DEFAULT_MODEL = "gpt-5.6-luna";
@@ -131,9 +131,12 @@ function buildInstructions() {
     "Remove empty supplier fluff such as 'good material', 'unique design', 'stylish and beautiful', repeated words and awkward keyword stuffing.",
     "Keep model numbers, brand names, sizes and technical identifiers exact when they matter.",
     "Write a clean base title of 3-8 words whenever possible and never exceed 80 characters.",
+    "Use natural ecommerce title order in every language. When known, place brand first, then model, then the everyday product type; for example Turkish must be 'SKMEI 1251 Dijital Spor Saat', never 'Spor Saat SKMEI 1251'.",
     "Start titles with the product's plain everyday name. Remove SEO filler such as hot selling, new, fashion, gadget, products, household, for home, gift and repeated category words unless essential to identify the item.",
     "The base title must NOT include color, size, capacity, quantity, pack count or another variant value; Rotavoy displays the localized variant separately.",
     "Use a warm, fluent retail voice that sounds naturally written by a helpful shop assistant, never like a technical specification sheet, customs declaration or literal translation.",
+    "Prefer the words customers actually use in each market. In Turkish use 'dijital ekran' rather than 'sayısal ekran', '50 metre suya dayanıklılık' rather than 'su geçirmezlik performansı', and concise active phrasing rather than repeated 'sahiptir' sentences.",
+    "Do not address the customer with commands such as 'takip et' inside descriptions; describe the benefit naturally.",
     "Descriptions must be 1-3 compact sentences and never exceed 360 characters. Explain naturally what the product helps the customer do, then summarize its distinguishing source-supported details without turning the paragraph into a specification dump.",
     "Do not dump dimensions, materials and functions into a comma-separated sentence. Exact technical details belong in the feature bullets.",
     "Avoid stiff phrases equivalent to 'it has', 'it is equipped with' and 'this product features' when a simpler natural sentence works.",
