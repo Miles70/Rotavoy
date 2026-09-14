@@ -5,6 +5,7 @@ import { useLanguage } from "../../i18n/LanguageContext";
 import { useCart } from "../../context/CartContext";
 import { useCustomerAuth } from "../../context/CustomerAuthContext";
 import { useCustomerAccount } from "../../context/CustomerAccountContext";
+import { getProductVideoUrl } from "../../services/productsApi";
 import "./ProductCard.css";
 import "./ProductFavorite.css";
 
@@ -231,7 +232,7 @@ function ProductCard({ product }) {
               <video
                 ref={videoRef}
                 className="productHoverVideo"
-                src={product.videoUrl}
+                src={getProductVideoUrl(product.key)}
                 poster={product.videoPosterUrl || product.imageUrl}
                 muted
                 loop
