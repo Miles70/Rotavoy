@@ -5,6 +5,7 @@ import {
 } from "./cjApi.js";
 import { buildCjVariantStockMap } from "./cjCatalogSync.js";
 import { getCjProductVideoMedia } from "./cjProductVideo.js";
+import { buildCjVariantGroupMap } from "./cjVariantGrouping.js";
 
 const DEFAULT_INTERVAL_MS = 6 * 60 * 60 * 1000;
 const DEFAULT_INITIAL_DELAY_MS = 15_000;
@@ -56,6 +57,7 @@ export function buildCjAvailabilityChanges(
   stockByVariantId,
   markupMultiplier = 1.65,
   videoMedia = { checked: false },
+  variantGroupById = new Map(),
 ) {
   const supplierByVariantId = new Map(
     (Array.isArray(supplierVariants) ? supplierVariants : [])
@@ -79,6 +81,7 @@ export function buildCjAvailabilityChanges(
             hasVideo: videoMedia.hasVideo,
           }
           : {}),
+        variantGroupKey: variantGroupById.get(variantId) || product.variantGroupKey || "standard-band-1",
       };
     }
 
@@ -102,6 +105,7 @@ export function buildCjAvailabilityChanges(
           hasVideo: videoMedia.hasVideo,
         }
         : {}),
+      variantGroupKey: variantGroupById.get(variantId) || product.variantGroupKey || "standard-band-1",
     };
   });
 }
@@ -119,7 +123,7 @@ async function syncSupplierProduct(supplierProductId) {
     source: "cj",
     supplierProductId,
   })
-    .select({ _id: 1, supplierVariantId: 1 })
+    .select({ _id: 1, supplierVariantId: 1, variantGroupKey: 1 })
     .lean();
 
   if (storedVariants.length === 0) {
@@ -139,6 +143,12 @@ async function syncSupplierProduct(supplierProductId) {
 
   const inventory = await getCjProductInventory(supplierProductId);
   const videoMedia = await getCjProductVideoMedia(detail, supplierProductId);
+  const storedVariantIds = new Set(
+    storedVariants.map((product) => String(product.supplierVariantId || "").trim()),
+  );
+  const variantGroupById = buildCjVariantGroupMap(
+    supplierVariants.filter((variant) => storedVariantIds.has(String(variant?.vid || "").trim())),
+  );
   const stockByVariantId = buildCjVariantStockMap(
     inventory,
     getOriginCountryCode(),
@@ -149,6 +159,7 @@ async function syncSupplierProduct(supplierProductId) {
     stockByVariantId,
     getMarkupMultiplier(),
     videoMedia,
+    variantGroupById,
   );
 
   if (changes.length > 0) {
