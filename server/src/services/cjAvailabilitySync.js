@@ -4,6 +4,7 @@ import {
   getCjProductInventory,
 } from "./cjApi.js";
 import { buildCjVariantStockMap } from "./cjCatalogSync.js";
+import { getCjProductVideoMedia } from "./cjProductVideo.js";
 
 const DEFAULT_INTERVAL_MS = 6 * 60 * 60 * 1000;
 const DEFAULT_INITIAL_DELAY_MS = 15_000;
@@ -54,6 +55,7 @@ export function buildCjAvailabilityChanges(
   supplierVariants,
   stockByVariantId,
   markupMultiplier = 1.65,
+  videoMedia = { checked: false },
 ) {
   const supplierByVariantId = new Map(
     (Array.isArray(supplierVariants) ? supplierVariants : [])
@@ -66,7 +68,18 @@ export function buildCjAvailabilityChanges(
     const supplierVariant = supplierByVariantId.get(variantId);
 
     if (!supplierVariant) {
-      return { productId: product._id, stock: 0, isActive: false };
+      return {
+        productId: product._id,
+        stock: 0,
+        isActive: false,
+        ...(videoMedia.checked
+          ? {
+            videoUrl: videoMedia.videoUrl,
+            videoPosterUrl: videoMedia.videoPosterUrl,
+            hasVideo: videoMedia.hasVideo,
+          }
+          : {}),
+      };
     }
 
     const stock = Math.max(Number(stockByVariantId.get(variantId) || 0), 0);
@@ -80,6 +93,13 @@ export function buildCjAvailabilityChanges(
         ? {
           costPrice,
           price: roundMoney(costPrice * markupMultiplier),
+        }
+        : {}),
+      ...(videoMedia.checked
+        ? {
+          videoUrl: videoMedia.videoUrl,
+          videoPosterUrl: videoMedia.videoPosterUrl,
+          hasVideo: videoMedia.hasVideo,
         }
         : {}),
     };
@@ -118,6 +138,7 @@ async function syncSupplierProduct(supplierProductId) {
   }
 
   const inventory = await getCjProductInventory(supplierProductId);
+  const videoMedia = await getCjProductVideoMedia(detail, supplierProductId);
   const stockByVariantId = buildCjVariantStockMap(
     inventory,
     getOriginCountryCode(),
@@ -127,6 +148,7 @@ async function syncSupplierProduct(supplierProductId) {
     supplierVariants,
     stockByVariantId,
     getMarkupMultiplier(),
+    videoMedia,
   );
 
   if (changes.length > 0) {
