@@ -119,17 +119,6 @@ function getProductTranslation(product, language) {
   return english && typeof english === "object" ? english : null;
 }
 
-function stripVariantSuffix(title, variant) {
-  const cleanTitle = String(title || "").trim();
-  const cleanVariant = String(variant || "").trim();
-  if (!cleanTitle || !cleanVariant) return cleanTitle;
-
-  const suffix = ` - ${cleanVariant}`;
-  return cleanTitle.toLocaleLowerCase().endsWith(suffix.toLocaleLowerCase())
-    ? cleanTitle.slice(0, -suffix.length).trim()
-    : cleanTitle;
-}
-
 function humanizeDetailKey(value) {
   return String(value || "")
     .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
@@ -191,9 +180,10 @@ export function normalizeProduct(product, requestedLanguage = "en") {
     : product.features;
   const variantLabel = String(translation?.variant || product?.details?.variant || "").trim();
   const localizedTitle = translation?.title || product.title || "";
-  const title = Number(product.variantCount || 0) > 1
-    ? stripVariantSuffix(localizedTitle, variantLabel)
-    : localizedTitle;
+  // Logical CJ groups can represent different capacities, bundle sizes or
+  // packaging under one supplier parent. Keep the representative variant in
+  // the title so separate storefront cards never look like duplicates.
+  const title = localizedTitle;
 
   return {
     ...product,
