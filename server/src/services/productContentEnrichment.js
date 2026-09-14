@@ -1,7 +1,7 @@
 import { Product } from "../models/Product.js";
 import { getRotavoyProductLanguages } from "./productTranslation.js";
 
-export const PRODUCT_CONTENT_VERSION = "rotavoy-ai-copy-v2";
+export const PRODUCT_CONTENT_VERSION = "rotavoy-ai-copy-v3";
 
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 const DEFAULT_MODEL = "gpt-5.6-luna";
@@ -133,9 +133,15 @@ function buildInstructions() {
     "Write a clean base title of 3-8 words whenever possible and never exceed 80 characters.",
     "Start titles with the product's plain everyday name. Remove SEO filler such as hot selling, new, fashion, gadget, products, household, for home, gift and repeated category words unless essential to identify the item.",
     "The base title must NOT include color, size, capacity, quantity, pack count or another variant value; Rotavoy displays the localized variant separately.",
-    "Descriptions must be 1-2 compact sentences and never exceed 360 characters. State what the product is and its most useful source-supported facts without repeating the title or variant.",
+    "Use a warm, fluent retail voice that sounds naturally written by a helpful shop assistant, never like a technical specification sheet, customs declaration or literal translation.",
+    "Descriptions must be 1-2 compact sentences and never exceed 360 characters. First explain naturally what the product helps the customer do, then weave in at most two useful source-supported details.",
+    "Do not dump dimensions, materials and functions into a comma-separated sentence. Exact technical details belong in the feature bullets.",
+    "Avoid stiff phrases equivalent to 'it has', 'it is equipped with' and 'this product features' when a simpler natural sentence works.",
     "Variant labels must be concise and customer-friendly while preserving every factual distinction such as color, dimensions, capacity, model, pack count, plug type and packaging.",
-    "Features must be short factual bullets directly supported by source data. Do not add a feature merely because it is common for that product type.",
+    "Return 3-5 useful feature bullets. Combine closely related facts, omit standalone model numbers and generic labels such as 'electronic mechanism', and never repeat the same fact in multiple bullets.",
+    "Features must remain directly supported by source data. Do not add a feature merely because it is common for that product type.",
+    "Good Turkish style example: 'Günlük kullanım ve antrenman için tasarlanan bu dijital spor saat, zamanı kolayca takip etmeni sağlar. Aydınlatmalı ekranı ve 50 metre suya dayanıklı yapısıyla gün boyu yanında.'",
+    "Bad style example: '49 mm kadranlı ve 15 mm kalınlığında elektronik saat. Alarm, kronograf, geri sayım, PU kayış ve çelik tokaya sahiptir.'",
     "Translate category hierarchy naturally while preserving its levels and > separators.",
     "Variant arrays must preserve the exact input order and item count in every language.",
     `Return native professional copy for exactly these languages: ${languageList}.`,
