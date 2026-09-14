@@ -113,7 +113,13 @@ export function buildCatalogGroupSummaries(rows, sortMode = "popular") {
   const groups = new Map();
 
   for (const row of Array.isArray(rows) ? rows : []) {
-    const groupKey = String(row?.supplierProductId || row?.key || "").trim();
+    const supplierProductId = String(row?.supplierProductId || "").trim();
+    const variantGroupKey = String(row?.variantGroupKey || "").trim();
+    const groupKey = supplierProductId
+      ? variantGroupKey
+        ? `${supplierProductId}:${variantGroupKey}`
+        : supplierProductId
+      : String(row?.key || "").trim();
     if (!groupKey) continue;
 
     const price = Number(row?.price || 0);
