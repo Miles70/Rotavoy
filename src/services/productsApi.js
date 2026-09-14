@@ -119,6 +119,75 @@ function getProductTranslation(product, language) {
   return english && typeof english === "object" ? english : null;
 }
 
+const portableBlenderCopy = {
+  en: {
+    title: "USB Rechargeable Portable Mini Blender",
+    common: "Compact smoothie blender with USB charging and four SUS304 stainless-steel blades.",
+    option: "This is the {variant} option.",
+    capacity: "This option is the {capacity} model.",
+    pair: "This package contains two blenders: {variant}.",
+    simple: "This {variant} option is supplied in simple packaging.",
+    set: "This is the {variant} package; its contents are shown in the product images.",
+  },
+  tr: {
+    title: "USB Şarjlı Taşınabilir Mini Blender",
+    common: "USB ile şarj edilen, dört adet SUS304 paslanmaz çelik bıçaklı kompakt smoothie blenderı.",
+    option: "Bu seçenek {variant} modelidir.",
+    capacity: "Bu seçenek {capacity} hacimli modeldir.",
+    pair: "Bu paket iki blender içerir: {variant}.",
+    simple: "Bu {variant} seçenek sade ambalajla gönderilir.",
+    set: "Bu seçenek {variant} paketidir; paket içeriği ürün görsellerinde gösterilir.",
+  },
+  ru: { title: "Портативный мини-блендер с USB-зарядкой", common: "Компактный блендер для смузи с USB-зарядкой и четырьмя лезвиями из нержавеющей стали SUS304.", option: "Это вариант {variant}.", capacity: "Это модель объёмом {capacity}.", pair: "В комплект входят два блендера: {variant}.", simple: "Вариант {variant} поставляется в простой упаковке.", set: "Это комплект {variant}; содержимое показано на фотографиях товара." },
+  ar: { title: "خلاط صغير محمول قابل للشحن عبر USB", common: "خلاط سموذي صغير يُشحن عبر USB ومزوّد بأربع شفرات من الفولاذ المقاوم للصدأ SUS304.", option: "هذا هو خيار {variant}.", capacity: "هذا هو الطراز بسعة {capacity}.", pair: "تحتوي هذه العبوة على خلاطين: {variant}.", simple: "يأتي خيار {variant} في عبوة بسيطة.", set: "هذه حزمة {variant}؛ محتوياتها موضحة في صور المنتج." },
+  zh: { title: "USB充电便携式迷你榨汁机", common: "紧凑型便携式果昔机，支持USB充电，配备四片SUS304不锈钢刀片。", option: "当前选择为{variant}。", capacity: "当前选择为{capacity}容量款。", pair: "此包装包含两台榨汁机：{variant}。", simple: "{variant}选项采用简易包装。", set: "当前选择为{variant}套装，具体内容见商品图片。" },
+  es: { title: "Mini batidora portátil recargable por USB", common: "Batidora compacta para smoothies con carga USB y cuatro cuchillas de acero inoxidable SUS304.", option: "Esta es la opción {variant}.", capacity: "Esta opción tiene una capacidad de {capacity}.", pair: "Este paquete contiene dos batidoras: {variant}.", simple: "La opción {variant} se entrega en embalaje sencillo.", set: "Este es el paquete {variant}; su contenido aparece en las imágenes." },
+  pt: { title: "Mini liquidificador portátil recarregável por USB", common: "Liquidificador compacto para smoothies com carregamento USB e quatro lâminas de aço inoxidável SUS304.", option: "Esta é a opção {variant}.", capacity: "Esta opção tem capacidade de {capacity}.", pair: "Este pacote contém dois liquidificadores: {variant}.", simple: "A opção {variant} é enviada em embalagem simples.", set: "Este é o pacote {variant}; o conteúdo aparece nas imagens." },
+  fr: { title: "Mini blender portable rechargeable par USB", common: "Blender compact pour smoothies, rechargeable par USB et doté de quatre lames en acier inoxydable SUS304.", option: "Il s’agit de l’option {variant}.", capacity: "Cette option offre une capacité de {capacity}.", pair: "Ce lot contient deux blenders : {variant}.", simple: "L’option {variant} est livrée dans un emballage simple.", set: "Il s’agit du lot {variant} ; son contenu est présenté sur les images." },
+  de: { title: "Tragbarer USB-Mini-Mixer", common: "Kompakter Smoothie-Mixer mit USB-Ladefunktion und vier SUS304-Edelstahlklingen.", option: "Dies ist die Variante {variant}.", capacity: "Diese Variante hat ein Fassungsvermögen von {capacity}.", pair: "Dieses Paket enthält zwei Mixer: {variant}.", simple: "Die Variante {variant} wird in einfacher Verpackung geliefert.", set: "Dies ist das Paket {variant}; der Inhalt ist auf den Produktbildern zu sehen." },
+  it: { title: "Mini frullatore portatile ricaricabile USB", common: "Frullatore compatto per smoothie con ricarica USB e quattro lame in acciaio inox SUS304.", option: "Questa è l’opzione {variant}.", capacity: "Questa opzione ha una capacità di {capacity}.", pair: "La confezione contiene due frullatori: {variant}.", simple: "L’opzione {variant} viene fornita in confezione semplice.", set: "Questo è il pacchetto {variant}; il contenuto è mostrato nelle immagini." },
+};
+
+function isCuratedPortableBlender(product) {
+  const englishTitle = String(
+    product?.translations?.en?.title || product?.title || "",
+  ).toLowerCase();
+  return (
+    englishTitle.includes("electric juicer blender mixer") ||
+    englishTitle.includes("portable blender maker cup kitchen tool kit")
+  );
+}
+
+function buildPortableBlenderCopy(product, language, variantLabel) {
+  if (!isCuratedPortableBlender(product)) return null;
+
+  const copy = portableBlenderCopy[language] || portableBlenderCopy.en;
+  const fallback = portableBlenderCopy.en;
+  const variant = String(variantLabel || "").trim();
+  const normalized = variant.toLowerCase();
+  const capacity = variant.match(/\b(?:350|380|420)\s*ml\b/i)?.[0] || "";
+  const isPair = /\b(?:2\s*(?:pcs?|adet)|white\s*[-+&/]?\s*pink|beyaz\s*[-+&/]?\s*pembe)\b/i.test(variant);
+  const isSimple = /simple packaging|basic packaging|basit ambalaj|sade ambalaj/i.test(variant);
+  const isSet = /\bset\s*\d*\b/i.test(variant);
+  let detailTemplate = copy.option || fallback.option;
+
+  if (isPair) detailTemplate = copy.pair || fallback.pair;
+  else if (isSimple) detailTemplate = copy.simple || fallback.simple;
+  else if (isSet) detailTemplate = copy.set || fallback.set;
+  else if (capacity) detailTemplate = copy.capacity || fallback.capacity;
+
+  const detail = detailTemplate
+    .replace("{variant}", variant)
+    .replace("{capacity}", capacity);
+  const common = copy.common || fallback.common;
+  const baseTitle = copy.title || fallback.title;
+
+  return {
+    title: variant && normalized !== "default" ? `${baseTitle} – ${variant}` : baseTitle,
+    description: `${common} ${detail}`,
+  };
+}
+
 function humanizeDetailKey(value) {
   return String(value || "")
     .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
@@ -180,21 +249,22 @@ export function normalizeProduct(product, requestedLanguage = "en") {
     : product.features;
   const variantLabel = String(translation?.variant || product?.details?.variant || "").trim();
   const localizedTitle = translation?.title || product.title || "";
+  const curatedCopy = buildPortableBlenderCopy(product, language, variantLabel);
   // Logical CJ groups can represent different capacities, bundle sizes or
   // packaging under one supplier parent. Keep the representative variant in
   // the title so separate storefront cards never look like duplicates.
   const usefulVariant = variantLabel && variantLabel.toLowerCase() !== "default";
-  const title = usefulVariant && !localizedTitle.toLocaleLowerCase().includes(
+  const title = curatedCopy?.title || (usefulVariant && !localizedTitle.toLocaleLowerCase().includes(
     variantLabel.toLocaleLowerCase(),
   )
     ? `${localizedTitle} - ${variantLabel}`
-    : localizedTitle;
+    : localizedTitle);
 
   return {
     ...product,
     title,
     variantLabel,
-    description: translation?.description || product.description || "",
+    description: curatedCopy?.description || translation?.description || product.description || "",
     categoryLabel: translation?.categoryLabel || product.categoryLabel || "",
     features: Array.isArray(localizedFeatures) ? localizedFeatures : [],
     details: localizeDetails(product, language, translation),
