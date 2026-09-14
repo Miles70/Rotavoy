@@ -145,6 +145,38 @@ function buildVariantTitle(productTitle, variant) {
   return appendVariantToTitle(productTitle, getVariantLabel(variant));
 }
 
+function compactSupplierFacts(detail, variant, originCountryCode) {
+  const facts = {
+    brand: cleanText(detail?.supplierName || detail?.brandName, 160),
+    productSku: cleanText(detail?.productSku, 120),
+    productType: cleanText(detail?.productType, 160),
+    productUnit: cleanText(detail?.productUnit, 80),
+    material: cleanText(detail?.material || detail?.productMaterial, 300),
+    productWeightGrams: Number(detail?.productWeight || 0) || undefined,
+    packingWeightGrams: Number(detail?.packingWeight || 0) || undefined,
+    packingLength: Number(detail?.packingLength || 0) || undefined,
+    packingWidth: Number(detail?.packingWidth || 0) || undefined,
+    packingHeight: Number(detail?.packingHeight || 0) || undefined,
+    packingList: cleanText(detail?.packingList, 1_000),
+    property: cleanText(detail?.propertyKey || detail?.productProperty, 1_000),
+    variant: getVariantLabel(variant),
+    variantSku: cleanText(variant?.variantSku, 120),
+    variantUnit: cleanText(variant?.variantUnit, 80),
+    variantProperty: cleanText(variant?.variantProperty || variant?.variantNameEn, 1_000),
+    variantWeightGrams: Number(variant?.variantWeight || 0) || undefined,
+    variantLength: Number(variant?.variantLength || 0) || undefined,
+    variantWidth: Number(variant?.variantWidth || 0) || undefined,
+    variantHeight: Number(variant?.variantHeight || 0) || undefined,
+    originCountry: String(originCountryCode || "CN").toUpperCase(),
+  };
+
+  return Object.fromEntries(
+    Object.entries(facts).filter(([, value]) => (
+      value !== undefined && value !== null && value !== ""
+    )),
+  );
+}
+
 function normalizeImageUrl(value) {
   const url = String(value || "")
     .trim()
@@ -182,9 +214,9 @@ export function extractCjDescriptionImageUrls(html) {
   return uniqueUrls(urls);
 }
 
-function createTranslationSourceHash({ title, description, categoryLabel, variants }) {
+function createTranslationSourceHash({ title, description, categoryLabel, variants, structuredFacts }) {
   return createHash("sha256")
-    .update(JSON.stringify({ title, description, categoryLabel, variants }))
+    .update(JSON.stringify({ title, description, categoryLabel, variants, structuredFacts }))
     .digest("hex");
 }
 
@@ -327,11 +359,15 @@ async function syncOneProduct(listProduct, options) {
   const baseImage = detail?.productImage || detail?.bigImage || listProduct?.bigImage || "";
   const descriptionImages = extractCjDescriptionImageUrls(rawDescription);
   const variantLabels = selectedVariants.map(getVariantLabel);
+  const structuredFacts = selectedVariants.map((variant) => (
+    compactSupplierFacts(detail, variant, options.originCountryCode)
+  ));
   const sourceHash = createTranslationSourceHash({
     title: productTitle,
     description,
     categoryLabel,
     variants: variantLabels,
+    structuredFacts,
   });
   const videoMedia = await getCjProductVideoMedia(detail, pid);
 
@@ -471,6 +507,8 @@ async function syncOneProduct(listProduct, options) {
             description,
             categoryLabel,
             variant: variantLabel,
+            brand: cleanText(detail?.supplierName || detail?.brandName, 160),
+            facts: structuredFacts[variantIndex],
           },
           contentMeta,
           translations,
