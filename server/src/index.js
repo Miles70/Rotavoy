@@ -10,6 +10,7 @@ import {
   getCjAvailabilityIntervalMs,
   syncCjAvailability,
 } from "./services/cjAvailabilitySync.js";
+import { groupExistingCjVariants } from "./services/catalogVariantGrouping.js";
 
 const port = Number(process.env.PORT) || 5000;
 const app = createApp();
@@ -63,6 +64,13 @@ async function startServer() {
   await connectDatabase();
 
   const orderMigrationResult = await migrateLegacyOrderNumbers();
+
+  const variantGroupingResult = await groupExistingCjVariants();
+  if (variantGroupingResult.modifiedCount > 0) {
+    console.log(
+      `CJ variants regrouped: ${variantGroupingResult.modifiedCount}/${variantGroupingResult.checkedCount} variants across ${variantGroupingResult.parentProductCount} products.`,
+    );
+  }
 
   if (orderMigrationResult.modifiedCount > 0) {
     console.log(
