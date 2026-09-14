@@ -1,7 +1,7 @@
 import { Product } from "../models/Product.js";
 import { getRotavoyProductLanguages } from "./productTranslation.js";
 
-export const PRODUCT_CONTENT_VERSION = "rotavoy-ai-copy-v5";
+export const PRODUCT_CONTENT_VERSION = "rotavoy-ai-copy-v6";
 
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 const DEFAULT_MODEL = "gpt-5.6-luna";
@@ -80,11 +80,11 @@ function getResponseSchema() {
     additionalProperties: false,
     properties: {
       title: { type: "string", minLength: 2, maxLength: 80 },
-      description: { type: "string", minLength: 20, maxLength: 360 },
+      description: { type: "string", minLength: 20, maxLength: 600 },
       features: {
         type: "array",
         minItems: 3,
-        maxItems: 8,
+        maxItems: 20,
         items: { type: "string", minLength: 2, maxLength: 120 },
       },
       categoryLabel: { type: "string", minLength: 2, maxLength: 220 },
@@ -139,7 +139,9 @@ function buildInstructions() {
     "Avoid stiff phrases equivalent to 'it has', 'it is equipped with' and 'this product features' when a simpler natural sentence works.",
     "Variant labels must be concise and customer-friendly while preserving every factual distinction such as color, dimensions, capacity, model, pack count, plug type and packaging.",
     "Return 3-8 useful feature bullets written as natural customer-facing noun phrases, not raw supplier fragments or full mechanical sentences.",
-    "Preserve every materially useful fact supported by the supplier source, including dimensions, capacity, materials, power, functions, compatibility, water-resistance rating, included pieces, package quantity and safety information.",
+    "Preserve EVERY unique factual claim supported by the supplier source, including dimensions, weight, capacity, materials, power, battery, charging, functions, controls, compatibility, water-resistance rating, included pieces, package quantity, care instructions and safety information.",
+    "Before returning JSON, compare the source with the proposed description and feature bullets fact by fact. If any unique supported fact is missing, add it to the most natural feature bullet.",
+    "Completeness is mandatory: concise means removing redundant wording, not removing information.",
     "Do not discard a real differentiating specification merely to make the copy shorter. Shorten wording and combine closely related facts instead.",
     "Remove only repetition, empty marketing filler, irrelevant supplier language and facts already communicated by the selected variant label.",
     "Combine only facts that naturally belong together. Keep unrelated measurements and materials in separate bullets.",
@@ -214,9 +216,9 @@ export function normalizeContentBundle(bundle, expectedVariantCount) {
     }
 
     const title = cleanText(entry.title, 80);
-    const description = cleanText(entry.description, 360);
+    const description = cleanText(entry.description, 600);
     const categoryLabel = cleanText(entry.categoryLabel, 220);
-    const features = uniqueStrings(entry.features, 8, 120);
+    const features = uniqueStrings(entry.features, 20, 160);
 
     if (!title || !description || !categoryLabel || features.length < 3) {
       throw new Error(`AI product content returned incomplete ${language} copy.`);
@@ -272,7 +274,7 @@ async function requestProfessionalContent(source) {
               schema: getResponseSchema(),
             },
           },
-          max_output_tokens: 12_000,
+          max_output_tokens: 20_000,
         }),
       });
 
@@ -319,7 +321,7 @@ function getSupplierContent(product) {
 
   return {
     title: cleanText(raw.title || product?.title, 300),
-    description: cleanText(raw.description || product?.description, 2_000),
+    description: cleanText(raw.description || product?.description, 6_000),
     categoryLabel: cleanText(raw.categoryLabel || product?.categoryLabel || "General", 220),
     variant: cleanText(raw.variant || product?.details?.variant || product?.supplierSku || "Default", 120),
   };
