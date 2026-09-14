@@ -104,6 +104,8 @@ productListRouter.get("/", async (request, response, next) => {
         { categoryKey: pattern },
         { categoryLabel: pattern },
         { description: pattern },
+        { supplierProductId: pattern },
+        { supplierVariantId: pattern },
         { supplierSku: pattern },
         ...getLocalizedSearchFields(language).map((field) => ({ [field]: pattern })),
       ];
