@@ -1,5 +1,9 @@
 const apiBaseUrl = String(import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
 
+export function getProductVideoUrl(productKey) {
+  return `${apiBaseUrl}/api/products/${encodeURIComponent(productKey)}/video`;
+}
+
 const supportedProductLanguages = [
   "en",
   "tr",
