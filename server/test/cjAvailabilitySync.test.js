@@ -26,6 +26,7 @@ test("CJ availability changes deactivate removed and zero-stock variants", () =>
         isActive: true,
         costPrice: 10,
         price: 16.5,
+        variantGroupKey: "standard-band-1",
       },
       {
         productId: "empty",
@@ -33,11 +34,13 @@ test("CJ availability changes deactivate removed and zero-stock variants", () =>
         isActive: false,
         costPrice: 20,
         price: 33,
+        variantGroupKey: "standard-band-1",
       },
       {
         productId: "removed",
         stock: 0,
         isActive: false,
+        variantGroupKey: "standard-band-1",
       },
     ],
   );
@@ -58,6 +61,7 @@ test("CJ availability changes reactivate restocked variants", () => {
       isActive: true,
       costPrice: 4.2,
       price: 8.4,
+      variantGroupKey: "standard-band-1",
     },
   ]);
 });
