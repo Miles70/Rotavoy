@@ -1,7 +1,7 @@
 import { Product } from "../models/Product.js";
 import { getRotavoyProductLanguages } from "./productTranslation.js";
 
-export const PRODUCT_CONTENT_VERSION = "rotavoy-ai-copy-v4";
+export const PRODUCT_CONTENT_VERSION = "rotavoy-ai-copy-v5";
 
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 const DEFAULT_MODEL = "gpt-5.6-luna";
@@ -83,8 +83,8 @@ function getResponseSchema() {
       description: { type: "string", minLength: 20, maxLength: 360 },
       features: {
         type: "array",
-        minItems: 2,
-        maxItems: 6,
+        minItems: 3,
+        maxItems: 8,
         items: { type: "string", minLength: 2, maxLength: 120 },
       },
       categoryLabel: { type: "string", minLength: 2, maxLength: 220 },
@@ -134,11 +134,14 @@ function buildInstructions() {
     "Start titles with the product's plain everyday name. Remove SEO filler such as hot selling, new, fashion, gadget, products, household, for home, gift and repeated category words unless essential to identify the item.",
     "The base title must NOT include color, size, capacity, quantity, pack count or another variant value; Rotavoy displays the localized variant separately.",
     "Use a warm, fluent retail voice that sounds naturally written by a helpful shop assistant, never like a technical specification sheet, customs declaration or literal translation.",
-    "Descriptions must be 1-2 compact sentences and never exceed 360 characters. First explain naturally what the product helps the customer do, then weave in at most two useful source-supported details.",
+    "Descriptions must be 1-3 compact sentences and never exceed 360 characters. Explain naturally what the product helps the customer do, then summarize its distinguishing source-supported details without turning the paragraph into a specification dump.",
     "Do not dump dimensions, materials and functions into a comma-separated sentence. Exact technical details belong in the feature bullets.",
     "Avoid stiff phrases equivalent to 'it has', 'it is equipped with' and 'this product features' when a simpler natural sentence works.",
     "Variant labels must be concise and customer-friendly while preserving every factual distinction such as color, dimensions, capacity, model, pack count, plug type and packaging.",
-    "Return 3-5 useful feature bullets written as natural customer-facing noun phrases, not raw supplier fragments or full mechanical sentences.",
+    "Return 3-8 useful feature bullets written as natural customer-facing noun phrases, not raw supplier fragments or full mechanical sentences.",
+    "Preserve every materially useful fact supported by the supplier source, including dimensions, capacity, materials, power, functions, compatibility, water-resistance rating, included pieces, package quantity and safety information.",
+    "Do not discard a real differentiating specification merely to make the copy shorter. Shorten wording and combine closely related facts instead.",
+    "Remove only repetition, empty marketing filler, irrelevant supplier language and facts already communicated by the selected variant label.",
     "Combine only facts that naturally belong together. Keep unrelated measurements and materials in separate bullets.",
     "Omit standalone model numbers and generic labels such as 'electronic mechanism'. Rewrite awkward material order naturally in each language; for example Turkish should say 'PC kasalı, plastik camlı tasarım' instead of 'Plastik camlı PC kasa'.",
     "Prefer '49 mm kadran çapı' and '15 mm kasa kalınlığı' as separate Turkish bullets instead of joining them to a vague mechanism claim, unless space requires one concise measurement bullet.",
@@ -213,9 +216,9 @@ export function normalizeContentBundle(bundle, expectedVariantCount) {
     const title = cleanText(entry.title, 80);
     const description = cleanText(entry.description, 360);
     const categoryLabel = cleanText(entry.categoryLabel, 220);
-    const features = uniqueStrings(entry.features, 6, 120);
+    const features = uniqueStrings(entry.features, 8, 120);
 
-    if (!title || !description || !categoryLabel || features.length < 2) {
+    if (!title || !description || !categoryLabel || features.length < 3) {
       throw new Error(`AI product content returned incomplete ${language} copy.`);
     }
 
