@@ -36,6 +36,20 @@ test("popular catalog prioritizes video products without changing newest sorting
   assert.equal(buildCatalogGroupSummaries(rows, "newest")[0].groupKey, "popular");
 });
 
+test("catalog grouping keeps logical groups from one CJ parent separate", () => {
+  const rows = [
+    { _id: "blue-380", key: "blue-380", supplierProductId: "blender", variantGroupKey: "standard-band-1", price: 2.85, stock: 2 },
+    { _id: "blue-420", key: "blue-420", supplierProductId: "blender", variantGroupKey: "standard-band-1", price: 2.87, stock: 2 },
+    { _id: "white", key: "white", supplierProductId: "blender", variantGroupKey: "standard-band-2", price: 21.09, stock: 2 },
+    { _id: "black", key: "black", supplierProductId: "blender", variantGroupKey: "standard-band-3", price: 47.88, stock: 2 },
+    { _id: "two-white", key: "two-white", supplierProductId: "blender", variantGroupKey: "pack-2-band-1", price: 42.16, stock: 2 },
+  ];
+
+  const groups = buildCatalogGroupSummaries(rows);
+  assert.equal(groups.length, 4);
+  assert.equal(groups.find((group) => group.groupKey.endsWith("standard-band-1")).variantCount, 2);
+});
+
 test("storefront language is constrained to Rotavoy languages", () => {
   assert.equal(normalizeStorefrontLanguage("TR"), "tr");
   assert.equal(normalizeStorefrontLanguage("de"), "de");
