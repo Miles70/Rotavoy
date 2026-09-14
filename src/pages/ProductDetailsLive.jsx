@@ -20,8 +20,8 @@ import { useLanguage } from "../i18n/LanguageContext";
 import regionalProductDetailsTranslations from "../i18n/regionalProductDetailsTranslations";
 import {
   getProductVideoUrl,
+  getRelatedStoreProducts,
   getStoreProduct,
-  getStoreProducts,
 } from "../services/productsApi";
 import "./ProductDetailsLive.css";
 
@@ -36,6 +36,7 @@ const copy = {
     outOfStock: "Out of stock",
     quantity: "Quantity",
     variant: "Variant",
+    variantNote: "The price and package contents shown belong to this selected option.",
     add: "Add to cart",
     added: "Added to cart",
     delivery: "Fast delivery",
@@ -64,6 +65,7 @@ const copy = {
     outOfStock: "Stokta yok",
     quantity: "Adet",
     variant: "Varyant",
+    variantNote: "Gösterilen fiyat ve paket içeriği bu seçeneğe aittir.",
     add: "Sepete ekle",
     added: "Sepete eklendi",
     delivery: "Hızlı teslimat",
@@ -92,6 +94,7 @@ const copy = {
     outOfStock: "Нет в наличии",
     quantity: "Количество",
     variant: "Вариант",
+    variantNote: "Указанные цена и комплектация относятся к выбранному варианту.",
     add: "Добавить в корзину",
     added: "Добавлено",
     delivery: "Быстрая доставка",
@@ -120,6 +123,7 @@ const copy = {
     outOfStock: "غير متوفر",
     quantity: "الكمية",
     variant: "الخيار",
+    variantNote: "السعر ومحتويات العبوة المعروضة تخص هذا الخيار المحدد.",
     add: "أضف إلى السلة",
     added: "تمت الإضافة",
     delivery: "توصيل سريع",
@@ -148,6 +152,7 @@ const copy = {
     outOfStock: "缺货",
     quantity: "数量",
     variant: "规格",
+    variantNote: "显示的价格和包装内容仅适用于当前所选规格。",
     add: "加入购物车",
     added: "已加入购物车",
     delivery: "快速配送",
@@ -238,24 +243,10 @@ function ProductDetailsLive() {
         setVariants(data.variants || []);
 
         try {
-          const relatedData = await getStoreProducts({
-            page: 1,
-            limit: 6,
-            category: data.product.categoryKey,
-            language,
-          });
+          const relatedData = await getRelatedStoreProducts(data.product.key, language, 8);
 
           if (!isCancelled) {
-            const seenSupplierProducts = new Set([
-              data.product.supplierProductId || data.product.key,
-            ]);
-            setRelatedProducts((relatedData.products || []).filter((item) => {
-              if (item.key === data.product.key) return false;
-              const groupKey = item.supplierProductId || item.key;
-              if (seenSupplierProducts.has(groupKey)) return false;
-              seenSupplierProducts.add(groupKey);
-              return true;
-            }).slice(0, 4));
+            setRelatedProducts(relatedData);
           }
         } catch {
           if (!isCancelled) setRelatedProducts([]);
@@ -483,6 +474,13 @@ function ProductDetailsLive() {
                 ))}
               </div>
             </section>
+          ) : null}
+
+          {product.variantLabel && product.variantLabel.toLowerCase() !== "default" ? (
+            <div className="liveProductVariantNotice">
+              <strong>{labels.variant}: {product.variantLabel}</strong>
+              <span>{labels.variantNote || copy.en.variantNote}</span>
+            </div>
           ) : null}
 
           <p className="liveProductDescription">
