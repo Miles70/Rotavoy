@@ -224,7 +224,9 @@ function localizeDetails(product, language, translation) {
     const label = labels[key] || humanizeDetailKey(key);
     let value = rawValue;
 
-    if (key === "variant" && translation?.variant) {
+    if (key === "supplier") {
+      value = "Rotavoy";
+    } else if (key === "variant" && translation?.variant) {
       value = translation.variant;
     } else if (key === "originCountry") {
       value = localizeCountryCode(rawValue, language);

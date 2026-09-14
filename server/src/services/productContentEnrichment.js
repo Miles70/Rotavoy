@@ -84,8 +84,7 @@ function getResponseSchema() {
       features: {
         type: "array",
         minItems: 1,
-        maxItems: 20,
-        items: { type: "string", minLength: 2, maxLength: 120 },
+        items: { type: "string", minLength: 2, maxLength: 240 },
       },
       categoryLabel: { type: "string", minLength: 2, maxLength: 220 },
       variants: {
@@ -142,14 +141,14 @@ function buildInstructions() {
     "Do not dump dimensions, materials and functions into a comma-separated sentence. Exact technical details belong in the feature bullets.",
     "Avoid stiff phrases equivalent to 'it has', 'it is equipped with' and 'this product features' when a simpler natural sentence works.",
     "Variant labels must be concise and customer-friendly while preserving every factual distinction such as color, dimensions, capacity, model, pack count, plug type and packaging.",
-    "Return 1-20 useful feature bullets, matching the real amount of source information. Never invent filler merely to reach a count. Write natural customer-facing noun phrases, not raw supplier fragments or full mechanical sentences.",
+    "Return as many useful feature bullets as needed to preserve the full amount of real source information. There is no feature-count cap. Never omit a supported product fact merely to keep the feature list short, and never invent filler. Write natural customer-facing noun phrases, not raw supplier fragments or full mechanical sentences.",
     "Preserve EVERY unique factual claim supported by the supplier source, including dimensions, weight, capacity, materials, power, battery, charging, functions, controls, compatibility, water-resistance rating, included pieces, package quantity, care instructions and safety information.",
     "Before returning JSON, compare the source with the proposed description and feature bullets fact by fact. If any unique supported fact is missing, add it to the most natural feature bullet.",
     "Completeness is mandatory: concise means removing redundant wording, not removing information.",
     "Do not discard a real differentiating specification merely to make the copy shorter. Shorten wording and combine closely related facts instead.",
     "Remove only repetition, empty marketing filler, irrelevant supplier language and facts already communicated by the selected variant label.",
     "Combine only facts that naturally belong together. Keep unrelated measurements and materials in separate bullets.",
-    "Omit standalone model numbers and generic labels such as 'electronic mechanism'. Rewrite awkward material order naturally in each language; for example Turkish should say 'PC kasalı, plastik camlı tasarım' instead of 'Plastik camlı PC kasa'.",
+    "Preserve customer-relevant model numbers, standards and identifiers when they are present in the source. Only meaningless generic labels may be omitted. Rewrite awkward material order naturally in each language.",
     "Prefer '49 mm kadran çapı' and '15 mm kasa kalınlığı' as separate Turkish bullets instead of joining them to a vague mechanism claim, unless space requires one concise measurement bullet.",
     "Never repeat the same fact in multiple bullets.",
     "Features must remain directly supported by source data. Do not add a feature merely because it is common for that product type.",
@@ -222,7 +221,7 @@ export function normalizeContentBundle(bundle, expectedVariantCount) {
     const title = cleanText(entry.title, 80);
     const description = cleanText(entry.description, 600);
     const categoryLabel = cleanText(entry.categoryLabel, 220);
-    const features = uniqueStrings(entry.features, 20, 160);
+    const features = uniqueStrings(entry.features, Number.POSITIVE_INFINITY, 240);
 
     if (!title || !description || !categoryLabel || features.length < 1) {
       throw new Error(`AI product content returned incomplete ${language} copy.`);
@@ -373,7 +372,7 @@ function getSupplierContent(product) {
 
   return {
     title: cleanText(raw.title || product?.title, 300),
-    description: cleanText(raw.description || product?.description, 6_000),
+    description: cleanText(raw.description || product?.description, 20_000),
     categoryLabel: cleanText(raw.categoryLabel || product?.categoryLabel || "General", 220),
     variant: cleanText(raw.variant || product?.details?.variant || product?.supplierSku || "Default", 120),
     brand: cleanText(product?.brand || raw.brand, 160),
