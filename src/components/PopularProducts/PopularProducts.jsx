@@ -7,10 +7,56 @@ import "./PopularProducts.css";
 
 const HOME_PRODUCT_LIMIT = 100;
 const HOME_PRODUCT_CACHE_TTL_MS = 2 * 60 * 1000;
+const HOME_PRODUCT_CACHE_KEY_PREFIX = "rotavoy:home-products:v1:";
 const homeProductCache = new Map();
 
+function getSessionCacheKey(language) {
+  return `${HOME_PRODUCT_CACHE_KEY_PREFIX}${language}`;
+}
+
+function readSessionCache(language) {
+  if (typeof window === "undefined" || !window.sessionStorage) return null;
+
+  const cacheKey = getSessionCacheKey(language);
+
+  try {
+    const raw = window.sessionStorage.getItem(cacheKey);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed?.products) || !Number.isFinite(parsed?.cachedAt)) {
+      window.sessionStorage.removeItem(cacheKey);
+      return null;
+    }
+
+    return parsed;
+  } catch {
+    try {
+      window.sessionStorage.removeItem(cacheKey);
+    } catch {
+      // Ignore storage access failures and fall back to the API.
+    }
+    return null;
+  }
+}
+
+function writeSessionCache(language, value) {
+  if (typeof window === "undefined" || !window.sessionStorage) return;
+
+  try {
+    window.sessionStorage.setItem(getSessionCacheKey(language), JSON.stringify(value));
+  } catch {
+    // Storage may be unavailable or full. In-memory caching still works.
+  }
+}
+
 function getCachedHomeProducts(language) {
-  return homeProductCache.get(language) || null;
+  const memoryCache = homeProductCache.get(language);
+  if (memoryCache) return memoryCache;
+
+  const sessionCache = readSessionCache(language);
+  if (sessionCache) homeProductCache.set(language, sessionCache);
+  return sessionCache;
 }
 
 function PopularProducts() {
@@ -44,10 +90,13 @@ function PopularProducts() {
       .then((data) => {
         if (!isCancelled) {
           const nextProducts = data.products || [];
-          homeProductCache.set(language, {
+          const nextCache = {
             products: nextProducts,
             cachedAt: Date.now(),
-          });
+          };
+
+          homeProductCache.set(language, nextCache);
+          writeSessionCache(language, nextCache);
           setProducts(nextProducts);
           setError("");
         }
