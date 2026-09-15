@@ -15,6 +15,9 @@ import { getStoreProducts } from "../../services/productsApi";
 
 import "./Hero.css";
 
+const PRODUCT_COUNT_CACHE_TTL_MS = 2 * 60 * 1000;
+const PRODUCT_COUNT_CACHE_KEY_PREFIX = "rotavoy:product-count:v1:";
+
 function formatProductCount(count) {
   const total = Number(count || 0);
 
@@ -26,21 +29,79 @@ function formatProductCount(count) {
   return total > 0 ? String(total) : "—";
 }
 
+function getProductCountCacheKey(language) {
+  return `${PRODUCT_COUNT_CACHE_KEY_PREFIX}${language}`;
+}
+
+function readProductCountCache(language) {
+  if (typeof window === "undefined" || !window.sessionStorage) return null;
+
+  const cacheKey = getProductCountCacheKey(language);
+
+  try {
+    const raw = window.sessionStorage.getItem(cacheKey);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw);
+    if (!Number.isFinite(parsed?.count) || !Number.isFinite(parsed?.cachedAt)) {
+      window.sessionStorage.removeItem(cacheKey);
+      return null;
+    }
+
+    return parsed;
+  } catch {
+    try {
+      window.sessionStorage.removeItem(cacheKey);
+    } catch {
+      // Ignore storage failures and fall back to the API.
+    }
+    return null;
+  }
+}
+
+function writeProductCountCache(language, count) {
+  if (typeof window === "undefined" || !window.sessionStorage) return;
+
+  try {
+    window.sessionStorage.setItem(
+      getProductCountCacheKey(language),
+      JSON.stringify({ count, cachedAt: Date.now() }),
+    );
+  } catch {
+    // Ignore storage failures. The live API result still remains on screen.
+  }
+}
+
 function Hero() {
   const { t, language } = useLanguage();
-  const [productCount, setProductCount] = useState(0);
+  const initialCache = readProductCountCache(language);
+  const [productCount, setProductCount] = useState(() => Number(initialCache?.count || 0));
 
   useEffect(() => {
     let isCancelled = false;
+    const cached = readProductCountCache(language);
+    const isFresh = cached && Date.now() - cached.cachedAt < PRODUCT_COUNT_CACHE_TTL_MS;
+
+    if (cached) {
+      setProductCount(Number(cached.count || 0));
+    }
+
+    if (isFresh) {
+      return () => {
+        isCancelled = true;
+      };
+    }
 
     getStoreProducts({ page: 1, limit: 8, sort: "popular", language })
       .then((data) => {
         if (!isCancelled) {
-          setProductCount(Number(data.pagination?.total || 0));
+          const nextCount = Number(data.pagination?.total || 0);
+          setProductCount(nextCount);
+          writeProductCountCache(language, nextCount);
         }
       })
       .catch(() => {
-        if (!isCancelled) setProductCount(0);
+        if (!isCancelled && !cached) setProductCount(0);
       });
 
     return () => {
