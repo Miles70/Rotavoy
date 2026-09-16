@@ -13,7 +13,7 @@ import {
   Star,
   Truck,
 } from "lucide-react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import ProductCard from "../components/ProductCard/ProductCard";
 import { useCart } from "../context/CartContext";
 import { useLanguage } from "../i18n/LanguageContext";
@@ -209,26 +209,33 @@ function formatPrice(value, locale) {
 
 function ProductDetailsLive() {
   const { productKey } = useParams();
+  const location = useLocation();
   const { language, t } = useLanguage();
   const { addToCart } = useCart();
   const labels = regionalProductDetailsTranslations[language] || copy[language] || copy.en;
   const numberLocale = numberLocales[language] || numberLocales.en;
-  const [product, setProduct] = useState(null);
+  const navigationProduct = location.state?.product;
+  const canUseNavigationProduct = Boolean(
+    navigationProduct?.key === productKey && location.state?.language === language,
+  );
+  const [product, setProduct] = useState(
+    canUseNavigationProduct ? navigationProduct : null,
+  );
   const [variants, setVariants] = useState([]);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [quantity, setQuantity] = useState(1);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [videoFailed, setVideoFailed] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!canUseNavigationProduct);
   const [error, setError] = useState("");
 
   useEffect(() => {
     let isCancelled = false;
 
-    setIsLoading(true);
+    setIsLoading(!canUseNavigationProduct);
     setError("");
-    setProduct(null);
+    setProduct(canUseNavigationProduct ? navigationProduct : null);
     setVariants([]);
     setRelatedProducts([]);
     setQuantity(1);
@@ -254,7 +261,7 @@ function ProductDetailsLive() {
         }
       })
       .catch((requestError) => {
-        if (!isCancelled) setError(requestError.message);
+        if (!isCancelled && !canUseNavigationProduct) setError(requestError.message);
       })
       .finally(() => {
         if (!isCancelled) setIsLoading(false);
@@ -263,7 +270,7 @@ function ProductDetailsLive() {
     return () => {
       isCancelled = true;
     };
-  }, [language, productKey]);
+  }, [canUseNavigationProduct, language, navigationProduct, productKey]);
 
   const galleryItems = useMemo(() => {
     if (!product) return [];
@@ -466,6 +473,7 @@ function ProductDetailsLive() {
                   <Link
                     key={variant.key}
                     to={`/products/${variant.key}`}
+                    state={{ product: variant, language }}
                     className={variant.key === product.key ? "is-active" : ""}
                     aria-current={variant.key === product.key ? "true" : undefined}
                   >
