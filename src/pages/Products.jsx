@@ -10,6 +10,18 @@ import { getStoreProducts } from "../services/productsApi";
 import "./Products.css";
 
 const PAGE_SIZE = 24;
+const recommendationLabels = {
+  en: { title: "You may also like", text: "Popular products from the same collection." },
+  tr: { title: "Bunları da beğenebilirsin", text: "Aynı koleksiyondan popüler ürünler." },
+  ru: { title: "Вам также может понравиться", text: "Популярные товары из той же коллекции." },
+  ar: { title: "قد يعجبك أيضاً", text: "منتجات شائعة من المجموعة نفسها." },
+  zh: { title: "你可能还喜欢", text: "同一系列中的热门商品。" },
+  es: { title: "También te puede gustar", text: "Productos populares de la misma colección." },
+  pt: { title: "Você também pode gostar", text: "Produtos populares da mesma coleção." },
+  fr: { title: "Vous aimerez peut-être aussi", text: "Produits populaires de la même collection." },
+  de: { title: "Das könnte dir auch gefallen", text: "Beliebte Produkte aus derselben Kollektion." },
+  it: { title: "Potrebbero piacerti anche", text: "Prodotti popolari della stessa collezione." },
+};
 const productsPageDescriptions = {
   en: "Explore the full marketplace across nine clear product collections.",
   tr: "Dokuz ana koleksiyondaki ürünleri keşfet, ara ve sayfa sayfa gez.",
@@ -61,6 +73,7 @@ function Products() {
   const { t, language } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
   const [pagination, setPagination] = useState({
     page: 1,
     limit: PAGE_SIZE,
@@ -82,6 +95,7 @@ function Products() {
 
     setIsLoading(true);
     setError("");
+    setRecommendations([]);
 
     getStoreProducts({
       page: requestedPage,
@@ -95,6 +109,7 @@ function Products() {
         if (isCancelled) return;
 
         setProducts(data.products || []);
+        setRecommendations(data.recommendations || []);
         setPagination(data.pagination || {});
 
         if (data.pagination?.page && data.pagination.page !== requestedPage) {
@@ -106,6 +121,7 @@ function Products() {
       .catch((requestError) => {
         if (!isCancelled) {
           setProducts([]);
+          setRecommendations([]);
           setError(requestError.message);
         }
       })
@@ -125,6 +141,7 @@ function Products() {
 
   const selectedCategoryTitle =
     groupLabel(groupQuery, language) || categoryLabel(categoryQuery, t);
+  const recommendationText = recommendationLabels[language] || recommendationLabels.en;
 
   function changePage(nextPage) {
     if (nextPage < 1 || nextPage > pagination.totalPages || nextPage === pagination.page) return;
@@ -240,6 +257,21 @@ function Products() {
             <h3>No products found</h3>
             <p>Try another keyword or browse the full product list.</p>
           </div>
+        ) : null}
+
+        {!isLoading && !error && searchQuery && recommendations.length > 0 ? (
+          <section className="productsRecommendations">
+            <div className="productsRecommendationHeader">
+              <span>{recommendationText.title}</span>
+              <h2>{recommendationText.title}</h2>
+              <p>{recommendationText.text}</p>
+            </div>
+            <div className="productsGrid">
+              {recommendations.map((product) => (
+                <ProductCard key={`recommendation-${product.key}`} product={product} />
+              ))}
+            </div>
+          </section>
         ) : null}
       </section>
     </main>

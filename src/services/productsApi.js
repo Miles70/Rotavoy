@@ -311,6 +311,8 @@ export async function getStoreProducts({
   return {
     ...data,
     products: (data.products || []).map((product) => normalizeProduct(product, normalizedLanguage)),
+    recommendations: (data.recommendations || []).map((product) =>
+      normalizeProduct(product, normalizedLanguage)),
   };
 }
 

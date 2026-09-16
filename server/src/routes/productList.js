@@ -4,6 +4,7 @@ import { isCjConfigured } from "../services/cjApi.js";
 import {
   buildCatalogSearchConditions,
   buildCatalogSearchExclusions,
+  getCatalogSearchRecommendationCategories,
 } from "../services/catalogSearch.js";
 import {
   buildGroupedStorefrontProduct,
@@ -33,6 +34,20 @@ const FEATURED_CATEGORY_PREVIEW_LIMIT = 3;
 const FEATURED_CATEGORY_CANDIDATE_LIMIT = 8;
 const FEATURED_CATEGORY_CACHE_TTL_MS = 2 * 60 * 1000;
 const featuredCategoryCache = new Map();
+const SEARCH_RECOMMENDATION_LIMIT = 8;
+const SEARCH_FIELDS = [
+  "key",
+  "title",
+  "brand",
+  "categoryKey",
+  "categoryLabel",
+  "description",
+  "features",
+  "supplierProductId",
+  "supplierVariantId",
+  "supplierSku",
+  ...getAllLocalizedSearchFields(),
+];
 
 function hasProductImage(product) {
   return Boolean(
@@ -203,21 +218,8 @@ productListRouter.get("/", async (request, response, next) => {
     }
 
     if (search) {
-      const searchFields = [
-        "key",
-        "title",
-        "brand",
-        "categoryKey",
-        "categoryLabel",
-        "description",
-        "features",
-        "supplierProductId",
-        "supplierVariantId",
-        "supplierSku",
-        ...getAllLocalizedSearchFields(),
-      ];
-      filter.$and = buildCatalogSearchConditions(search, searchFields);
-      const exclusions = buildCatalogSearchExclusions(search, searchFields);
+      filter.$and = buildCatalogSearchConditions(search, SEARCH_FIELDS);
+      const exclusions = buildCatalogSearchExclusions(search, SEARCH_FIELDS);
       if (exclusions.length) filter.$nor = exclusions;
     }
 
@@ -230,8 +232,29 @@ productListRouter.get("/", async (request, response, next) => {
         language,
       });
 
+      let recommendations = [];
+      const recommendationCategories = getCatalogSearchRecommendationCategories(search);
+      if (search && requestedPage === 1 && recommendationCategories.length) {
+        const recommendationFilter = {
+          isActive: true,
+          source: { $in: ["cj"] },
+          stock: { $gt: 0 },
+          categoryKey: { $in: recommendationCategories },
+          $nor: buildCatalogSearchConditions(search, SEARCH_FIELDS),
+        };
+        const recommendationResult = await getGroupedCjCatalog({
+          filter: recommendationFilter,
+          sortMode: "popular",
+          requestedPage: 1,
+          limit: SEARCH_RECOMMENDATION_LIMIT,
+          language,
+        });
+        recommendations = recommendationResult.products;
+      }
+
       return response.json({
         ...grouped,
+        recommendations,
         source: "cj",
       });
     }
@@ -251,8 +274,28 @@ productListRouter.get("/", async (request, response, next) => {
       .limit(limit)
       .lean();
 
+    let recommendations = [];
+    const recommendationCategories = getCatalogSearchRecommendationCategories(search);
+    if (search && requestedPage === 1 && recommendationCategories.length) {
+      const recommendationFilter = {
+        isActive: true,
+        source: { $in: LEGACY_SOURCES },
+        stock: { $gt: 0 },
+        categoryKey: { $in: recommendationCategories },
+        $nor: buildCatalogSearchConditions(search, SEARCH_FIELDS),
+      };
+      const recommendationProducts = await Product.find(recommendationFilter)
+        .select(STOREFRONT_PRIVATE_FIELDS)
+        .sort({ popularity: -1, createdAt: -1, key: 1 })
+        .limit(SEARCH_RECOMMENDATION_LIMIT)
+        .lean();
+      recommendations = recommendationProducts.map((product) =>
+        trimStorefrontTranslations(product, language));
+    }
+
     return response.json({
       products: products.map((product) => trimStorefrontTranslations(product, language)),
+      recommendations,
       pagination: {
         page,
         limit,

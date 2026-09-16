@@ -19,6 +19,31 @@ const SEARCH_ALIASES = {
 
 const STOP_WORDS = new Set(["bir", "ve", "ile", "icin", "için", "the", "and", "for"]);
 
+const SEARCH_PRODUCT_PROFILES = [
+  {
+    terms: ["ayakkabi", "shoe", "shoes", "sneaker", "sneakers"],
+    categoryKeys: ["fashion"],
+    accessoryTerms: [
+      "bag", "bags", "backpack", "handbag", "pouch", "luggage", "suitcase", "case",
+      "organizer", "storage", "holder", "rack", "cabinet", "box", "cover", "dryer",
+      "washer", "brush", "horn", "charm", "canta", "çanta", "bavul", "valiz", "kese",
+      "saklama", "düzenleyici", "duzenleyici", "dolap", "raf", "rafı", "rafi", "kutusu", "kutu", "kılıf",
+      "kilif", "fırça", "firca", "kurutucu", "yıkama", "yikama",
+      "bolsa", "mochila", "maleta", "organizador", "almacenamiento",
+      "sac", "valise", "organisateur", "rangement", "armoire",
+      "tasche", "rucksack", "koffer", "aufbewahrung", "schrank",
+      "borsa", "zaino", "valigia", "organizzatore", "contenitore",
+      "сумка", "рюкзак", "чемодан", "органайзер", "хранение", "шкаф",
+      "حقيبة", "منظم", "تخزين", "خزانة", "包", "收纳", "鞋柜",
+    ],
+  },
+  {
+    terms: ["kilif", "kilifi", "case", "cover"],
+    categoryKeys: ["electronics", "mobile"],
+    negativePattern: /(kılıfsız|kilifsiz|without\s+(?:a\s+)?case|no\s+case|case[-\s]?less)/iu,
+  },
+];
+
 function asciiFold(value) {
   return String(value || "")
     .toLocaleLowerCase("tr-TR")
@@ -104,10 +129,26 @@ export function buildCatalogSearchExclusions(search, fields) {
   const titleFields = [...new Set(fields.filter((field) => /(^|\.)title$/.test(field)))];
   const exclusions = [];
 
-  if (normalizedTerms.some((term) => ["kilif", "kilifi", "case", "cover"].includes(term))) {
-    const negativeCase = /(kılıfsız|kilifsiz|without\s+(?:a\s+)?case|no\s+case|case[-\s]?less)/iu;
-    exclusions.push(...titleFields.map((field) => ({ [field]: negativeCase })));
+  for (const profile of SEARCH_PRODUCT_PROFILES) {
+    if (!normalizedTerms.some((term) => profile.terms.includes(term))) continue;
+
+    const pattern = profile.negativePattern || new RegExp(
+      `(^|[^\\p{L}\\p{N}])(?:${profile.accessoryTerms.map(escapeRegex).join("|")})([^\\p{L}\\p{N}]|$)`,
+      "iu",
+    );
+    exclusions.push(...titleFields.map((field) => ({ [field]: pattern })));
   }
 
   return exclusions;
+}
+
+export function getCatalogSearchRecommendationCategories(search) {
+  const normalizedTerms = getCatalogSearchTermGroups(search)
+    .flat()
+    .map(asciiFold);
+  const profile = SEARCH_PRODUCT_PROFILES.find(({ terms }) =>
+    normalizedTerms.some((term) => terms.includes(term)),
+  );
+
+  return profile?.categoryKeys || [];
 }

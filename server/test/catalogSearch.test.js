@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   buildCatalogSearchConditions,
   buildCatalogSearchExclusions,
+  getCatalogSearchRecommendationCategories,
   getCatalogSearchTermGroups,
 } from "../src/services/catalogSearch.js";
 
@@ -72,4 +73,24 @@ test("catalog search uses whole words and excludes products explicitly sold with
   assert.ok(exclusions.some((condition) =>
     condition["translations.en.title"]?.test("Phone cleaner without case"),
   ));
+});
+
+test("shoe searches exclude bags, luggage, storage products and organizers", () => {
+  const fields = ["title", "translations.tr.title", "translations.en.title"];
+  const exclusions = buildCatalogSearchExclusions("ayakkabı", fields);
+  const rejects = [
+    "Shoe Storage Bag",
+    "Ayakkabı Saklama Çantası",
+    "Travel Shoe Organizer",
+    "Ayakkabı Rafı",
+    "Shoe Suitcase Pouch",
+  ];
+
+  for (const title of rejects) {
+    assert.ok(exclusions.some((condition) =>
+      Object.values(condition).some((pattern) => pattern.test(title))), title);
+  }
+  assert.equal(exclusions.some((condition) =>
+    Object.values(condition).some((pattern) => pattern.test("Kadın Spor Ayakkabı"))), false);
+  assert.deepEqual(getCatalogSearchRecommendationCategories("ayakkabı"), ["fashion"]);
 });
