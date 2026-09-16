@@ -5,9 +5,9 @@ import { useLanguage } from "../../i18n/LanguageContext";
 import { getStoreProducts } from "../../services/productsApi";
 import "./PopularProducts.css";
 
-const HOME_PRODUCT_LIMIT = 100;
+const HOME_PRODUCT_LIMIT = 24;
 const HOME_PRODUCT_CACHE_TTL_MS = 2 * 60 * 1000;
-const HOME_PRODUCT_CACHE_KEY_PREFIX = "rotavoy:home-products:v1:";
+const HOME_PRODUCT_CACHE_KEY_PREFIX = "rotavoy:home-products:v2:";
 const homeProductCache = new Map();
 
 function getSessionCacheKey(language) {
