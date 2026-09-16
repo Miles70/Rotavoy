@@ -428,7 +428,7 @@ async function enrichSupplierProduct(supplierProductId) {
     })),
   };
 
-  if (!source.title || !source.description || !source.categoryLabel || source.variants.some((value) => !value)) {
+  if (!source.title || !source.categoryLabel || source.variants.some((value) => !value)) {
     throw new Error(`CJ source content is incomplete for ${supplierProductId}.`);
   }
 
