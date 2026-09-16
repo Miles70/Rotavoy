@@ -12,7 +12,8 @@
     "content:translate": "node src/scripts/backfillProductTranslations.js",
     "content:enrich": "node src/scripts/enrichProductContent.js",
     "test": "node --test",
-    "catalog:audit-duplicates": "node src/scripts/auditProductDuplicates.js"
+    "catalog:audit-duplicates": "node src/scripts/auditProductDuplicates.js",
+    "catalog:cleanup-duplicates": "node src/scripts/cleanupProductDuplicates.js"
   },
   "dependencies": {
     "cors": "^2.8.6",
