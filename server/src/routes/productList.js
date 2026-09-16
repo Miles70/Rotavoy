@@ -25,6 +25,35 @@ const CATEGORY_GROUPS = {
   booksMusicFilmHobby: ["gaming"],
 };
 
+const FEATURED_CATEGORY_PREVIEW_LIMIT = 3;
+const FEATURED_CATEGORY_CANDIDATE_LIMIT = 8;
+const FEATURED_CATEGORY_CACHE_TTL_MS = 2 * 60 * 1000;
+const featuredCategoryCache = new Map();
+
+function hasProductImage(product) {
+  return Boolean(
+    String(product?.imageUrl || "").trim() ||
+    (Array.isArray(product?.images) && product.images.some((image) => String(image || "").trim())),
+  );
+}
+
+function getCachedFeaturedCategories(cacheKey) {
+  const cached = featuredCategoryCache.get(cacheKey);
+  if (!cached || cached.expiresAt <= Date.now()) {
+    featuredCategoryCache.delete(cacheKey);
+    return null;
+  }
+
+  return cached.value;
+}
+
+function cacheFeaturedCategories(cacheKey, value) {
+  featuredCategoryCache.set(cacheKey, {
+    expiresAt: Date.now() + FEATURED_CATEGORY_CACHE_TTL_MS,
+    value,
+  });
+}
+
 function escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -71,6 +100,84 @@ async function getGroupedCjCatalog({ filter, sortMode, requestedPage, limit, lan
     },
   };
 }
+
+productListRouter.get("/featured-categories", async (request, response, next) => {
+  try {
+    const language = normalizeStorefrontLanguage(request.query.language);
+    const cjConfigured = isCjConfigured();
+    const cacheKey = `${cjConfigured ? "cj" : "legacy"}:${language}`;
+    const cached = getCachedFeaturedCategories(cacheKey);
+
+    if (cached) {
+      response.set("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
+      return response.json(cached);
+    }
+
+    const filter = {
+      isActive: true,
+      source: { $in: cjConfigured ? ["cj"] : LEGACY_SOURCES },
+      stock: { $gt: 0 },
+      categoryKey: { $in: [...new Set(Object.values(CATEGORY_GROUPS).flat())] },
+    };
+    const rows = await Product.find(filter)
+      .select("_id key categoryKey supplierProductId variantGroupKey price popularity createdAt stock hasVideo")
+      .lean();
+    const summariesByGroup = new Map();
+    const representativeIds = new Set();
+
+    for (const [groupKey, sourceKeys] of Object.entries(CATEGORY_GROUPS)) {
+      const sourceKeySet = new Set(sourceKeys);
+      const summaries = buildCatalogGroupSummaries(
+        rows.filter((row) => sourceKeySet.has(String(row?.categoryKey || ""))),
+        "popular",
+      );
+      summariesByGroup.set(groupKey, summaries);
+      for (const summary of summaries.slice(0, FEATURED_CATEGORY_CANDIDATE_LIMIT)) {
+        representativeIds.add(summary.representative._id);
+      }
+    }
+
+    const representativeProducts = await Product.find({ _id: { $in: [...representativeIds] } })
+      .select(STOREFRONT_PRIVATE_FIELDS)
+      .lean();
+    const productsById = new Map(
+      representativeProducts.map((product) => [String(product._id), product]),
+    );
+    const categories = {};
+
+    for (const [groupKey, summaries] of summariesByGroup) {
+      const candidates = summaries
+        .slice(0, FEATURED_CATEGORY_CANDIDATE_LIMIT)
+        .map((summary) => ({
+          summary,
+          product: productsById.get(String(summary.representative._id)),
+        }))
+        .filter(({ product }) => product);
+      const imageCandidates = candidates.filter(({ product }) => hasProductImage(product));
+      const chosen = [...imageCandidates, ...candidates.filter(({ product }) => !hasProductImage(product))]
+        .slice(0, FEATURED_CATEGORY_PREVIEW_LIMIT);
+
+      categories[groupKey] = {
+        total: summaries.length,
+        products: chosen.map(({ product, summary }) =>
+          buildGroupedStorefrontProduct({
+            product,
+            variantCount: summary.variantCount,
+            priceMin: summary.priceMin,
+            priceMax: summary.priceMax,
+            stockTotal: summary.stockTotal,
+          }, language)),
+      };
+    }
+
+    const payload = { categories, source: cjConfigured ? "cj" : "legacy" };
+    cacheFeaturedCategories(cacheKey, payload);
+    response.set("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
+    return response.json(payload);
+  } catch (error) {
+    return next(error);
+  }
+});
 
 productListRouter.get("/", async (request, response, next) => {
   try {

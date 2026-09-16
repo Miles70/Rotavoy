@@ -14,7 +14,7 @@ import { Link } from "react-router-dom";
 import categories from "../../data/categories";
 import { getCategoryGroupText } from "../../i18n/categoryGroupText";
 import { useLanguage } from "../../i18n/LanguageContext";
-import { getStoreProducts } from "../../services/productsApi";
+import { getFeaturedCategoryProducts } from "../../services/productsApi";
 import "./FeaturedCategories.css";
 
 const numberLocales = {
@@ -45,40 +45,23 @@ const categoryIcons = {
 function FeaturedCategories() {
   const { t, language } = useLanguage();
   const [categoryData, setCategoryData] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
   const numberLocale = numberLocales[language] || numberLocales.en;
 
   useEffect(() => {
     let isCancelled = false;
 
-    Promise.allSettled(
-      categories.map((category) =>
-        getStoreProducts({
-          page: 1,
-          limit: 3,
-          group: category.key,
-          sort: "popular",
-          language,
-        }),
-      ),
-    ).then((results) => {
-      if (isCancelled) return;
-
-      const nextCategoryData = {};
-
-      results.forEach((result, index) => {
-        const category = categories[index];
-
-        nextCategoryData[category.key] =
-          result.status === "fulfilled"
-            ? {
-                products: (result.value.products || []).slice(0, 3),
-                total: Number(result.value.pagination?.total || 0),
-              }
-            : { products: [], total: 0 };
+    setIsLoading(true);
+    getFeaturedCategoryProducts(language)
+      .then((result) => {
+        if (!isCancelled) setCategoryData(result.categories || {});
+      })
+      .catch(() => {
+        if (!isCancelled) setCategoryData({});
+      })
+      .finally(() => {
+        if (!isCancelled) setIsLoading(false);
       });
-
-      setCategoryData(nextCategoryData);
-    });
 
     return () => {
       isCancelled = true;
@@ -114,9 +97,11 @@ function FeaturedCategories() {
                     </div>
 
                     <span className="featuredCategoryCount">
-                      {groupData.total > 0
+                      {isLoading
+                        ? "…"
+                        : groupData.total > 0
                         ? `${groupData.total.toLocaleString(numberLocale)} ${t("categoriesPage.items")}`
-                        : "—"}
+                        : `0 ${t("categoriesPage.items")}`}
                     </span>
                   </div>
 
@@ -138,6 +123,8 @@ function FeaturedCategories() {
                       >
                         {imageUrl ? (
                           <img src={imageUrl} alt="" loading="lazy" decoding="async" />
+                        ) : isLoading ? (
+                          <span className="featuredCategoryImageSkeleton" />
                         ) : (
                           <CategoryIcon aria-hidden="true" />
                         )}

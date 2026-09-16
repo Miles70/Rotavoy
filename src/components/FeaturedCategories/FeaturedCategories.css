@@ -228,6 +228,20 @@
   height: 28px;
 }
 
+.featuredCategoryImageSkeleton {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(100deg, #eceef3 20%, #ffffff 40%, #eceef3 60%);
+  background-size: 220% 100%;
+  animation: featuredCategoryShimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes featuredCategoryShimmer {
+  to {
+    background-position-x: -220%;
+  }
+}
+
 .featuredCategoryPreviewCard1 {
   left: 1%;
   z-index: 1;

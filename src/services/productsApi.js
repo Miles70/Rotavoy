@@ -314,6 +314,23 @@ export async function getStoreProducts({
   };
 }
 
+export async function getFeaturedCategoryProducts(language = "en") {
+  const normalizedLanguage = normalizeLanguage(language);
+  const query = new URLSearchParams({ language: normalizedLanguage });
+  const data = await storeRequest(`/products/featured-categories?${query.toString()}`);
+  const categories = {};
+
+  for (const [groupKey, groupData] of Object.entries(data.categories || {})) {
+    categories[groupKey] = {
+      total: Number(groupData?.total || 0),
+      products: (groupData?.products || []).map((product) =>
+        normalizeProduct(product, normalizedLanguage)),
+    };
+  }
+
+  return { ...data, categories };
+}
+
 export async function getStoreProduct(productKey, language = "en") {
   const normalizedLanguage = normalizeLanguage(language);
   const query = new URLSearchParams({ language: normalizedLanguage });
