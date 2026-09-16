@@ -91,8 +91,13 @@ export async function archiveExactCjDuplicates({ apply = false } = {}) {
     };
   });
   const duplicateIds = decisions.flatMap((decision) => decision.duplicates.map((product) => product._id));
+  const duplicateIdSet = new Set(duplicateIds.map(String));
+  const brokenVariants = audit.brokenVariants.filter(
+    (product) => !duplicateIdSet.has(String(product._id)),
+  );
 
   let archivedCount = 0;
+  let archivedBrokenCount = 0;
   if (apply && duplicateIds.length) {
     const archivedAt = new Date();
     const operations = decisions.flatMap((decision) => decision.duplicates.map((duplicate) => ({
@@ -112,14 +117,34 @@ export async function archiveExactCjDuplicates({ apply = false } = {}) {
     archivedCount = result.modifiedCount || 0;
   }
 
+  if (apply && brokenVariants.length) {
+    const archivedAt = new Date();
+    const operations = brokenVariants.map((product) => ({
+      updateOne: {
+        filter: { _id: product._id, isActive: true },
+        update: {
+          $set: {
+            isActive: false,
+            "contentMeta.catalogArchiveReason": "broken-cj-variant",
+            "contentMeta.catalogArchivedAt": archivedAt,
+          },
+        },
+      },
+    }));
+    const result = await Product.bulkWrite(operations, { ordered: false });
+    archivedBrokenCount = result.modifiedCount || 0;
+  }
+
   return {
     mode: apply ? "apply" : "dry-run",
     checkedRows: audit.checkedRows,
     exactDuplicateGroups: decisions.length,
     duplicateRows: duplicateIds.length,
-    archivedCount,
+    archivedDuplicateCount: archivedCount,
+    archivedBrokenCount,
+    archivedTotal: archivedCount + archivedBrokenCount,
     conflictingVariantIdGroups: audit.conflictingGroups.length,
-    brokenVariantRows: audit.brokenVariants.length,
+    brokenVariantRows: brokenVariants.length,
     decisions: decisions.map((decision) => ({
       supplierVariantId: decision.supplierVariantId,
       keep: decision.survivor.key,
@@ -130,7 +155,7 @@ export async function archiveExactCjDuplicates({ apply = false } = {}) {
       parentIds: group.parentIds,
       keys: group.products.map((product) => product.key),
     })),
-    brokenVariants: audit.brokenVariants.map((product) => ({
+    brokenVariants: brokenVariants.map((product) => ({
       key: product.key,
       supplierProductId: product.supplierProductId,
       supplierVariantId: product.supplierVariantId,
