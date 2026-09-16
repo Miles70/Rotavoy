@@ -19,6 +19,7 @@ const MAX_CJ_PRODUCT_IMAGES = 8;
 const MAX_CJ_LIST_PAGE_SIZE = 100;
 const MAX_CJ_LIST_PAGE = 1000;
 const MAX_CATALOG_TARGET = 5_000;
+const MAX_CJ_EXACT_IMPORT_PRODUCTS = 100;
 
 function parsePositiveInt(value, fallback, max = 100) {
   const parsed = Number.parseInt(value, 10);
@@ -574,6 +575,66 @@ async function syncOneProduct(listProduct, options) {
     upserted,
     activeVariants,
     skipped: upserted > 0 ? 0 : 1,
+  };
+}
+
+export async function syncCjProductsByIds(productIds = []) {
+  const normalizedIds = [...new Set(
+    (Array.isArray(productIds) ? productIds : [productIds])
+      .map((value) => String(value || "").trim())
+      .filter(Boolean),
+  )];
+
+  if (normalizedIds.length > MAX_CJ_EXACT_IMPORT_PRODUCTS) {
+    throw new Error(
+      `Exact CJ import is limited to ${MAX_CJ_EXACT_IMPORT_PRODUCTS} products per run.`,
+    );
+  }
+
+  const options = {
+    markupMultiplier: getMarkupMultiplier(),
+    originCountryCode: String(process.env.CJ_FROM_COUNTRY_CODE || "CN").toUpperCase(),
+  };
+  const results = [];
+  let importedProducts = 0;
+  let failedProducts = 0;
+  let skippedProducts = 0;
+  let upsertedVariants = 0;
+  let activeVariants = 0;
+
+  for (const pid of normalizedIds) {
+    try {
+      const result = await syncOneProduct({ id: pid, pid }, options);
+      importedProducts += result.skipped ? 0 : 1;
+      skippedProducts += result.skipped;
+      upsertedVariants += result.upserted;
+      activeVariants += result.activeVariants;
+      results.push({
+        pid,
+        status: result.skipped ? "skipped" : "imported",
+        upsertedVariants: result.upserted,
+        activeVariants: result.activeVariants,
+      });
+    } catch (error) {
+      failedProducts += 1;
+      results.push({
+        pid,
+        status: "failed",
+        error: String(error?.message || error),
+      });
+    }
+  }
+
+  return {
+    requestedProducts: normalizedIds.length,
+    importedProducts,
+    failedProducts,
+    skippedProducts,
+    upsertedVariants,
+    activeVariants,
+    markupMultiplier: options.markupMultiplier,
+    originCountryCode: options.originCountryCode,
+    results,
   };
 }
 
