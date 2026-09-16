@@ -11,6 +11,7 @@
     "cj:bootstrap": "node src/scripts/bootstrapCjCatalog.js",
     "content:translate": "node src/scripts/backfillProductTranslations.js",
     "content:enrich": "node src/scripts/enrichProductContent.js",
+    "content:audit-languages": "node src/scripts/auditProductLanguages.js",
     "test": "node --test",
     "catalog:audit-duplicates": "node src/scripts/auditProductDuplicates.js",
     "catalog:cleanup-duplicates": "node src/scripts/cleanupProductDuplicates.js"
