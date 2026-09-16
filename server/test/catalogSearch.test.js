@@ -32,3 +32,24 @@ test("catalog search requires every meaningful word while allowing aliases acros
   assert.ok(conditions[0].$or.some((condition) => condition.title instanceof RegExp));
   assert.ok(conditions[1].$or.some((condition) => condition["translations.tr.title"] instanceof RegExp));
 });
+
+test("translated aliases cannot match generic words in product descriptions", () => {
+  const conditions = buildCatalogSearchConditions("telefon kılıfı", [
+    "title",
+    "description",
+    "translations.en.title",
+    "translations.en.description",
+  ]);
+  const secondWordMatches = conditions[1].$or;
+  const descriptionPatterns = secondWordMatches
+    .filter((condition) => condition.description)
+    .map((condition) => condition.description.source);
+  const titlePatterns = secondWordMatches
+    .filter((condition) => condition.title)
+    .map((condition) => condition.title.source);
+
+  assert.equal(descriptionPatterns.includes("case"), false);
+  assert.equal(descriptionPatterns.includes("cover"), false);
+  assert.equal(titlePatterns.includes("case"), true);
+  assert.equal(titlePatterns.includes("cover"), true);
+});

@@ -54,16 +54,39 @@ export function getCatalogSearchTermGroups(search) {
   });
 }
 
+function getDetailedSearchTermGroups(search) {
+  return getCatalogSearchTermGroups(search).map((terms) => {
+    const directSet = new Set([terms[0], ...stems(asciiFold(terms[0]))]);
+    const directTerms = terms.filter((term) => directSet.has(term));
+
+    return {
+      terms,
+      directTerms: directTerms.length ? directTerms : terms.slice(0, 1),
+      aliasTerms: terms.filter((term) => !directTerms.includes(term)),
+    };
+  });
+}
+
 function escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 export function buildCatalogSearchConditions(search, fields) {
   const safeFields = [...new Set(fields.filter(Boolean))];
-  return getCatalogSearchTermGroups(search).map((terms) => ({
-    $or: terms.flatMap((term) => {
+  const strongFields = safeFields.filter((field) =>
+    /(^|\.)(key|title|brand|categoryKey|categoryLabel)$/.test(field),
+  );
+
+  return getDetailedSearchTermGroups(search).map(({ directTerms, aliasTerms }) => ({
+    $or: [
+      ...directTerms.flatMap((term) => {
+        const pattern = new RegExp(escapeRegex(term), "i");
+        return safeFields.map((field) => ({ [field]: pattern }));
+      }),
+      ...aliasTerms.flatMap((term) => {
       const pattern = new RegExp(escapeRegex(term), "i");
-      return safeFields.map((field) => ({ [field]: pattern }));
-    }),
+        return strongFields.map((field) => ({ [field]: pattern }));
+      }),
+    ],
   }));
 }
