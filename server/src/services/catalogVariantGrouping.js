@@ -15,9 +15,35 @@ function toGroupingVariant(product) {
 }
 
 export async function groupExistingCjVariants() {
-  const products = await Product.find({
+  const pendingParentIds = await Product.distinct("supplierProductId", {
     source: "cj",
     supplierProductId: { $ne: "" },
+    supplierVariantId: { $ne: "" },
+    $or: [
+      { variantGroupKey: "" },
+      { variantGroupKey: null },
+      { variantGroupKey: { $exists: false } },
+    ],
+  });
+
+  const supplierProductIds = pendingParentIds
+    .map((value) => String(value || "").trim())
+    .filter(Boolean);
+
+  if (!supplierProductIds.length) {
+    return {
+      checkedCount: 0,
+      parentProductCount: 0,
+      modifiedCount: 0,
+    };
+  }
+
+  // Only load complete sibling sets for parents that actually have an
+  // ungrouped variant. Re-reading every CJ product on every server start made
+  // cold starts unnecessarily expensive once the catalog was already grouped.
+  const products = await Product.find({
+    source: "cj",
+    supplierProductId: { $in: supplierProductIds },
     supplierVariantId: { $ne: "" },
   })
     .select({
