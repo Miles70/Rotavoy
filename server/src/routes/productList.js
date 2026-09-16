@@ -1,10 +1,11 @@
 import { Router } from "express";
 import { Product } from "../models/Product.js";
 import { isCjConfigured } from "../services/cjApi.js";
+import { buildCatalogSearchConditions } from "../services/catalogSearch.js";
 import {
   buildGroupedStorefrontProduct,
   buildCatalogGroupSummaries,
-  getLocalizedSearchFields,
+  getAllLocalizedSearchFields,
   normalizeStorefrontLanguage,
   STOREFRONT_PRIVATE_FIELDS,
   trimStorefrontTranslations,
@@ -52,10 +53,6 @@ function cacheFeaturedCategories(cacheKey, value) {
     expiresAt: Date.now() + FEATURED_CATEGORY_CACHE_TTL_MS,
     value,
   });
-}
-
-function escapeRegex(value) {
-  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 async function getGroupedCjCatalog({ filter, sortMode, requestedPage, limit, language }) {
@@ -203,19 +200,20 @@ productListRouter.get("/", async (request, response, next) => {
     }
 
     if (search) {
-      const pattern = new RegExp(escapeRegex(search), "i");
-      filter.$or = [
-        { key: pattern },
-        { title: pattern },
-        { brand: pattern },
-        { categoryKey: pattern },
-        { categoryLabel: pattern },
-        { description: pattern },
-        { supplierProductId: pattern },
-        { supplierVariantId: pattern },
-        { supplierSku: pattern },
-        ...getLocalizedSearchFields(language).map((field) => ({ [field]: pattern })),
+      const searchFields = [
+        "key",
+        "title",
+        "brand",
+        "categoryKey",
+        "categoryLabel",
+        "description",
+        "features",
+        "supplierProductId",
+        "supplierVariantId",
+        "supplierSku",
+        ...getAllLocalizedSearchFields(),
       ];
+      filter.$and = buildCatalogSearchConditions(search, searchFields);
     }
 
     if (cjConfigured) {

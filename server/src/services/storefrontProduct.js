@@ -11,6 +11,8 @@ const SUPPORTED_PRODUCT_LANGUAGES = new Set([
   "it",
 ]);
 
+export const STOREFRONT_PRODUCT_LANGUAGES = [...SUPPORTED_PRODUCT_LANGUAGES];
+
 const STOREFRONT_PRIVATE_FIELD_NAMES = [
   "costPrice",
   "supplierContent",
@@ -41,6 +43,12 @@ export function getLocalizedSearchFields(language) {
     `translations.${safeLanguage}.variant`,
     `translations.${safeLanguage}.features`,
   ];
+}
+
+export function getAllLocalizedSearchFields() {
+  return STOREFRONT_PRODUCT_LANGUAGES.flatMap((language) =>
+    getLocalizedSearchFields(language),
+  );
 }
 
 export function sanitizeStorefrontProduct(product) {

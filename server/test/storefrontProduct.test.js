@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   buildCatalogGroupSummaries,
   buildGroupedStorefrontProduct,
+  getAllLocalizedSearchFields,
   getLocalizedSearchFields,
   normalizeStorefrontLanguage,
   rankRelatedCatalogGroups,
@@ -98,6 +99,14 @@ test("localized search targets only the active translation branch", () => {
   assert.ok(fields.includes("translations.tr.title"));
   assert.ok(fields.includes("translations.tr.features"));
   assert.equal(fields.some((field) => field.includes("translations.de")), false);
+});
+
+test("global storefront search covers every supported product language", () => {
+  const fields = getAllLocalizedSearchFields();
+  for (const language of ["en", "tr", "ru", "ar", "zh", "es", "pt", "fr", "de", "it"]) {
+    assert.ok(fields.includes(`translations.${language}.title`));
+    assert.ok(fields.includes(`translations.${language}.description`));
+  }
 });
 
 test("storefront payload applies requested translation and keeps English fallback only", () => {
