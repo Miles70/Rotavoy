@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   buildCatalogSearchConditions,
+  buildCatalogSearchExclusions,
   getCatalogSearchTermGroups,
 } from "../src/services/catalogSearch.js";
 
@@ -33,7 +34,7 @@ test("catalog search requires every meaningful word while allowing aliases acros
   assert.ok(conditions[1].$or.some((condition) => condition["translations.tr.title"] instanceof RegExp));
 });
 
-test("translated aliases cannot match generic words in product descriptions", () => {
+test("search terms and translated aliases cannot match generic words in descriptions", () => {
   const conditions = buildCatalogSearchConditions("telefon kılıfı", [
     "title",
     "description",
@@ -48,8 +49,27 @@ test("translated aliases cannot match generic words in product descriptions", ()
     .filter((condition) => condition.title)
     .map((condition) => condition.title.source);
 
-  assert.equal(descriptionPatterns.includes("case"), false);
-  assert.equal(descriptionPatterns.includes("cover"), false);
-  assert.equal(titlePatterns.includes("case"), true);
-  assert.equal(titlePatterns.includes("cover"), true);
+  assert.equal(descriptionPatterns.some((pattern) => pattern.includes("case")), false);
+  assert.equal(descriptionPatterns.some((pattern) => pattern.includes("cover")), false);
+  assert.equal(descriptionPatterns.some((pattern) => pattern.includes("kılıfı")), false);
+  assert.equal(titlePatterns.some((pattern) => pattern.includes("case")), true);
+  assert.equal(titlePatterns.some((pattern) => pattern.includes("cover")), true);
+});
+
+test("catalog search uses whole words and excludes products explicitly sold without a case", () => {
+  const fields = ["title", "translations.tr.title", "translations.en.title"];
+  const conditions = buildCatalogSearchConditions("telefon kılıfı", fields);
+  const casePatterns = conditions[1].$or
+    .filter((condition) => condition["translations.tr.title"])
+    .map((condition) => condition["translations.tr.title"]);
+  const exclusions = buildCatalogSearchExclusions("telefon kılıfı", fields);
+
+  assert.equal(casePatterns.some((pattern) => pattern.test("Kılıfsız ekran temizleyici")), false);
+  assert.equal(casePatterns.some((pattern) => pattern.test("Telefon kılıfı")), true);
+  assert.ok(exclusions.some((condition) =>
+    condition["translations.tr.title"]?.test("Kılıfsız ekran temizleyici"),
+  ));
+  assert.ok(exclusions.some((condition) =>
+    condition["translations.en.title"]?.test("Phone cleaner without case"),
+  ));
 });

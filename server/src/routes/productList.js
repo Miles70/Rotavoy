@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { Product } from "../models/Product.js";
 import { isCjConfigured } from "../services/cjApi.js";
-import { buildCatalogSearchConditions } from "../services/catalogSearch.js";
+import {
+  buildCatalogSearchConditions,
+  buildCatalogSearchExclusions,
+} from "../services/catalogSearch.js";
 import {
   buildGroupedStorefrontProduct,
   buildCatalogGroupSummaries,
@@ -214,6 +217,8 @@ productListRouter.get("/", async (request, response, next) => {
         ...getAllLocalizedSearchFields(),
       ];
       filter.$and = buildCatalogSearchConditions(search, searchFields);
+      const exclusions = buildCatalogSearchExclusions(search, searchFields);
+      if (exclusions.length) filter.$nor = exclusions;
     }
 
     if (cjConfigured) {

@@ -71,22 +71,43 @@ function escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+function exactWordPattern(term) {
+  return new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegex(term)}([^\\p{L}\\p{N}]|$)`, "iu");
+}
+
+function isStrongSearchField(field) {
+  return /(^|\.)(key|title|brand|categoryKey|categoryLabel)$/.test(field);
+}
+
 export function buildCatalogSearchConditions(search, fields) {
   const safeFields = [...new Set(fields.filter(Boolean))];
-  const strongFields = safeFields.filter((field) =>
-    /(^|\.)(key|title|brand|categoryKey|categoryLabel)$/.test(field),
-  );
+  const strongFields = safeFields.filter(isStrongSearchField);
 
   return getDetailedSearchTermGroups(search).map(({ directTerms, aliasTerms }) => ({
     $or: [
       ...directTerms.flatMap((term) => {
-        const pattern = new RegExp(escapeRegex(term), "i");
-        return safeFields.map((field) => ({ [field]: pattern }));
+        const pattern = exactWordPattern(term);
+        return strongFields.map((field) => ({ [field]: pattern }));
       }),
       ...aliasTerms.flatMap((term) => {
-      const pattern = new RegExp(escapeRegex(term), "i");
+        const pattern = exactWordPattern(term);
         return strongFields.map((field) => ({ [field]: pattern }));
       }),
     ],
   }));
+}
+
+export function buildCatalogSearchExclusions(search, fields) {
+  const normalizedTerms = getCatalogSearchTermGroups(search)
+    .flat()
+    .map(asciiFold);
+  const titleFields = [...new Set(fields.filter((field) => /(^|\.)title$/.test(field)))];
+  const exclusions = [];
+
+  if (normalizedTerms.some((term) => ["kilif", "kilifi", "case", "cover"].includes(term))) {
+    const negativeCase = /(kılıfsız|kilifsiz|without\s+(?:a\s+)?case|no\s+case|case[-\s]?less)/iu;
+    exclusions.push(...titleFields.map((field) => ({ [field]: negativeCase })));
+  }
+
+  return exclusions;
 }
