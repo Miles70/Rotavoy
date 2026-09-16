@@ -8,6 +8,7 @@
     "start": "node src/index.js",
     "seed": "node src/scripts/seedProducts.js",
     "cj:sync": "node src/scripts/syncCjProducts.js",
+    "cj:import": "node src/scripts/importCjProductsById.js",
     "cj:bootstrap": "node src/scripts/bootstrapCjCatalog.js",
     "content:translate": "node src/scripts/backfillProductTranslations.js",
     "content:enrich": "node src/scripts/enrichProductContent.js",
