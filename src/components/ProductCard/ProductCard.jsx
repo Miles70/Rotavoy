@@ -122,7 +122,7 @@ function ProductCard({ product }) {
 
   function handleAddToCart() {
     if (hasMultipleVariants) {
-      navigate(productPath);
+      navigate(productPath, { state: { product, language } });
       return;
     }
 
@@ -212,6 +212,7 @@ function ProductCard({ product }) {
       >
         <Link
           to={productPath}
+          state={{ product, language }}
           className="productImageLink"
           aria-label={product.title}
         >
@@ -278,16 +279,16 @@ function ProductCard({ product }) {
 
       <div className="productContent">
         {showVariantLabel ? (
-          <Link to={productPath} className="productVariantSummary" title={variantLabel}>
+          <Link to={productPath} state={{ product, language }} className="productVariantSummary" title={variantLabel}>
             {variantLabel}
           </Link>
         ) : null}
-        <Link to={productPath} className="productTitleLink">
+        <Link to={productPath} state={{ product, language }} className="productTitleLink">
           <h3>{product.title}</h3>
         </Link>
 
         <div className="productBottom">
-          <Link to={productPath} className="productPriceBlock">
+          <Link to={productPath} state={{ product, language }} className="productPriceBlock">
             <strong>{displayPrice}</strong>
             {displayOldPrice ? <del>{formatPrice(displayOldPrice)}</del> : null}
           </Link>
