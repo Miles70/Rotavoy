@@ -241,6 +241,7 @@ function ProductDetailsLive() {
 
         setProduct(data.product);
         setVariants(data.variants || []);
+        setIsLoading(false);
 
         try {
           const relatedData = await getRelatedStoreProducts(data.product.key, language, 8);
