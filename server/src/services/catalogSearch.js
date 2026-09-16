@@ -8,7 +8,7 @@ const SEARCH_ALIASES = {
   charger: ["charger", "charging", "şarj", "sarj"],
   kulaklik: ["kulaklık", "kulaklik", "earphone", "earphones", "headphone", "headphones", "earbuds"],
   ayakkabi: ["ayakkabı", "ayakkabi", "shoe", "shoes", "sneaker", "sneakers"],
-  canta: ["çanta", "canta", "bag", "backpack", "handbag"],
+  canta: ["çanta", "çantalar", "canta", "cantalar", "bag", "bags", "backpack", "backpacks", "handbag", "handbags"],
   saat: ["saat", "watch", "smartwatch"],
   mutfak: ["mutfak", "kitchen"],
   oyuncak: ["oyuncak", "toy", "toys"],
@@ -120,6 +120,43 @@ export function buildCatalogSearchConditions(search, fields) {
       }),
     ],
   }));
+}
+
+export function buildCatalogProductTypeCondition(search, fields) {
+  const termGroups = getDetailedSearchTermGroups(search);
+  const productTypeTerms = termGroups.at(-1);
+  if (!productTypeTerms) return null;
+
+  const safeFields = [...new Set(fields.filter(Boolean))];
+  const categoryFields = safeFields.filter((field) => /(^|\.)categoryLabel$/.test(field));
+  const titleFields = safeFields.filter((field) => /(^|\.)title$/.test(field));
+  const terms = [...productTypeTerms.directTerms, ...productTypeTerms.aliasTerms];
+  const matchesAnyField = (targetFields) => ({
+    $or: terms.flatMap((term) => {
+      const pattern = exactWordPattern(term);
+      return targetFields.map((field) => ({ [field]: pattern }));
+    }),
+  });
+
+  if (!categoryFields.length) return matchesAnyField(titleFields);
+
+  return {
+    $or: [
+      matchesAnyField(categoryFields),
+      {
+        $and: [
+          {
+            $or: [
+              { categoryLabel: { $exists: false } },
+              { categoryLabel: "" },
+              { categoryLabel: /^general$/i },
+            ],
+          },
+          matchesAnyField(titleFields),
+        ],
+      },
+    ],
+  };
 }
 
 export function buildCatalogSearchExclusions(search, fields) {

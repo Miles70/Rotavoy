@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   buildCatalogSearchConditions,
   buildCatalogSearchExclusions,
+  buildCatalogProductTypeCondition,
   getCatalogSearchRecommendationCategories,
   getCatalogSearchTermGroups,
 } from "../src/services/catalogSearch.js";
@@ -93,4 +94,24 @@ test("shoe searches exclude bags, luggage, storage products and organizers", () 
   assert.equal(exclusions.some((condition) =>
     Object.values(condition).some((pattern) => pattern.test("Kadın Spor Ayakkabı"))), false);
   assert.deepEqual(getCatalogSearchRecommendationCategories("ayakkabı"), ["fashion"]);
+});
+
+test("every search verifies the requested product type against the leaf category", () => {
+  const fields = [
+    "title",
+    "categoryLabel",
+    "translations.tr.title",
+    "translations.tr.categoryLabel",
+    "translations.en.title",
+    "translations.en.categoryLabel",
+  ];
+  const bagCondition = buildCatalogProductTypeCondition("çanta", fields);
+  const shoeCondition = buildCatalogProductTypeCondition("ayakkabı", fields);
+  const bagPatterns = bagCondition.$or[0].$or.map((condition) => Object.values(condition)[0]);
+  const shoePatterns = shoeCondition.$or[0].$or.map((condition) => Object.values(condition)[0]);
+
+  assert.ok(bagPatterns.some((pattern) => pattern.test("Bags & Backpacks")));
+  assert.equal(bagPatterns.some((pattern) => pattern.test("Women's Shoes")), false);
+  assert.ok(shoePatterns.some((pattern) => pattern.test("Women's Shoes")));
+  assert.equal(shoePatterns.some((pattern) => pattern.test("Bags & Backpacks")), false);
 });

@@ -4,6 +4,7 @@ import { isCjConfigured } from "../services/cjApi.js";
 import {
   buildCatalogSearchConditions,
   buildCatalogSearchExclusions,
+  buildCatalogProductTypeCondition,
   getCatalogSearchRecommendationCategories,
 } from "../services/catalogSearch.js";
 import {
@@ -219,6 +220,8 @@ productListRouter.get("/", async (request, response, next) => {
 
     if (search) {
       filter.$and = buildCatalogSearchConditions(search, SEARCH_FIELDS);
+      const productTypeCondition = buildCatalogProductTypeCondition(search, SEARCH_FIELDS);
+      if (productTypeCondition) filter.$and.push(productTypeCondition);
       const exclusions = buildCatalogSearchExclusions(search, SEARCH_FIELDS);
       if (exclusions.length) filter.$nor = exclusions;
     }
@@ -233,14 +236,17 @@ productListRouter.get("/", async (request, response, next) => {
       });
 
       let recommendations = [];
-      const recommendationCategories = getCatalogSearchRecommendationCategories(search);
+      const recommendationCategories = [...new Set([
+        ...grouped.products.map((product) => product.categoryKey).filter(Boolean),
+        ...getCatalogSearchRecommendationCategories(search),
+      ])];
       if (search && requestedPage === 1 && recommendationCategories.length) {
         const recommendationFilter = {
           isActive: true,
           source: { $in: ["cj"] },
           stock: { $gt: 0 },
           categoryKey: { $in: recommendationCategories },
-          $nor: buildCatalogSearchConditions(search, SEARCH_FIELDS),
+          $nor: [buildCatalogProductTypeCondition(search, SEARCH_FIELDS)].filter(Boolean),
         };
         const recommendationResult = await getGroupedCjCatalog({
           filter: recommendationFilter,
@@ -275,14 +281,17 @@ productListRouter.get("/", async (request, response, next) => {
       .lean();
 
     let recommendations = [];
-    const recommendationCategories = getCatalogSearchRecommendationCategories(search);
+    const recommendationCategories = [...new Set([
+      ...products.map((product) => product.categoryKey).filter(Boolean),
+      ...getCatalogSearchRecommendationCategories(search),
+    ])];
     if (search && requestedPage === 1 && recommendationCategories.length) {
       const recommendationFilter = {
         isActive: true,
         source: { $in: LEGACY_SOURCES },
         stock: { $gt: 0 },
         categoryKey: { $in: recommendationCategories },
-        $nor: buildCatalogSearchConditions(search, SEARCH_FIELDS),
+        $nor: [buildCatalogProductTypeCondition(search, SEARCH_FIELDS)].filter(Boolean),
       };
       const recommendationProducts = await Product.find(recommendationFilter)
         .select(STOREFRONT_PRIVATE_FIELDS)
