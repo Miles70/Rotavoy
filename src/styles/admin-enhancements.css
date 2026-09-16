@@ -163,6 +163,7 @@
 
 .admin-order-modal { width: min(100%, 880px); }
 .admin-product-create-modal { width: min(100%, 820px); }
+.admin-product-edit-modal { width: min(100%, 900px); }
 
 .admin-modal-header {
   position: sticky;
@@ -335,6 +336,7 @@
 
 .admin-create-product-form .admin-field > input,
 .admin-create-product-form .admin-field > select,
+.admin-create-product-form .admin-field > textarea,
 .admin-input-with-icon {
   width: 100%;
   min-height: 48px;
@@ -345,14 +347,17 @@
 }
 
 .admin-create-product-form .admin-field > input,
-.admin-create-product-form .admin-field > select {
+.admin-create-product-form .admin-field > select,
+.admin-create-product-form .admin-field > textarea {
   padding: 0 13px;
 }
 
 .admin-create-product-form .admin-field > select { cursor: pointer; }
+.admin-create-product-form .admin-field > textarea { min-height: 110px; resize: vertical; padding: 12px 14px; }
 
 .admin-create-product-form .admin-field > input:focus,
 .admin-create-product-form .admin-field > select:focus,
+.admin-create-product-form .admin-field > textarea:focus,
 .admin-input-with-icon:focus-within {
   outline: none;
   border-color: rgba(240, 24, 96, .65);

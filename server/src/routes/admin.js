@@ -1,11 +1,13 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
+import mongoose from "mongoose";
 import { requireAdmin } from "../middleware/requireAdmin.js";
 import { Order } from "../models/Order.js";
 import { Product } from "../models/Product.js";
 import { releaseOrderStock } from "../services/stockReservation.js";
 import {
   createAdminToken,
+  revokeAdminToken,
   verifyAdminCredentials,
 } from "../utils/adminAuth.js";
 
@@ -111,7 +113,42 @@ adminRouter.post("/login", loginLimiter, (request, response, next) => {
 adminRouter.use(requireAdmin);
 
 adminRouter.get("/session", (request, response) => {
-  response.json({ admin: { email: request.admin.email } });
+  response.json({
+    admin: { email: request.admin.email },
+    session: { expiresAt: new Date(request.admin.exp * 1000).toISOString() },
+  });
+});
+
+adminRouter.post("/logout", (request, response) => {
+  revokeAdminToken(request.adminToken);
+  response.json({ loggedOut: true });
+});
+
+adminRouter.get("/system-status", async (request, response, next) => {
+  try {
+    const [products, orders] = await Promise.all([
+      Product.estimatedDocumentCount(),
+      Order.estimatedDocumentCount(),
+    ]);
+
+    response.json({
+      api: { ok: true, uptimeSeconds: Math.floor(process.uptime()) },
+      database: {
+        connected: mongoose.connection.readyState === 1,
+        name: mongoose.connection.name || "",
+      },
+      catalog: { products },
+      commerce: { orders },
+      configuration: {
+        adminAuth: Boolean(process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD),
+        cj: Boolean(process.env.CJ_API_KEY || process.env.CJ_ACCESS_TOKEN),
+        crypto: Boolean(process.env.ROTAVOY_PAYMENT_WALLET),
+      },
+      checkedAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 adminRouter.get("/dashboard", async (request, response, next) => {
@@ -170,13 +207,19 @@ adminRouter.get("/dashboard", async (request, response, next) => {
 adminRouter.get("/orders", async (request, response, next) => {
   try {
     const status = String(request.query.status || "").trim();
+    const paymentStatus = String(request.query.paymentStatus || "").trim();
     const search = String(request.query.search || "").trim();
-    const requestedLimit = Number(request.query.limit) || 100;
-    const limit = Math.min(Math.max(requestedLimit, 1), 200);
+    const requestedPage = Number.parseInt(request.query.page, 10) || 1;
+    const requestedLimit = Number.parseInt(request.query.limit, 10) || 25;
+    const limit = Math.min(Math.max(requestedLimit, 5), 100);
     const filter = {};
 
     if (status && orderStatuses.includes(status)) {
       filter.status = status;
+    }
+
+    if (paymentStatus && paymentStatuses.includes(paymentStatus)) {
+      filter.paymentStatus = paymentStatus;
     }
 
     if (search) {
@@ -189,8 +232,25 @@ adminRouter.get("/orders", async (request, response, next) => {
       ];
     }
 
-    const orders = await Order.find(filter).sort({ createdAt: -1 }).limit(limit).lean();
-    response.json({ orders });
+    const total = await Order.countDocuments(filter);
+    const totalPages = Math.max(Math.ceil(total / limit), 1);
+    const page = Math.min(Math.max(requestedPage, 1), totalPages);
+    const orders = await Order.find(filter)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
+    response.json({
+      orders,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasPreviousPage: page > 1,
+        hasNextPage: page < totalPages,
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -397,10 +457,29 @@ adminRouter.patch("/products/:productKey", async (request, response, next) => {
     const updates = {};
     const body = request.body || {};
 
-    for (const field of ["title", "categoryKey", "image", "imageUrl"]) {
+    for (const field of [
+      "title",
+      "description",
+      "brand",
+      "categoryKey",
+      "categoryLabel",
+      "image",
+      "imageUrl",
+      "videoUrl",
+    ]) {
       if (body[field] !== undefined) {
         updates[field] = String(body[field]).trim();
       }
+    }
+
+    if (body.features !== undefined) {
+      if (!Array.isArray(body.features)) {
+        throw createHttpError("Product features must be an array.", 400);
+      }
+      updates.features = body.features
+        .map((item) => String(item).trim())
+        .filter(Boolean)
+        .slice(0, 20);
     }
 
     if (body.images !== undefined) {

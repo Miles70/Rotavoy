@@ -4,6 +4,7 @@ import {
   getAdminSession,
   getStoredAdminToken,
   loginAdmin,
+  logoutAdmin,
   storeAdminToken,
 } from "../services/adminApi";
 
@@ -57,11 +58,14 @@ export function AdminAuthProvider({ children }) {
     return data.admin;
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    if (token) {
+      await logoutAdmin(token).catch(() => {});
+    }
     clearAdminToken();
     setToken("");
     setAdmin(null);
-  }, []);
+  }, [token]);
 
   const value = useMemo(
     () => ({ token, admin, isChecking, login, logout }),

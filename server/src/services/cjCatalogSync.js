@@ -708,7 +708,6 @@ export async function syncCjCatalog() {
     batchSize,
     pageSize,
     maxPagesPerKeyword,
-    maxVariantsPerProduct,
     markupMultiplier: options.markupMultiplier,
     originCountryCode: options.originCountryCode,
     productLanguages: getRotavoyProductLanguages(),

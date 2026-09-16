@@ -220,6 +220,8 @@
 .admin-topbar > div > span { color: #70798b; font-size: 11px; }
 .admin-live-pill { display: flex; align-items: center; gap: 7px; margin-left: auto; border: 1px solid rgba(37,199,131,.20); border-radius: 999px; color: #7ce3b3; background: rgba(37,199,131,.08); padding: 7px 11px; font-size: 11px; font-weight: 750; }
 .admin-live-pill span { width: 7px; height: 7px; border-radius: 50%; background: #25c783; box-shadow: 0 0 0 4px rgba(37,199,131,.10); }
+.admin-live-pill.is-offline { border-color: rgba(245,184,61,.24); color: #ffd277; background: rgba(245,184,61,.08); }
+.admin-live-pill.is-offline span { background: #f5b83d; box-shadow: 0 0 0 4px rgba(245,184,61,.10); }
 .admin-menu-button { display: none; margin-right: 12px; }
 .admin-icon-button { border: 1px solid var(--admin-border); border-radius: 10px; color: #c8ced9; background: rgba(255,255,255,.04); padding: 9px; }
 .admin-content { width: min(100%, 1500px); margin: 0 auto; padding: 34px; }
@@ -296,6 +298,12 @@
 .admin-settings-card p { margin: 0 0 8px; color: #e8eaf0; }
 .admin-settings-card span { display: block; font-size: 12px; }
 .admin-settings-card-wide { grid-column: 1 / -1; }
+.admin-system-state { display: inline-flex !important; align-items: center; gap: 6px; width: fit-content; margin-bottom: 8px; border-radius: 999px; padding: 6px 9px; font-weight: 800; }
+.admin-system-state.is-ok { color: #73e1ac; background: rgba(37,199,131,.11); }
+.admin-system-state.is-error { color: #ff96a3; background: rgba(255,67,88,.11); }
+.admin-integration-states { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 4px; }
+.admin-filter-toolbar { justify-content: flex-start; flex-wrap: wrap; }
+.admin-products-table td:last-child { display: flex; align-items: center; gap: 7px; }
 .admin-code-line { display: inline-block; margin: 0 8px 10px 0 !important; border: 1px solid var(--admin-border); border-radius: 8px; color: #ff7fa7 !important; background: rgba(0,0,0,.22); padding: 7px 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; }
 .admin-loading-screen { display: grid; place-items: center; align-content: center; gap: 13px; }
 .admin-loading-screen p { color: #8b94a5; }

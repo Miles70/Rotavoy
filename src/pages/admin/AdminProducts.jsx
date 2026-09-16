@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Package, Plus, RefreshCw, Save, Search, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, FilePenLine, Package, Plus, RefreshCw, Save, Search, X } from "lucide-react";
 import ProductCreateModal from "../../components/admin/ProductCreateModal";
+import ProductEditModal from "../../components/admin/ProductEditModal";
 import { useAdminAuth } from "../../context/AdminAuthContext";
 import {
   createAdminProduct,
@@ -64,10 +65,16 @@ function AdminProducts() {
   const [searchInput, setSearchInput] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [sourceFilter, setSourceFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [stockFilter, setStockFilter] = useState("");
+  const [filterOptions, setFilterOptions] = useState({ categories: [], sources: [] });
   const [dirtyKeys, setDirtyKeys] = useState(() => new Set());
   const [savingKey, setSavingKey] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -83,12 +90,17 @@ function AdminProducts() {
           page,
           limit: PRODUCTS_PER_PAGE,
           search: appliedSearch,
+          category: categoryFilter,
+          source: sourceFilter,
+          status: statusFilter,
+          stock: stockFilter,
         });
 
         if (isCancelled) return;
 
         setProducts(data.products || []);
         setPagination(data.pagination || initialPagination);
+        setFilterOptions(data.filters || { categories: [], sources: [] });
         setDirtyKeys(new Set());
 
         if (data.pagination?.page && data.pagination.page !== page) {
@@ -110,7 +122,7 @@ function AdminProducts() {
     return () => {
       isCancelled = true;
     };
-  }, [token, page, appliedSearch, refreshKey]);
+  }, [token, page, appliedSearch, categoryFilter, sourceFilter, statusFilter, stockFilter, refreshKey]);
 
   function confirmDiscardChanges() {
     if (dirtyKeys.size === 0) return true;
@@ -199,19 +211,25 @@ function AdminProducts() {
         next.delete(product.key);
         return next;
       });
-      setPagination((current) => ({
-        ...current,
-        activeTotal:
-          Boolean(data.product.isActive) === Boolean(product.isActive)
-            ? current.activeTotal
-            : current.activeTotal + (data.product.isActive ? 1 : -1),
-      }));
       setSuccess(`${product.title} güncellendi.`);
+      setRefreshKey((current) => current + 1);
     } catch (requestError) {
       setError(requestError.message);
     } finally {
       setSavingKey("");
     }
+  }
+
+  async function saveProductContent(productKey, payload) {
+    const data = await updateAdminProduct(token, productKey, payload);
+    setProducts((current) => current.map((item) => (item.key === productKey ? data.product : item)));
+    setSuccess(`${data.product.title} içeriği güncellendi.`);
+  }
+
+  function changeFilter(setter, value) {
+    if (!confirmDiscardChanges()) return;
+    setter(value);
+    setPage(1);
   }
 
   const firstVisibleItem = pagination.total === 0 ? 0 : (pagination.page - 1) * pagination.limit + 1;
@@ -261,6 +279,23 @@ function AdminProducts() {
           <span>{pagination.catalogTotal} toplam</span>
           <span>{dirtyKeys.size} kaydedilmemiş</span>
         </div>
+      </section>
+
+      <section className="admin-toolbar admin-filter-toolbar">
+        <select value={categoryFilter} onChange={(event) => changeFilter(setCategoryFilter, event.target.value)}>
+          <option value="">Tüm kategoriler</option>
+          {filterOptions.categories.map((value) => <option key={value} value={value}>{value}</option>)}
+        </select>
+        <select value={sourceFilter} onChange={(event) => changeFilter(setSourceFilter, event.target.value)}>
+          <option value="">Tüm kaynaklar</option>
+          {filterOptions.sources.map((value) => <option key={value} value={value}>{value}</option>)}
+        </select>
+        <select value={statusFilter} onChange={(event) => changeFilter(setStatusFilter, event.target.value)}>
+          <option value="">Tüm yayın durumları</option><option value="active">Yayında</option><option value="inactive">Kapalı</option>
+        </select>
+        <select value={stockFilter} onChange={(event) => changeFilter(setStockFilter, event.target.value)}>
+          <option value="">Tüm stoklar</option><option value="out">Stok yok</option><option value="low">Düşük stok (1–10)</option><option value="available">Stok yeterli (10+)</option>
+        </select>
       </section>
 
       {appliedSearch ? (
@@ -369,6 +404,9 @@ function AdminProducts() {
                         <Save size={16} />
                         {savingKey === product.key ? "..." : "Kaydet"}
                       </button>
+                      <button className="admin-detail-button" type="button" onClick={() => setEditingProduct(product)}>
+                        <FilePenLine size={16} /> Detay
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -433,6 +471,9 @@ function AdminProducts() {
 
       {isCreateOpen ? (
         <ProductCreateModal onClose={() => setIsCreateOpen(false)} onCreate={createProduct} />
+      ) : null}
+      {editingProduct ? (
+        <ProductEditModal product={editingProduct} onClose={() => setEditingProduct(null)} onSave={saveProductContent} />
       ) : null}
     </div>
   );

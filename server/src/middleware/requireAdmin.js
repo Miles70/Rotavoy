@@ -9,7 +9,8 @@ export function requireAdmin(request, response, next) {
       return response.status(401).json({ message: "Admin login is required." });
     }
 
-    request.admin = verifyAdminToken(match[1]);
+    request.adminToken = match[1];
+    request.admin = verifyAdminToken(request.adminToken);
     return next();
   } catch (error) {
     return next(error);

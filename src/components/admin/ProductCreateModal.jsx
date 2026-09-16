@@ -134,8 +134,18 @@ function ProductCreateModal({ onClose, onCreate }) {
               />
               <datalist id="admin-product-categories">
                 <option value="electronics" />
+                <option value="mobile" />
                 <option value="fashion" />
                 <option value="home" />
+                <option value="office" />
+                <option value="appliances" />
+                <option value="automotive" />
+                <option value="tools" />
+                <option value="baby" />
+                <option value="toys" />
+                <option value="sports" />
+                <option value="beauty" />
+                <option value="pets" />
                 <option value="gaming" />
               </datalist>
             </label>

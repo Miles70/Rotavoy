@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Eye, RefreshCw, Search, ShoppingCart, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, RefreshCw, Search, ShoppingCart, Trash2, X } from "lucide-react";
 import OrderDetailsModal from "../../components/admin/OrderDetailsModal";
 import { useAdminAuth } from "../../context/AdminAuthContext";
 import {
@@ -20,6 +20,7 @@ const orderStatusOptions = [
   "expired",
 ];
 const paymentStatusOptions = ["unpaid", "pending", "paid", "failed", "refunded"];
+const ORDERS_PER_PAGE = 25;
 
 function formatMoney(value, currency = "USD") {
   return new Intl.NumberFormat("en-US", {
@@ -40,7 +41,18 @@ function AdminOrders() {
   const selectAllRef = useRef(null);
   const [orders, setOrders] = useState([]);
   const [statusFilter, setStatusFilter] = useState("");
-  const [search, setSearch] = useState("");
+  const [paymentFilter, setPaymentFilter] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [appliedSearch, setAppliedSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: ORDERS_PER_PAGE,
+    total: 0,
+    totalPages: 1,
+    hasPreviousPage: false,
+    hasNextPage: false,
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [updatingOrder, setUpdatingOrder] = useState("");
   const [deletingOrder, setDeletingOrder] = useState("");
@@ -56,13 +68,23 @@ function AdminOrders() {
     setError("");
 
     try {
-      const data = await getAdminOrders(token, statusFilter);
+      const data = await getAdminOrders(token, {
+        page,
+        limit: ORDERS_PER_PAGE,
+        status: statusFilter,
+        paymentStatus: paymentFilter,
+        search: appliedSearch,
+      });
       const nextOrders = data.orders || [];
       const availableOrderNumbers = new Set(
         nextOrders.map((order) => order.orderNumber),
       );
 
       setOrders(nextOrders);
+      setPagination((current) => data.pagination || current);
+      if (data.pagination?.page && data.pagination.page !== page) {
+        setPage(data.pagination.page);
+      }
       setSelectedOrderNumbers(
         (current) =>
           new Set(
@@ -85,27 +107,13 @@ function AdminOrders() {
     } finally {
       setIsLoading(false);
     }
-  }, [token, statusFilter]);
+  }, [token, statusFilter, paymentFilter, appliedSearch, page]);
 
   useEffect(() => {
     loadOrders();
   }, [loadOrders]);
 
-  const visibleOrders = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    if (!term) return orders;
-
-    return orders.filter((order) =>
-      [
-        order.orderNumber,
-        order.customer?.fullName,
-        order.customer?.email,
-        order.customer?.phone,
-      ]
-        .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(term)),
-    );
-  }, [orders, search]);
+  const visibleOrders = orders;
 
   const visibleOrderNumbers = useMemo(
     () => visibleOrders.map((order) => order.orderNumber),
@@ -154,6 +162,18 @@ function AdminOrders() {
     } finally {
       setUpdatingOrder("");
     }
+  }
+
+  function applySearch(event) {
+    event.preventDefault();
+    setAppliedSearch(searchInput.trim());
+    setPage(1);
+  }
+
+  function clearSearch() {
+    setSearchInput("");
+    setAppliedSearch("");
+    setPage(1);
   }
 
   function toggleOrderSelection(orderNumber) {
@@ -282,24 +302,42 @@ function AdminOrders() {
       </div>
 
       <section className="admin-toolbar">
-        <label className="admin-search-box">
-          <Search size={18} />
-          <input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Sipariş no, müşteri, e-posta ara..."
-          />
-        </label>
+        <form className="admin-product-search-form" onSubmit={applySearch}>
+          <label className="admin-search-box">
+            <Search size={18} />
+            <input
+              value={searchInput}
+              onChange={(event) => setSearchInput(event.target.value)}
+              placeholder="Tüm siparişlerde no, müşteri, e-posta ara..."
+            />
+          </label>
+          <button className="admin-secondary-button admin-search-submit" type="submit">Ara</button>
+          {appliedSearch ? (
+            <button className="admin-search-clear" type="button" onClick={clearSearch} aria-label="Aramayı temizle">
+              <X size={17} />
+            </button>
+          ) : null}
+        </form>
 
         <select
           value={statusFilter}
-          onChange={(event) => setStatusFilter(event.target.value)}
+          onChange={(event) => { setStatusFilter(event.target.value); setPage(1); }}
         >
           <option value="">Tüm siparişler</option>
           {orderStatusOptions.map((status) => (
             <option key={status} value={status}>
               {status}
             </option>
+          ))}
+        </select>
+
+        <select
+          value={paymentFilter}
+          onChange={(event) => { setPaymentFilter(event.target.value); setPage(1); }}
+        >
+          <option value="">Tüm ödeme durumları</option>
+          {paymentStatusOptions.map((status) => (
+            <option key={status} value={status}>{status}</option>
           ))}
         </select>
       </section>
@@ -312,7 +350,7 @@ function AdminOrders() {
         <div className="admin-panel-header">
           <div>
             <p className="admin-eyebrow">KAYITLAR</p>
-            <h2>{visibleOrders.length} sipariş</h2>
+            <h2>{pagination.total} sipariş</h2>
           </div>
 
           <div className="admin-order-bulk-actions">
@@ -519,6 +557,22 @@ function AdminOrders() {
             </tbody>
           </table>
         </div>
+
+        <footer className="admin-pagination">
+          <div className="admin-pagination-info">
+            <strong>Sayfa {pagination.page}</strong>
+            <span>/ {pagination.totalPages}</span>
+          </div>
+          <nav className="admin-pagination-nav" aria-label="Sipariş sayfaları">
+            <button type="button" onClick={() => setPage((current) => current - 1)} disabled={!pagination.hasPreviousPage || isLoading}>
+              <ChevronLeft size={17} />
+            </button>
+            <span>{pagination.total} toplam kayıt</span>
+            <button type="button" onClick={() => setPage((current) => current + 1)} disabled={!pagination.hasNextPage || isLoading}>
+              <ChevronRight size={17} />
+            </button>
+          </nav>
+        </footer>
       </section>
 
       {selectedOrder ? (

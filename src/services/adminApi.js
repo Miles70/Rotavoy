@@ -55,6 +55,14 @@ export async function getAdminSession(token) {
   return adminRequest("/session", { token });
 }
 
+export async function logoutAdmin(token) {
+  return adminRequest("/logout", { token, method: "POST" });
+}
+
+export async function getAdminSystemStatus(token) {
+  return adminRequest("/system-status", { token });
+}
+
 export async function getAdminDashboard(token) {
   return adminRequest("/dashboard", { token });
 }
@@ -75,9 +83,15 @@ export async function getAdminAnalytics(token) {
   }
 }
 
-export async function getAdminOrders(token, status = "") {
-  const query = status ? `?status=${encodeURIComponent(status)}` : "";
-  return adminRequest(`/orders${query}`, { token });
+export async function getAdminOrders(
+  token,
+  { page = 1, limit = 25, status = "", paymentStatus = "", search = "" } = {},
+) {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (status) params.set("status", status);
+  if (paymentStatus) params.set("paymentStatus", paymentStatus);
+  if (search) params.set("search", search);
+  return adminRequest(`/orders?${params.toString()}`, { token });
 }
 
 export async function updateAdminOrder(token, orderNumber, updates) {
@@ -103,7 +117,10 @@ export async function deleteAdminOrders(token, orderNumbers) {
   });
 }
 
-export async function getAdminProducts(token, { page = 1, limit = 20, search = "" } = {}) {
+export async function getAdminProducts(
+  token,
+  { page = 1, limit = 20, search = "", category = "", source = "", status = "", stock = "" } = {},
+) {
   const params = new URLSearchParams({
     page: String(page),
     limit: String(limit),
@@ -112,6 +129,10 @@ export async function getAdminProducts(token, { page = 1, limit = 20, search = "
   if (search) {
     params.set("search", search);
   }
+  if (category) params.set("category", category);
+  if (source) params.set("source", source);
+  if (status) params.set("status", status);
+  if (stock) params.set("stock", stock);
 
   return adminRequest(`/products?${params.toString()}`, { token });
 }

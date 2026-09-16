@@ -84,3 +84,7 @@ export function verifyAdminToken(token) {
     exp: Math.floor(session.expiresAt / 1000),
   };
 }
+
+export function revokeAdminToken(token) {
+  return activeSessions.delete(String(token || ""));
+}

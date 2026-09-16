@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { useAdminAuth } from "../context/AdminAuthContext";
+import { getAdminSystemStatus } from "../services/adminApi";
 
 const navigation = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -21,7 +22,8 @@ const navigation = [
 
 function AdminLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const { admin, logout } = useAdminAuth();
+  const [isApiConnected, setIsApiConnected] = useState(false);
+  const { admin, token, logout } = useAdminAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -29,8 +31,28 @@ function AdminLayout() {
     setIsSidebarOpen(false);
   }, [location.pathname]);
 
-  function handleLogout() {
-    logout();
+  useEffect(() => {
+    let cancelled = false;
+
+    async function checkConnection() {
+      try {
+        const status = await getAdminSystemStatus(token);
+        if (!cancelled) setIsApiConnected(Boolean(status.api?.ok && status.database?.connected));
+      } catch {
+        if (!cancelled) setIsApiConnected(false);
+      }
+    }
+
+    checkConnection();
+    const timer = window.setInterval(checkConnection, 60_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [token]);
+
+  async function handleLogout() {
+    await logout();
     navigate("/admin/login", { replace: true });
   }
 
@@ -107,8 +129,8 @@ function AdminLayout() {
             <p>Rotavoy yönetim paneli</p>
             <span>Operasyonu tek ekrandan yönet.</span>
           </div>
-          <div className="admin-live-pill">
-            <span /> API bağlı
+          <div className={`admin-live-pill ${isApiConnected ? "" : "is-offline"}`}>
+            <span /> {isApiConnected ? "API ve veritabanı bağlı" : "Bağlantı kontrol ediliyor"}
           </div>
         </header>
 
