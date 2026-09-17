@@ -10,6 +10,7 @@
     "cj:sync": "node src/scripts/syncCjProducts.js",
     "cj:import": "node src/scripts/importCjProductsById.js",
     "cj:bootstrap": "node src/scripts/bootstrapCjCatalog.js",
+    "cj:expand": "node src/scripts/expandRotavoyCatalog.js",
     "content:translate": "node src/scripts/backfillProductTranslations.js",
     "content:enrich": "node src/scripts/enrichProductContent.js",
     "content:audit-languages": "node src/scripts/auditProductLanguages.js",
@@ -22,7 +23,7 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-rate-limit": "^8.5.2",
-    "helmet": "^8.2.0",
+    "helmet": "^8.2.1",
     "mongoose": "^9.7.4",
     "viem": "^2.55.0"
   }
