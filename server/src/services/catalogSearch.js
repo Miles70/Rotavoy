@@ -96,8 +96,27 @@ function escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+function getSearchWordForms(term) {
+  const value = String(term || "").trim();
+  const forms = new Set([value]);
+
+  if (!/^[a-z]+$/i.test(value) || value.length < 3) return [...forms];
+
+  const lower = value.toLowerCase();
+  if (lower.endsWith("y") && !/[aeiou]y$/i.test(lower)) {
+    forms.add(`${value.slice(0, -1)}ies`);
+  } else if (/(?:s|x|z|ch|sh)$/i.test(lower)) {
+    forms.add(`${value}es`);
+  } else if (!lower.endsWith("s")) {
+    forms.add(`${value}s`);
+  }
+
+  return [...forms];
+}
+
 function exactWordPattern(term) {
-  return new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegex(term)}([^\\p{L}\\p{N}]|$)`, "iu");
+  const alternatives = getSearchWordForms(term).map(escapeRegex).join("|");
+  return new RegExp(`(^|[^\\p{L}\\p{N}])(?:${alternatives})([^\\p{L}\\p{N}]|$)`, "iu");
 }
 
 function isStrongSearchField(field) {
