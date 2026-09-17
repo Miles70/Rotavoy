@@ -12,6 +12,7 @@
     "cj:bootstrap": "node src/scripts/bootstrapCjCatalog.js",
     "cj:expand": "node src/scripts/expandRotavoyCatalog.js",
     "cj:expand-horeca": "node src/scripts/expandHorecaCatalog.js",
+    "cj:expand-wave2": "node src/scripts/expandSecondWaveCatalog.js",
     "content:translate": "node src/scripts/backfillProductTranslations.js",
     "content:enrich": "node src/scripts/enrichProductContent.js",
     "content:audit-languages": "node src/scripts/auditProductLanguages.js",
