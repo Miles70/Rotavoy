@@ -56,5 +56,7 @@ productSchema.index({
 
 productSchema.index({ source: 1, supplierProductId: 1, isActive: 1 });
 productSchema.index({ source: 1, "contentMeta.status": 1, supplierProductId: 1 });
+productSchema.index({ source: 1, isActive: 1, categoryKey: 1, stock: 1 });
+productSchema.index({ source: 1, isActive: 1, stock: 1 });
 
 export const Product = mongoose.model("Product", productSchema);
