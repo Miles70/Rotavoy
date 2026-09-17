@@ -76,6 +76,29 @@ test("catalog search uses whole words and excludes products explicitly sold with
   ));
 });
 
+test("English storefront search accepts plural category labels without substring matching", () => {
+  const fields = ["title", "categoryLabel"];
+  const phoneCaseConditions = buildCatalogSearchConditions("phone case", fields);
+  const caseTypeCondition = buildCatalogProductTypeCondition("phone case", fields);
+  const screenProtectorCondition = buildCatalogProductTypeCondition("screen protector", fields);
+
+  assert.ok(phoneCaseConditions[0].$or.some((condition) =>
+    condition.categoryLabel?.test("Phones & Accessories"),
+  ));
+  assert.ok(phoneCaseConditions[1].$or.some((condition) =>
+    condition.categoryLabel?.test("Cases & Covers"),
+  ));
+  assert.ok(caseTypeCondition.$or[0].$or.some((condition) =>
+    condition.categoryLabel?.test("Cases & Covers"),
+  ));
+  assert.ok(screenProtectorCondition.$or[0].$or.some((condition) =>
+    condition.categoryLabel?.test("Screen Protectors"),
+  ));
+  assert.equal(phoneCaseConditions[1].$or.some((condition) =>
+    condition.categoryLabel?.test("Showcase Accessories"),
+  ), false);
+});
+
 test("shoe searches exclude bags, luggage, storage products and organizers", () => {
   const fields = ["title", "translations.tr.title", "translations.en.title"];
   const exclusions = buildCatalogSearchExclusions("ayakkabı", fields);
