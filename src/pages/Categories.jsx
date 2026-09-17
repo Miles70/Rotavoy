@@ -17,7 +17,7 @@ import ProductCard from "../components/ProductCard/ProductCard";
 import categories from "../data/categories";
 import { getCategoryGroupText } from "../i18n/categoryGroupText";
 import { useLanguage } from "../i18n/LanguageContext";
-import { getStoreProducts } from "../services/productsApi";
+import { getFeaturedCategoryProducts } from "../services/productsApi";
 import "./Categories.css";
 
 const pageTranslations = {
@@ -76,7 +76,7 @@ const pageTranslations = {
   zh: {
     tag: "分类",
     title: "按分类购物。",
-    text: "通过九个清晰的商品集合浏览市场，更快找到合适的产品。",
+    text: "通过九个清晰商品集合浏览市场，更快找到合适的产品。",
     collections: "系列",
     products: "商品",
     globalStore: "全球商店",
@@ -188,33 +188,13 @@ function Categories() {
   useEffect(() => {
     let isCancelled = false;
 
-    Promise.allSettled(
-      categories.map((category) =>
-        getStoreProducts({
-          page: 1,
-          limit: 8,
-          group: category.key,
-          sort: "popular",
-          language,
-        }),
-      ),
-    )
-      .then((results) => {
-        if (isCancelled) return;
-
-        const nextData = {};
-        results.forEach((result, index) => {
-          const category = categories[index];
-          nextData[category.key] =
-            result.status === "fulfilled"
-              ? {
-                  products: result.value.products || [],
-                  total: Number(result.value.pagination?.total || 0),
-                }
-              : { products: [], total: 0 };
-        });
-
-        setCategoryData(nextData);
+    setIsLoading(true);
+    getFeaturedCategoryProducts(language)
+      .then((result) => {
+        if (!isCancelled) setCategoryData(result.categories || {});
+      })
+      .catch(() => {
+        if (!isCancelled) setCategoryData({});
       })
       .finally(() => {
         if (!isCancelled) setIsLoading(false);
