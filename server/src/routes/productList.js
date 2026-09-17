@@ -10,11 +10,12 @@ import {
 import {
   buildGroupedStorefrontProduct,
   buildCatalogGroupSummaries,
-  getAllLocalizedSearchFields,
+  getLocalizedSearchFields,
   normalizeStorefrontLanguage,
   STOREFRONT_PRIVATE_FIELDS,
   trimStorefrontTranslations,
 } from "../services/storefrontProduct.js";
+import { withStorefrontResponseCache } from "../services/storefrontResponseCache.js";
 
 export const productListRouter = Router();
 
@@ -31,23 +32,18 @@ const CATEGORY_GROUPS = {
   booksMusicFilmHobby: ["gaming"],
 };
 
-const FEATURED_CATEGORY_PREVIEW_LIMIT = 3;
+const FEATURED_CATEGORY_DEFAULT_LIMIT = 3;
+const FEATURED_CATEGORY_MAX_LIMIT = 8;
 const FEATURED_CATEGORY_CANDIDATE_LIMIT = 8;
 const FEATURED_CATEGORY_CACHE_TTL_MS = 2 * 60 * 1000;
-const featuredCategoryCache = new Map();
+const PRODUCT_LIST_CACHE_TTL_MS = 60 * 1000;
 const SEARCH_RECOMMENDATION_LIMIT = 8;
-const SEARCH_FIELDS = [
+const BASE_SEARCH_FIELDS = [
   "key",
   "title",
   "brand",
   "categoryKey",
   "categoryLabel",
-  "description",
-  "features",
-  "supplierProductId",
-  "supplierVariantId",
-  "supplierSku",
-  ...getAllLocalizedSearchFields(),
 ];
 
 function hasProductImage(product) {
@@ -57,46 +53,101 @@ function hasProductImage(product) {
   );
 }
 
-function getCachedFeaturedCategories(cacheKey) {
-  const cached = featuredCategoryCache.get(cacheKey);
-  if (!cached || cached.expiresAt <= Date.now()) {
-    featuredCategoryCache.delete(cacheKey);
-    return null;
-  }
+function getSearchFields(language) {
+  const languages = [...new Set([normalizeStorefrontLanguage(language), "en"])];
+  const localizedFields = languages.flatMap((item) =>
+    getLocalizedSearchFields(item).filter((field) => /\.(title|categoryLabel)$/.test(field)),
+  );
 
-  return cached.value;
+  return [...new Set([...BASE_SEARCH_FIELDS, ...localizedFields])];
 }
 
-function cacheFeaturedCategories(cacheKey, value) {
-  featuredCategoryCache.set(cacheKey, {
-    expiresAt: Date.now() + FEATURED_CATEGORY_CACHE_TTL_MS,
-    value,
-  });
+function buildCatalogGroupKeyExpression() {
+  const supplierProductId = { $ifNull: ["$supplierProductId", ""] };
+  const variantGroupKey = { $ifNull: ["$variantGroupKey", ""] };
+
+  return {
+    $cond: [
+      { $gt: [{ $strLenCP: supplierProductId }, 0] },
+      {
+        $concat: [
+          supplierProductId,
+          {
+            $cond: [
+              { $gt: [{ $strLenCP: variantGroupKey }, 0] },
+              { $concat: [":", variantGroupKey] },
+              "",
+            ],
+          },
+        ],
+      },
+      { $ifNull: ["$key", ""] },
+    ],
+  };
 }
 
 async function getGroupedCjCatalog({ filter, sortMode, requestedPage, limit, language }) {
-  // Pull only lightweight fields, then group and sort parent products in Node.
-  // Sorting complete product documents in Mongo can exceed Atlas' 32 MB
-  // in-memory limit because every variant contains large translation bundles.
-  const rows = await Product.find(filter)
-    .select("_id key supplierProductId variantGroupKey price popularity createdAt stock hasVideo")
-    .lean();
-  const summaries = buildCatalogGroupSummaries(rows, sortMode);
+  // Group lightweight variant rows in MongoDB so the API does not pull every
+  // matching variant into Node before it can return one storefront card.
+  const groupSort = sortMode === "newest"
+    ? { representativeCreatedAt: -1, representativeKey: 1 }
+    : {
+        hasVideo: -1,
+        representativePopularity: -1,
+        representativeCreatedAt: -1,
+        representativeKey: 1,
+      };
+
+  const summaries = await Product.aggregate([
+    { $match: filter },
+    {
+      $project: {
+        key: 1,
+        supplierProductId: 1,
+        variantGroupKey: 1,
+        price: 1,
+        popularity: 1,
+        createdAt: 1,
+        stock: 1,
+        hasVideo: 1,
+        groupKey: buildCatalogGroupKeyExpression(),
+      },
+    },
+    { $sort: { groupKey: 1, price: 1, key: 1 } },
+    {
+      $group: {
+        _id: "$groupKey",
+        representativeId: { $first: "$_id" },
+        representativeKey: { $first: "$key" },
+        representativePopularity: { $first: "$popularity" },
+        representativeCreatedAt: { $first: "$createdAt" },
+        variantCount: { $sum: 1 },
+        priceMin: { $min: "$price" },
+        priceMax: { $max: "$price" },
+        stockTotal: { $sum: "$stock" },
+        hasVideo: { $max: { $cond: ["$hasVideo", 1, 0] } },
+      },
+    },
+    { $sort: groupSort },
+  ]).allowDiskUse(true);
+
   const total = summaries.length;
   const totalPages = Math.max(Math.ceil(total / limit), 1);
   const page = Math.min(Math.max(requestedPage, 1), totalPages);
   const skip = (page - 1) * limit;
   const pageSummaries = summaries.slice(skip, skip + limit);
-  const representativeIds = pageSummaries.map((summary) => summary.representative._id);
-  const representativeProducts = await Product.find({ _id: { $in: representativeIds } })
-    .select(STOREFRONT_PRIVATE_FIELDS)
-    .lean();
+  const representativeIds = pageSummaries.map((summary) => summary.representativeId);
+  const representativeProducts = representativeIds.length
+    ? await Product.find({ _id: { $in: representativeIds } })
+        .select(STOREFRONT_PRIVATE_FIELDS)
+        .lean()
+    : [];
   const productsById = new Map(
     representativeProducts.map((product) => [String(product._id), product]),
   );
   const groups = pageSummaries
     .map((summary) => ({
-      product: productsById.get(String(summary.representative._id)),
+      product: productsById.get(String(summary.representativeId)),
       variantCount: summary.variantCount,
       priceMin: summary.priceMin,
       priceMax: summary.priceMax,
@@ -120,74 +171,78 @@ async function getGroupedCjCatalog({ filter, sortMode, requestedPage, limit, lan
 productListRouter.get("/featured-categories", async (request, response, next) => {
   try {
     const language = normalizeStorefrontLanguage(request.query.language);
+    const requestedLimit = Number.parseInt(request.query.limit, 10) || FEATURED_CATEGORY_DEFAULT_LIMIT;
+    const previewLimit = Math.min(Math.max(requestedLimit, 1), FEATURED_CATEGORY_MAX_LIMIT);
     const cjConfigured = isCjConfigured();
-    const cacheKey = `${cjConfigured ? "cj" : "legacy"}:${language}`;
-    const cached = getCachedFeaturedCategories(cacheKey);
+    const cacheKey = `featured-categories:${cjConfigured ? "cj" : "legacy"}:${language}:${previewLimit}`;
 
-    if (cached) {
-      response.set("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
-      return response.json(cached);
-    }
+    const payload = await withStorefrontResponseCache(
+      cacheKey,
+      async () => {
+        const filter = {
+          isActive: true,
+          source: { $in: cjConfigured ? ["cj"] : LEGACY_SOURCES },
+          stock: { $gt: 0 },
+          categoryKey: { $in: [...new Set(Object.values(CATEGORY_GROUPS).flat())] },
+        };
+        const rows = await Product.find(filter)
+          .select("_id key categoryKey supplierProductId variantGroupKey price popularity createdAt stock hasVideo")
+          .lean();
+        const summariesByGroup = new Map();
+        const representativeIds = new Set();
 
-    const filter = {
-      isActive: true,
-      source: { $in: cjConfigured ? ["cj"] : LEGACY_SOURCES },
-      stock: { $gt: 0 },
-      categoryKey: { $in: [...new Set(Object.values(CATEGORY_GROUPS).flat())] },
-    };
-    const rows = await Product.find(filter)
-      .select("_id key categoryKey supplierProductId variantGroupKey price popularity createdAt stock hasVideo")
-      .lean();
-    const summariesByGroup = new Map();
-    const representativeIds = new Set();
+        for (const [groupKey, sourceKeys] of Object.entries(CATEGORY_GROUPS)) {
+          const sourceKeySet = new Set(sourceKeys);
+          const summaries = buildCatalogGroupSummaries(
+            rows.filter((row) => sourceKeySet.has(String(row?.categoryKey || ""))),
+            "popular",
+          );
+          summariesByGroup.set(groupKey, summaries);
+          for (const summary of summaries.slice(0, FEATURED_CATEGORY_CANDIDATE_LIMIT)) {
+            representativeIds.add(summary.representative._id);
+          }
+        }
 
-    for (const [groupKey, sourceKeys] of Object.entries(CATEGORY_GROUPS)) {
-      const sourceKeySet = new Set(sourceKeys);
-      const summaries = buildCatalogGroupSummaries(
-        rows.filter((row) => sourceKeySet.has(String(row?.categoryKey || ""))),
-        "popular",
-      );
-      summariesByGroup.set(groupKey, summaries);
-      for (const summary of summaries.slice(0, FEATURED_CATEGORY_CANDIDATE_LIMIT)) {
-        representativeIds.add(summary.representative._id);
-      }
-    }
+        const representativeProducts = await Product.find({ _id: { $in: [...representativeIds] } })
+          .select(STOREFRONT_PRIVATE_FIELDS)
+          .lean();
+        const productsById = new Map(
+          representativeProducts.map((product) => [String(product._id), product]),
+        );
+        const categories = {};
+        let total = 0;
 
-    const representativeProducts = await Product.find({ _id: { $in: [...representativeIds] } })
-      .select(STOREFRONT_PRIVATE_FIELDS)
-      .lean();
-    const productsById = new Map(
-      representativeProducts.map((product) => [String(product._id), product]),
+        for (const [groupKey, summaries] of summariesByGroup) {
+          total += summaries.length;
+          const candidates = summaries
+            .slice(0, FEATURED_CATEGORY_CANDIDATE_LIMIT)
+            .map((summary) => ({
+              summary,
+              product: productsById.get(String(summary.representative._id)),
+            }))
+            .filter(({ product }) => product);
+          const imageCandidates = candidates.filter(({ product }) => hasProductImage(product));
+          const chosen = [...imageCandidates, ...candidates.filter(({ product }) => !hasProductImage(product))]
+            .slice(0, previewLimit);
+
+          categories[groupKey] = {
+            total: summaries.length,
+            products: chosen.map(({ product, summary }) =>
+              buildGroupedStorefrontProduct({
+                product,
+                variantCount: summary.variantCount,
+                priceMin: summary.priceMin,
+                priceMax: summary.priceMax,
+                stockTotal: summary.stockTotal,
+              }, language)),
+          };
+        }
+
+        return { categories, total, source: cjConfigured ? "cj" : "legacy" };
+      },
+      { ttlMs: FEATURED_CATEGORY_CACHE_TTL_MS },
     );
-    const categories = {};
 
-    for (const [groupKey, summaries] of summariesByGroup) {
-      const candidates = summaries
-        .slice(0, FEATURED_CATEGORY_CANDIDATE_LIMIT)
-        .map((summary) => ({
-          summary,
-          product: productsById.get(String(summary.representative._id)),
-        }))
-        .filter(({ product }) => product);
-      const imageCandidates = candidates.filter(({ product }) => hasProductImage(product));
-      const chosen = [...imageCandidates, ...candidates.filter(({ product }) => !hasProductImage(product))]
-        .slice(0, FEATURED_CATEGORY_PREVIEW_LIMIT);
-
-      categories[groupKey] = {
-        total: summaries.length,
-        products: chosen.map(({ product, summary }) =>
-          buildGroupedStorefrontProduct({
-            product,
-            variantCount: summary.variantCount,
-            priceMin: summary.priceMin,
-            priceMax: summary.priceMax,
-            stockTotal: summary.stockTotal,
-          }, language)),
-      };
-    }
-
-    const payload = { categories, source: cjConfigured ? "cj" : "legacy" };
-    cacheFeaturedCategories(cacheKey, payload);
     response.set("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
     return response.json(payload);
   } catch (error) {
@@ -205,116 +260,167 @@ productListRouter.get("/", async (request, response, next) => {
     const group = String(request.query.group || "").trim();
     const sortMode = String(request.query.sort || "popular").trim().toLowerCase();
     const language = normalizeStorefrontLanguage(request.query.language);
+    const includeRecommendations = String(request.query.recommendations ?? "1") !== "0";
     const cjConfigured = isCjConfigured();
-    const filter = {
-      isActive: true,
-      source: { $in: cjConfigured ? ["cj"] : LEGACY_SOURCES },
-      stock: { $gt: 0 },
-    };
+    const searchFields = getSearchFields(language);
+    const cacheKey = `product-list:${JSON.stringify({
+      source: cjConfigured ? "cj" : "legacy",
+      requestedPage,
+      limit,
+      search,
+      category,
+      group,
+      sortMode,
+      language,
+      includeRecommendations,
+    })}`;
 
-    if (group && CATEGORY_GROUPS[group]) {
-      filter.categoryKey = { $in: CATEGORY_GROUPS[group] };
-    } else if (category) {
-      filter.categoryKey = category;
-    }
-
-    if (search) {
-      filter.$and = buildCatalogSearchConditions(search, SEARCH_FIELDS);
-      const productTypeCondition = buildCatalogProductTypeCondition(search, SEARCH_FIELDS);
-      if (productTypeCondition) filter.$and.push(productTypeCondition);
-      const exclusions = buildCatalogSearchExclusions(search, SEARCH_FIELDS);
-      if (exclusions.length) filter.$nor = exclusions;
-    }
-
-    if (cjConfigured) {
-      const grouped = await getGroupedCjCatalog({
-        filter,
-        sortMode,
-        requestedPage,
-        limit,
-        language,
-      });
-
-      let recommendations = [];
-      const recommendationCategories = [...new Set([
-        ...grouped.products.map((product) => product.categoryKey).filter(Boolean),
-        ...getCatalogSearchRecommendationCategories(search),
-      ])];
-      if (search && requestedPage === 1 && recommendationCategories.length) {
-        const recommendationFilter = {
+    const payload = await withStorefrontResponseCache(
+      cacheKey,
+      async () => {
+        const filter = {
           isActive: true,
-          source: { $in: ["cj"] },
+          source: { $in: cjConfigured ? ["cj"] : LEGACY_SOURCES },
           stock: { $gt: 0 },
-          categoryKey: { $in: recommendationCategories },
-          $nor: [buildCatalogProductTypeCondition(search, SEARCH_FIELDS)].filter(Boolean),
         };
-        const recommendationResult = await getGroupedCjCatalog({
-          filter: recommendationFilter,
-          sortMode: "popular",
-          requestedPage: 1,
-          limit: SEARCH_RECOMMENDATION_LIMIT,
-          language,
-        });
-        recommendations = recommendationResult.products;
-      }
 
-      return response.json({
-        ...grouped,
-        recommendations,
-        source: "cj",
-      });
-    }
+        if (group && CATEGORY_GROUPS[group]) {
+          filter.categoryKey = { $in: CATEGORY_GROUPS[group] };
+        } else if (category) {
+          filter.categoryKey = category;
+        }
 
-    const total = await Product.countDocuments(filter);
-    const totalPages = Math.max(Math.ceil(total / limit), 1);
-    const page = Math.min(Math.max(requestedPage, 1), totalPages);
-    const skip = (page - 1) * limit;
-    const sort = sortMode === "newest"
-      ? { createdAt: -1, key: 1 }
-      : { popularity: -1, createdAt: -1, key: 1 };
+        if (search) {
+          filter.$and = buildCatalogSearchConditions(search, searchFields);
+          const productTypeCondition = buildCatalogProductTypeCondition(search, searchFields);
+          if (productTypeCondition) filter.$and.push(productTypeCondition);
+          const exclusions = buildCatalogSearchExclusions(search, searchFields);
+          if (exclusions.length) filter.$nor = exclusions;
+        }
 
-    const products = await Product.find(filter)
-      .select(STOREFRONT_PRIVATE_FIELDS)
-      .sort(sort)
-      .skip(skip)
-      .limit(limit)
-      .lean();
+        if (cjConfigured) {
+          const profileRecommendationCategories = includeRecommendations && search && requestedPage === 1
+            ? getCatalogSearchRecommendationCategories(search)
+            : [];
+          const groupedPromise = getGroupedCjCatalog({
+            filter,
+            sortMode,
+            requestedPage,
+            limit,
+            language,
+          });
+          const profileRecommendationPromise = profileRecommendationCategories.length
+            ? getGroupedCjCatalog({
+                filter: {
+                  isActive: true,
+                  source: { $in: ["cj"] },
+                  stock: { $gt: 0 },
+                  categoryKey: { $in: profileRecommendationCategories },
+                  $nor: [buildCatalogProductTypeCondition(search, searchFields)].filter(Boolean),
+                },
+                sortMode: "popular",
+                requestedPage: 1,
+                limit: SEARCH_RECOMMENDATION_LIMIT,
+                language,
+              })
+            : Promise.resolve(null);
 
-    let recommendations = [];
-    const recommendationCategories = [...new Set([
-      ...products.map((product) => product.categoryKey).filter(Boolean),
-      ...getCatalogSearchRecommendationCategories(search),
-    ])];
-    if (search && requestedPage === 1 && recommendationCategories.length) {
-      const recommendationFilter = {
-        isActive: true,
-        source: { $in: LEGACY_SOURCES },
-        stock: { $gt: 0 },
-        categoryKey: { $in: recommendationCategories },
-        $nor: [buildCatalogProductTypeCondition(search, SEARCH_FIELDS)].filter(Boolean),
-      };
-      const recommendationProducts = await Product.find(recommendationFilter)
-        .select(STOREFRONT_PRIVATE_FIELDS)
-        .sort({ popularity: -1, createdAt: -1, key: 1 })
-        .limit(SEARCH_RECOMMENDATION_LIMIT)
-        .lean();
-      recommendations = recommendationProducts.map((product) =>
-        trimStorefrontTranslations(product, language));
-    }
+          const grouped = await groupedPromise;
+          let recommendationResult = await profileRecommendationPromise;
 
-    return response.json({
-      products: products.map((product) => trimStorefrontTranslations(product, language)),
-      recommendations,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages,
-        hasPreviousPage: page > 1,
-        hasNextPage: page < totalPages,
+          if (
+            includeRecommendations &&
+            search &&
+            requestedPage === 1 &&
+            !recommendationResult
+          ) {
+            const recommendationCategories = [...new Set(
+              grouped.products.map((product) => product.categoryKey).filter(Boolean),
+            )];
+
+            if (recommendationCategories.length) {
+              recommendationResult = await getGroupedCjCatalog({
+                filter: {
+                  isActive: true,
+                  source: { $in: ["cj"] },
+                  stock: { $gt: 0 },
+                  categoryKey: { $in: recommendationCategories },
+                  $nor: [buildCatalogProductTypeCondition(search, searchFields)].filter(Boolean),
+                },
+                sortMode: "popular",
+                requestedPage: 1,
+                limit: SEARCH_RECOMMENDATION_LIMIT,
+                language,
+              });
+            }
+          }
+
+          return {
+            ...grouped,
+            recommendations: recommendationResult?.products || [],
+            source: "cj",
+          };
+        }
+
+        const total = await Product.countDocuments(filter);
+        const totalPages = Math.max(Math.ceil(total / limit), 1);
+        const page = Math.min(Math.max(requestedPage, 1), totalPages);
+        const skip = (page - 1) * limit;
+        const sort = sortMode === "newest"
+          ? { createdAt: -1, key: 1 }
+          : { popularity: -1, createdAt: -1, key: 1 };
+
+        const products = await Product.find(filter)
+          .select(STOREFRONT_PRIVATE_FIELDS)
+          .sort(sort)
+          .skip(skip)
+          .limit(limit)
+          .lean();
+
+        let recommendations = [];
+        if (includeRecommendations && search && requestedPage === 1) {
+          const recommendationCategories = [...new Set([
+            ...products.map((product) => product.categoryKey).filter(Boolean),
+            ...getCatalogSearchRecommendationCategories(search),
+          ])];
+
+          if (recommendationCategories.length) {
+            const recommendationFilter = {
+              isActive: true,
+              source: { $in: LEGACY_SOURCES },
+              stock: { $gt: 0 },
+              categoryKey: { $in: recommendationCategories },
+              $nor: [buildCatalogProductTypeCondition(search, searchFields)].filter(Boolean),
+            };
+            const recommendationProducts = await Product.find(recommendationFilter)
+              .select(STOREFRONT_PRIVATE_FIELDS)
+              .sort({ popularity: -1, createdAt: -1, key: 1 })
+              .limit(SEARCH_RECOMMENDATION_LIMIT)
+              .lean();
+            recommendations = recommendationProducts.map((product) =>
+              trimStorefrontTranslations(product, language));
+          }
+        }
+
+        return {
+          products: products.map((product) => trimStorefrontTranslations(product, language)),
+          recommendations,
+          pagination: {
+            page,
+            limit,
+            total,
+            totalPages,
+            hasPreviousPage: page > 1,
+            hasNextPage: page < totalPages,
+          },
+          source: "legacy",
+        };
       },
-      source: "legacy",
-    });
+      { ttlMs: PRODUCT_LIST_CACHE_TTL_MS },
+    );
+
+    response.set("Cache-Control", "public, max-age=30, stale-while-revalidate=120");
+    return response.json(payload);
   } catch (error) {
     return next(error);
   }
