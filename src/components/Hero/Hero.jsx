@@ -11,7 +11,7 @@ import {
 
 import categories from "../../data/categories";
 import { useLanguage } from "../../i18n/LanguageContext";
-import { getStoreProducts } from "../../services/productsApi";
+import { getFeaturedCategoryProducts } from "../../services/productsApi";
 
 import "./Hero.css";
 
@@ -92,10 +92,10 @@ function Hero() {
       };
     }
 
-    getStoreProducts({ page: 1, limit: 8, sort: "popular", language })
+    getFeaturedCategoryProducts(language)
       .then((data) => {
         if (!isCancelled) {
-          const nextCount = Number(data.pagination?.total || 0);
+          const nextCount = Number(data.total || 0);
           setProductCount(nextCount);
           writeProductCountCache(language, nextCount);
         }
