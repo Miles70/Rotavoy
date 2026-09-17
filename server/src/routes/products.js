@@ -13,6 +13,7 @@ import {
 export const productsRouter = Router();
 
 const LEGACY_SOURCES = ["amazon-reviews-2023", "manual"];
+const STOREFRONT_CACHE_CONTROL = "public, max-age=60, stale-while-revalidate=300";
 
 function getStorefrontSources() {
   return isCjConfigured() ? ["cj"] : LEGACY_SOURCES;
@@ -36,6 +37,7 @@ productsRouter.get("/", async (request, response, next) => {
       .limit(100)
       .lean();
 
+    response.set("Cache-Control", STOREFRONT_CACHE_CONTROL);
     response.json({
       products: products.map((product) => trimStorefrontTranslations(product, language)),
     });
@@ -102,6 +104,7 @@ productsRouter.get("/:productKey/related", async (request, response, next) => {
         stockTotal: group.stockTotal,
       }, language));
 
+    response.set("Cache-Control", STOREFRONT_CACHE_CONTROL);
     return response.json({ products });
   } catch (error) {
     return next(error);
@@ -142,6 +145,7 @@ productsRouter.get("/:productKey", async (request, response, next) => {
         .lean();
     }
 
+    response.set("Cache-Control", STOREFRONT_CACHE_CONTROL);
     return response.json({
       product: trimStorefrontTranslations(product, language),
       variants: variants.map((variant) => trimStorefrontTranslations(variant, language)),
