@@ -1,12 +1,17 @@
 import "dotenv/config";
 
 const TARGET_PER_GROUP = Number.parseInt(
-  process.env.ROTAVOY_WAVE2_TARGET_PER_GROUP || "100",
+  process.env.ROTAVOY_WAVE2_TARGET_PER_GROUP || "200",
+  10,
+);
+
+const MAX_ACTIVE_CATALOG = Number.parseInt(
+  process.env.ROTAVOY_WAVE2_MAX_ACTIVE_CATALOG || "5000",
   10,
 );
 
 const MAX_PASSES = Number.parseInt(
-  process.env.ROTAVOY_WAVE2_MAX_PASSES || "4",
+  process.env.ROTAVOY_WAVE2_MAX_PASSES || "5",
   10,
 );
 
@@ -312,23 +317,225 @@ const GROUPS = [
       "document bag",
     ],
   },
+  {
+    key: "pet-daily-essentials",
+    label: "Pet Daily Essentials",
+    keywords: [
+      "dog leash",
+      "pet collar",
+      "pet harness",
+      "pet bowl",
+      "slow feeder bowl",
+      "pet water bottle",
+      "pet grooming brush",
+      "pet hair remover",
+      "pet poop bag",
+      "pet poop bag holder",
+      "cat toy",
+      "dog toy",
+      "pet bed",
+      "cat scratching accessories",
+    ],
+  },
+  {
+    key: "mobile-power-charging",
+    label: "Mobile Power & Charging",
+    keywords: [
+      "usb c charging cable",
+      "fast charger",
+      "usb wall charger",
+      "wireless charger",
+      "magsafe charger stand",
+      "charging station",
+      "power bank",
+      "usb adapter",
+      "travel adapter",
+      "car charger",
+      "cable protector",
+      "charging cable organizer",
+      "phone charging dock",
+      "multiport usb charger",
+    ],
+  },
+  {
+    key: "auto-maintenance-emergency",
+    label: "Auto Maintenance & Everyday Car Care",
+    keywords: [
+      "car cleaning brush",
+      "car detailing brush",
+      "car microfiber towel",
+      "car vacuum cleaner",
+      "tire pressure gauge",
+      "portable tire inflator",
+      "car seat gap organizer",
+      "car trunk organizer",
+      "car sunshade",
+      "car windshield cover",
+      "car trash bin",
+      "car cup holder organizer",
+      "car scratch repair tool",
+      "car emergency accessories",
+    ],
+  },
+  {
+    key: "home-safety-security",
+    label: "Home Safety & Security Accessories",
+    keywords: [
+      "door stop alarm",
+      "door sensor alarm",
+      "window lock",
+      "sliding door lock",
+      "cabinet safety lock",
+      "door reinforcement lock",
+      "security door stopper",
+      "key lock box",
+      "privacy door lock",
+      "drawer lock",
+      "anti slip tape",
+      "furniture anti tip strap",
+      "corner protector",
+      "door finger guard",
+    ],
+  },
+  {
+    key: "moving-packing",
+    label: "Moving & Packing Supplies",
+    keywords: [
+      "packing tape",
+      "packing tape dispenser",
+      "shipping labels",
+      "fragile stickers",
+      "bubble wrap",
+      "stretch wrap film",
+      "zip storage bags",
+      "vacuum storage bags",
+      "moving labels",
+      "cable labels",
+      "packing organizer",
+      "reusable moving bag",
+      "shipping pouch",
+      "mailing bag",
+    ],
+  },
+  {
+    key: "business-warehouse",
+    label: "Business & Warehouse Supplies",
+    keywords: [
+      "label holder",
+      "price tag labels",
+      "barcode label stickers",
+      "inventory labels",
+      "shelf label holder",
+      "cash organizer",
+      "receipt holder",
+      "document tray",
+      "packing tape dispenser",
+      "shipping scale accessories",
+      "warehouse marker",
+      "storage bin labels",
+      "cable tag labels",
+      "office stamp accessories",
+    ],
+  },
+  {
+    key: "party-event-gifting",
+    label: "Party, Event & Gift Supplies",
+    keywords: [
+      "gift bag",
+      "gift box",
+      "gift wrapping paper",
+      "gift ribbon",
+      "party balloons",
+      "party tableware",
+      "cake topper",
+      "birthday decoration",
+      "party banner",
+      "favor bags",
+      "thank you stickers",
+      "gift tags",
+      "wedding decoration accessories",
+      "event table decoration",
+    ],
+  },
+  {
+    key: "hardware-fasteners",
+    label: "Hardware, Fasteners & Furniture Accessories",
+    keywords: [
+      "screw assortment kit",
+      "wall anchor kit",
+      "nuts bolts assortment",
+      "washers assortment",
+      "furniture felt pads",
+      "furniture sliders",
+      "cabinet handles",
+      "drawer handles",
+      "furniture corner bracket",
+      "shelf bracket",
+      "door hinge",
+      "magnetic cabinet catch",
+      "rubber feet pads",
+      "cable clamps",
+    ],
+  },
+  {
+    key: "wellness-everyday",
+    label: "Everyday Wellness Accessories",
+    keywords: [
+      "pill organizer",
+      "sleep mask",
+      "ear plugs sleeping",
+      "massage ball",
+      "massage roller",
+      "neck massage pillow",
+      "hot cold pack",
+      "posture cushion",
+      "foot massage roller",
+      "stretching strap",
+      "wrist support cushion",
+      "lumbar cushion",
+      "travel sleep pillow",
+      "relaxation accessories",
+    ],
+  },
+  {
+    key: "weather-seasonal",
+    label: "Weather & Seasonal Everyday",
+    keywords: [
+      "compact umbrella",
+      "rain poncho",
+      "waterproof shoe cover",
+      "rain shoe cover",
+      "cooling towel",
+      "sun protection sleeves",
+      "portable neck fan",
+      "windshield sunshade",
+      "windshield snow cover",
+      "reusable hand warmer",
+      "winter ear warmer",
+      "thermal gloves",
+      "waterproof bag cover",
+      "rain backpack cover",
+    ],
+  },
 ];
 
 function positiveInt(value, fallback) {
   return Number.isInteger(value) && value > 0 ? value : fallback;
 }
 
-const targetPerGroup = positiveInt(TARGET_PER_GROUP, 100);
-const maxPasses = positiveInt(MAX_PASSES, 4);
+const targetPerGroup = positiveInt(TARGET_PER_GROUP, 200);
+const maxPasses = positiveInt(MAX_PASSES, 5);
+const maxActiveCatalog = positiveInt(MAX_ACTIVE_CATALOG, 5000);
 
-// Wave 2 only grows the catalog. Existing CJ/manual products are preserved,
-// and CJ supplier products already stored in MongoDB are excluded.
+// Overnight Wave 2 only grows the catalog. Existing CJ/manual products are
+// preserved, supplier products already stored in MongoDB are excluded, and
+// the run stops automatically once the active CJ catalog reaches the ceiling.
 process.env.CJ_SYNC_ONLY_NEW = "true";
 process.env.CJ_REPLACE_LEGACY_CATALOG = "false";
 process.env.ROTAVOY_CONTENT_ENRICH_ON_SYNC = "false";
 process.env.CJ_SYNC_PAGE_SIZE = process.env.ROTAVOY_WAVE2_PAGE_SIZE || "100";
-process.env.CJ_SYNC_MAX_PAGES_PER_KEYWORD = process.env.ROTAVOY_WAVE2_MAX_PAGES || "30";
-process.env.CJ_SYNC_PRODUCTS_PER_KEYWORD = process.env.ROTAVOY_WAVE2_PRODUCTS_PER_KEYWORD || "20";
+process.env.CJ_SYNC_MAX_PAGES_PER_KEYWORD = process.env.ROTAVOY_WAVE2_MAX_PAGES || "35";
+process.env.CJ_SYNC_PRODUCTS_PER_KEYWORD = process.env.ROTAVOY_WAVE2_PRODUCTS_PER_KEYWORD || "25";
 process.env.CJ_SYNC_BATCH_SIZE = process.env.ROTAVOY_WAVE2_BATCH_SIZE || "100";
 
 const [
@@ -358,19 +565,36 @@ try {
   await connectDatabase();
 
   const startingCatalogCount = await getActiveCjParentCount();
-  const plannedTotal = GROUPS.length * targetPerGroup;
+  const remainingCapacity = Math.max(maxActiveCatalog - startingCatalogCount, 0);
+  const theoreticalGroupCapacity = GROUPS.length * targetPerGroup;
 
-  console.log(`Rotavoy Wave 2 expansion starting with ${startingCatalogCount} active CJ products.`);
-  console.log(`Plan: ${GROUPS.length} demand-led groups x ${targetPerGroup} products = up to +${plannedTotal} new products.`);
+  console.log(`Rotavoy overnight Wave 2 starting with ${startingCatalogCount} active CJ products.`);
+  console.log(
+    `Plan: ${GROUPS.length} demand-led groups, up to ${targetPerGroup} products each, filling toward ${maxActiveCatalog} active CJ products.`,
+  );
+  console.log(
+    `Current overnight capacity: up to +${Math.min(remainingCapacity, theoreticalGroupCapacity)} active products before the catalog ceiling.`,
+  );
+
+  if (remainingCapacity < 1) {
+    console.log(`Catalog already reached the configured ceiling of ${maxActiveCatalog}. Nothing to add.`);
+  }
 
   for (const group of GROUPS) {
     const beforeCount = await getActiveCjParentCount();
-    const targetCount = beforeCount + targetPerGroup;
+    const remaining = Math.max(maxActiveCatalog - beforeCount, 0);
+    if (remaining < 1) {
+      console.log(`Catalog ceiling reached at ${beforeCount} active CJ products. Stopping Wave 2.`);
+      break;
+    }
+
+    const groupTarget = Math.min(targetPerGroup, remaining);
+    const targetCount = beforeCount + groupTarget;
 
     process.env.CJ_SYNC_KEYWORDS = group.keywords.join(",");
     process.env.CJ_SYNC_TARGET_PRODUCTS = String(targetCount);
 
-    console.log(`\n=== ${group.label}: target +${targetPerGroup} (${beforeCount} -> ${targetCount}) ===`);
+    console.log(`\n=== ${group.label}: target +${groupTarget} (${beforeCount} -> ${targetCount}) ===`);
 
     let result = null;
     let pass = 0;
@@ -383,9 +607,9 @@ try {
 
       const currentCount = await getActiveCjParentCount();
       const added = Math.max(currentCount - beforeCount, 0);
-      console.log(`${group.label}: ${added}/${targetPerGroup} new active products added.`);
+      console.log(`${group.label}: ${added}/${groupTarget} new active products added.`);
 
-      if (currentCount >= targetCount) break;
+      if (currentCount >= targetCount || currentCount >= maxActiveCatalog) break;
 
       if (!result || Number(result.importedProducts || 0) < 1) {
         console.warn(`${group.label}: no more usable new products were found in this pass.`);
@@ -396,7 +620,7 @@ try {
     const afterCount = await getActiveCjParentCount();
     summary.push({
       group: group.label,
-      requested: targetPerGroup,
+      requested: groupTarget,
       added: Math.max(afterCount - beforeCount, 0),
       before: beforeCount,
       after: afterCount,
@@ -407,7 +631,7 @@ try {
   const endingCatalogCount = await getActiveCjParentCount();
   const totalAdded = Math.max(endingCatalogCount - startingCatalogCount, 0);
 
-  console.log("\nRotavoy Wave 2 catalog expansion complete.");
+  console.log("\nRotavoy overnight Wave 2 catalog expansion complete.");
   console.table(summary);
   console.log(`Active CJ catalog: ${startingCatalogCount} -> ${endingCatalogCount} (+${totalAdded}).`);
 
@@ -418,7 +642,7 @@ try {
     );
   }
 } catch (error) {
-  console.error("Rotavoy Wave 2 catalog expansion failed:", error);
+  console.error("Rotavoy overnight Wave 2 catalog expansion failed:", error);
   process.exitCode = 1;
 } finally {
   await disconnectDatabase();
