@@ -15,6 +15,21 @@ const MAX_PASSES = Number.parseInt(
   10,
 );
 
+const SYNC_RETRY_LIMIT = Number.parseInt(
+  process.env.ROTAVOY_WAVE2_SYNC_RETRIES || "4",
+  10,
+);
+
+const RETRY_BASE_DELAY_MS = Number.parseInt(
+  process.env.ROTAVOY_WAVE2_RETRY_BASE_DELAY_MS || "15000",
+  10,
+);
+
+const RETRY_MAX_DELAY_MS = Number.parseInt(
+  process.env.ROTAVOY_WAVE2_RETRY_MAX_DELAY_MS || "60000",
+  10,
+);
+
 const GROUPS = [
   {
     key: "horeca-packaging",
@@ -526,6 +541,53 @@ function positiveInt(value, fallback) {
 const targetPerGroup = positiveInt(TARGET_PER_GROUP, 200);
 const maxPasses = positiveInt(MAX_PASSES, 5);
 const maxActiveCatalog = positiveInt(MAX_ACTIVE_CATALOG, 5000);
+const syncRetryLimit = Math.min(positiveInt(SYNC_RETRY_LIMIT, 4), 10);
+const retryBaseDelayMs = Math.min(
+  positiveInt(RETRY_BASE_DELAY_MS, 15_000),
+  5 * 60_000,
+);
+const retryMaxDelayMs = Math.max(
+  retryBaseDelayMs,
+  Math.min(positiveInt(RETRY_MAX_DELAY_MS, 60_000), 10 * 60_000),
+);
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isRetryableCjError(error) {
+  const statusCode = Number(error?.statusCode || 0);
+  if ([429, 502, 503, 504].includes(statusCode)) return true;
+
+  const message = String(error?.message || error || "");
+  return /timeout|timed out|could not be reached|system busy|temporar|rate limit|too many requests|network|fetch failed|econnreset|etimedout|socket|502|503|504/i.test(message);
+}
+
+async function syncCjCatalogWithRetry(groupLabel, passNumber) {
+  for (let attempt = 1; attempt <= syncRetryLimit + 1; attempt += 1) {
+    try {
+      return await syncCjCatalog();
+    } catch (error) {
+      const retryable = isRetryableCjError(error);
+      const retriesUsed = attempt - 1;
+
+      if (!retryable || retriesUsed >= syncRetryLimit) {
+        throw error;
+      }
+
+      const delayMs = Math.min(
+        retryBaseDelayMs * (2 ** retriesUsed),
+        retryMaxDelayMs,
+      );
+      console.log(
+        `[retry] ${groupLabel}: pass ${passNumber} hit a temporary CJ error (${String(error?.message || error)}). Retrying in ${Math.ceil(delayMs / 1000)}s (${attempt}/${syncRetryLimit}).`,
+      );
+      await sleep(delayMs);
+    }
+  }
+
+  return null;
+}
 
 // Overnight Wave 2 only grows the catalog. Existing CJ/manual products are
 // preserved, supplier products already stored in MongoDB are excluded, and
@@ -603,7 +665,18 @@ try {
       pass += 1;
       console.log(`${group.label}: pass ${pass}/${maxPasses}`);
 
-      result = await syncCjCatalog();
+      try {
+        result = await syncCjCatalogWithRetry(group.label, pass);
+      } catch (error) {
+        if (isRetryableCjError(error)) {
+          console.log(
+            `[skip] ${group.label}: pass ${pass} still failed after ${syncRetryLimit} retries (${String(error?.message || error)}). Continuing with the next pass instead of stopping Wave 2.`,
+          );
+          continue;
+        }
+
+        throw error;
+      }
 
       const currentCount = await getActiveCjParentCount();
       const added = Math.max(currentCount - beforeCount, 0);
@@ -612,7 +685,7 @@ try {
       if (currentCount >= targetCount || currentCount >= maxActiveCatalog) break;
 
       if (!result || Number(result.importedProducts || 0) < 1) {
-        console.warn(`${group.label}: no more usable new products were found in this pass.`);
+        console.log(`${group.label}: no more usable new products were found in this pass.`);
         break;
       }
     }
@@ -637,7 +710,7 @@ try {
 
   const incomplete = summary.filter((row) => !row.targetReached);
   if (incomplete.length > 0) {
-    console.warn(
+    console.log(
       `Groups below target: ${incomplete.map((row) => `${row.group} (${row.added}/${row.requested})`).join(", ")}. CJ did not expose enough new usable products for those searches in this run.`,
     );
   }
