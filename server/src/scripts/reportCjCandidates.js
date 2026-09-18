@@ -20,7 +20,9 @@ try {
     { projection: { _id: 0, pid: 1, title: 1, listedNum: 1, "audit.pricedInStockVariants": 1, "audit.sampledCostUsd": 1, "audit.shipping": 1, "audit.flags": 1, "audit.decision": 1 } },
   ).sort({ listedNum: -1 }).limit(100).toArray();
   const auditErrors = await candidates.countDocuments({ ...match, auditError: { $exists: true }, "audit.checkedAt": { $exists: false } });
-  console.log(JSON.stringify({ count, departments, topListingSignals: sample, audited, auditErrors }, null, 2));
+  const imported = await candidates.countDocuments({ countryCode: match.countryCode, status: "imported" });
+  const held = await candidates.countDocuments({ countryCode: match.countryCode, status: { $in: ["possible_duplicate", "import_failed"] } });
+  console.log(JSON.stringify({ count, imported, held, departments, topListingSignals: sample, audited, auditErrors }, null, 2));
   console.log("listedNum is a CJ listing signal; it does not establish sales or shipping demand.");
 } catch (error) {
   console.error("Candidate report failed:", error);
