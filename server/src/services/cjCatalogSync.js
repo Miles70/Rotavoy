@@ -359,7 +359,7 @@ async function syncOneProduct(listProduct, options) {
   const categoryKey = normalizeCategory(categoryLabel);
   const rawDescription = String(detail?.description || listProduct?.description || "");
   const description = cleanText(rawDescription, 6000);
-  const baseImage = detail?.productImage || detail?.bigImage || listProduct?.bigImage || "";
+  const baseImage = detail?.productImage || detail?.bigImage || detail?.productImageSet?.[0] || listProduct?.bigImage || "";
   const descriptionImages = extractCjDescriptionImageUrls(rawDescription);
   const variantLabels = selectedVariants.map(getVariantLabel);
   const structuredFacts = selectedVariants.map((variant) => (
@@ -450,6 +450,7 @@ async function syncOneProduct(listProduct, options) {
       baseImage,
       ...descriptionImages,
     ]);
+    if (!images.length) continue;
     const title = buildVariantTitle(productTitle, variant);
     const variantLabel = variantLabels[variantIndex] || "Default";
     const price = roundMoney(costPrice * options.markupMultiplier);
