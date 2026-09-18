@@ -25,3 +25,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local resumable CJ catalog harvest state
+.rotavoy-cj-stock-harvest.json
+.rotavoy-cj-stock-harvest.json.tmp
+server/.rotavoy-cj-stock-harvest.json
+server/.rotavoy-cj-stock-harvest.json.tmp
