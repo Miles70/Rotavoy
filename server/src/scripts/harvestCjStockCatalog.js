@@ -4,6 +4,7 @@ import path from "node:path";
 import mongoose from "mongoose";
 import { connectDatabase, disconnectDatabase } from "../config/database.js";
 import { getCjCategories, listCjProducts } from "../services/cjApi.js";
+import { Product } from "../models/Product.js";
 
 // Discovery only. This collection is never read by the storefront.
 const COLLECTION = "cj_stock_candidates";
@@ -41,12 +42,37 @@ function categoriesFrom(tree) {
         seen.add(id);
         result.push({
           id,
+          first: String(first.categoryFirstName || ""),
           label: [first.categoryFirstName, second.categorySecondName, third.categoryName].filter(Boolean).join(" > "),
         });
       }
     }
   }
   return result;
+}
+
+// Pick distinct departments early in the pilot. The full scan still visits all categories.
+function diversify(categories) {
+  const groups = new Map();
+  for (const category of categories) {
+    const key = category.first || category.id;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(category);
+  }
+  const preferred = /home|kitchen|electronic|phone|pet|baby|beauty|health|sport|outdoor|travel|luggage|auto|car|garden|office/i;
+  const keys = [...groups.keys()].sort((a, b) => Number(preferred.test(b)) - Number(preferred.test(a)) || a.localeCompare(b));
+  const ordered = [];
+  while (keys.some((key) => groups.get(key).length)) {
+    for (const key of keys) {
+      const next = groups.get(key).shift();
+      if (next) ordered.push(next);
+    }
+  }
+  return ordered;
+}
+
+function normalizeTitle(value) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim().replace(/\s+/g, " ");
 }
 
 async function checkpointWrite(state) {
@@ -73,7 +99,8 @@ async function run() {
   await connectDatabase();
   const collection = mongoose.connection.collection(COLLECTION);
   await collection.createIndex({ countryCode: 1, pid: 1 }, { unique: true });
-  const categories = categoriesFrom(await retry("categories", getCjCategories));
+  await collection.createIndex({ countryCode: 1, status: 1, titleKey: 1 });
+  const categories = diversify(categoriesFrom(await retry("categories", getCjCategories)));
   if (!categories.length) throw new Error("CJ returned no third-level categories; checkpoint unchanged.");
   const state = await checkpointRead();
   if (state.completed) {
@@ -84,6 +111,34 @@ async function run() {
   let categoriesThisRun = 0;
   let pagesThisRun = 0;
   const completed = new Set(state.completedCategoryIds);
+  // Prefer finishing an interrupted page before starting a different department.
+  if (state.currentCategoryId) {
+    const index = categories.findIndex((category) => category.id === state.currentCategoryId);
+    if (index >= 0) categories.unshift(...categories.splice(index, 1));
+  }
+  const existingPids = new Set();
+  const existingTitles = new Set();
+  for await (const product of Product.find({ source: "cj" })
+    .select({ supplierProductId: 1, "supplierContent.title": 1 }).lean().cursor()) {
+    if (product.supplierProductId) existingPids.add(String(product.supplierProductId));
+    const title = normalizeTitle(product.supplierContent?.title);
+    if (title.length >= 18) existingTitles.add(title);
+  }
+  // Earlier pilot candidates can contain products already present in the storefront.
+  await collection.updateMany(
+    { countryCode: COUNTRY_CODE, pid: { $in: [...existingPids] } },
+    { $set: { status: "existing_product" } },
+  );
+  // Backfill the small pilot created before title matching was introduced.
+  for await (const candidate of collection.find(
+    { countryCode: COUNTRY_CODE, status: "candidate", titleKey: { $exists: false } },
+    { projection: { title: 1 } },
+  )) {
+    const titleKey = normalizeTitle(candidate.title);
+    await collection.updateOne({ _id: candidate._id }, {
+      $set: { titleKey, ...(titleKey.length >= 18 && existingTitles.has(titleKey) ? { status: "possible_duplicate" } : {}) },
+    });
+  }
   console.log(`CJ candidate discovery: ${categories.length} categories, ${COUNTRY_CODE} warehouse, ${PAGE_SIZE} per page.`);
   console.log(`No products will be published. Resume: ${CHECKPOINT_PATH}`);
 
@@ -109,19 +164,38 @@ async function run() {
       const ids = [...byId.keys()];
       if (products.length && !ids.length) throw new Error(`No product IDs on ${category.id} page ${page}.`);
       const now = new Date();
-      if (ids.length) {
+      const titleKeys = ids.map((pid) => normalizeTitle(byId.get(pid)?.nameEn || byId.get(pid)?.productNameEn));
+      const existingCandidates = await collection.find({
+        countryCode: COUNTRY_CODE, status: "candidate",
+        titleKey: { $in: titleKeys.filter((title) => title.length >= 18) },
+      }, { projection: { titleKey: 1, pid: 1 } }).toArray();
+      const titlesOnPage = new Map(existingCandidates.map((item) => [item.titleKey, String(item.pid)]));
+      const newIds = ids.filter((pid) => !existingPids.has(pid));
+      const possibleDuplicates = new Set();
+      for (const pid of newIds) {
+        const title = normalizeTitle(byId.get(pid)?.nameEn || byId.get(pid)?.productNameEn);
+        if (title.length < 18) continue;
+        if (existingTitles.has(title) || (titlesOnPage.has(title) && titlesOnPage.get(title) !== pid)) possibleDuplicates.add(pid);
+        else titlesOnPage.set(title, pid);
+      }
+      if (newIds.length) {
         // Bulk upserts complete before the checkpoint advances. A crash may replay a page safely.
-        const operations = ids.map((pid) => ({
+        const operations = newIds.map((pid) => ({
           updateOne: {
             filter: { countryCode: COUNTRY_CODE, pid },
             update: {
               $set: {
                 categoryId: category.id, categoryLabel: category.label, seenAt: now,
                 title: String(byId.get(pid)?.nameEn || byId.get(pid)?.productNameEn || "").slice(0, 260),
+                titleKey: normalizeTitle(byId.get(pid)?.nameEn || byId.get(pid)?.productNameEn),
                 imageUrl: String(byId.get(pid)?.bigImage || byId.get(pid)?.productImage || "").slice(0, 2048),
+                listedNum: Math.max(0, Number(byId.get(pid)?.listedNum) || 0),
+                // CJ listing count is a weak interest proxy, not verified order volume.
+                demandSignal: "cj-listed-count",
                 // List filtering is only a discovery signal; variant stock and destination shipping
                 // must be checked again before any separate publication workflow.
-                stockSignal: "cj-list-filter-cn", status: "candidate",
+                stockSignal: "cj-list-filter-cn",
+                status: possibleDuplicates.has(pid) ? "possible_duplicate" : "candidate",
               },
               $setOnInsert: { countryCode: COUNTRY_CODE, pid, firstSeenAt: now },
             },
@@ -140,10 +214,10 @@ async function run() {
       state.currentCategoryId = category.id;
       state.nextPage = page + 1;
       state.pagesProcessed += 1;
-      state.candidatesSeen += ids.length;
+      state.candidatesSeen += newIds.length - possibleDuplicates.size;
       await checkpointWrite(state);
       pagesThisRun += 1;
-      console.log(`${category.label}: page ${page}/${totalPages}, ${ids.length} candidates, total unique ${await collection.countDocuments({ countryCode: COUNTRY_CODE })}`);
+      console.log(`${category.label}: page ${page}/${totalPages}, ${newIds.length - possibleDuplicates.size} new candidates, ${ids.length - newIds.length} existing IDs excluded, ${possibleDuplicates.size} title matches held for review, total unique ${await collection.countDocuments({ countryCode: COUNTRY_CODE, status: "candidate" })}`);
       if (page >= 1000 && totalPages > 1000) {
         throw new Error(`CJ reports ${totalPages} pages for ${category.id}; 1000-page API ceiling needs a narrower query. Checkpoint saved at page ${state.nextPage}.`);
       }
@@ -166,7 +240,7 @@ async function run() {
   }
   state.completed = categories.every((category) => completed.has(category.id));
   await checkpointWrite(state);
-  console.log(`Discovery ${state.completed ? "complete" : "paused"}: ${completed.size}/${categories.length} categories; ${await collection.countDocuments({ countryCode: COUNTRY_CODE })} unique candidates.`);
+  console.log(`Discovery ${state.completed ? "complete" : "paused"}: ${completed.size}/${categories.length} categories; ${await collection.countDocuments({ countryCode: COUNTRY_CODE, status: "candidate" })} unique candidates.`);
   if (state.completed && state.candidatesSeen === 0) {
     console.warn("CJ returned zero candidates; verify filters and account access.");
   }
