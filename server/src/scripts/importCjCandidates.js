@@ -31,8 +31,12 @@ try {
     const result = await syncCjProductsByIds([candidate.pid]);
     const item = result.results?.[0];
     if (item?.status !== "imported" || !item.activeVariants) {
-      console.warn(`${candidate.pid}: ${item?.error || "no active variants imported"}; retained as candidate.`);
+      console.warn(`${candidate.pid}: ${item?.error || "no active variants imported"}; held for review.`);
       if (/too many requests|qps limit|rate limit/i.test(String(item?.error || ""))) break;
+      await collection.updateOne({ _id: candidate._id }, { $set: {
+        status: "import_failed",
+        importError: String(item?.error || "no active variants imported").slice(0, 300),
+      } });
       continue;
     }
     const activeWithImage = await Product.exists({
@@ -45,6 +49,9 @@ try {
         { $set: { isActive: false } },
       );
       console.warn(`${candidate.pid}: imported without a usable image; kept off the storefront.`);
+      await collection.updateOne({ _id: candidate._id }, { $set: {
+        status: "import_failed", importError: "No active variant with an image",
+      } });
       continue;
     }
     await collection.updateOne({ _id: candidate._id }, {
