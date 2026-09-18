@@ -10,9 +10,9 @@ import { Product } from "../models/Product.js";
 const COLLECTION = "cj_stock_candidates";
 const PAGE_SIZE = 100;
 const COUNTRY_CODE = String(process.env.ROTAVOY_CJ_HARVEST_COUNTRY || "CN").trim().toUpperCase();
-// A small pilot is the default. Explicitly set both limits to 0 for a full scan.
-const MAX_CATEGORIES = Math.max(0, Number.parseInt(process.env.ROTAVOY_CJ_HARVEST_MAX_CATEGORIES || "2", 10) || 0);
-const MAX_PAGES = Math.max(0, Number.parseInt(process.env.ROTAVOY_CJ_HARVEST_MAX_PAGES || "4", 10) || 0);
+// Sample distinct departments before deciding whether a wider scan is useful.
+const MAX_CATEGORIES = Math.max(0, Number.parseInt(process.env.ROTAVOY_CJ_HARVEST_MAX_CATEGORIES || "12", 10) || 0);
+const MAX_PAGES = Math.max(0, Number.parseInt(process.env.ROTAVOY_CJ_HARVEST_MAX_PAGES || "12", 10) || 0);
 const CHECKPOINT_PATH = path.resolve(process.cwd(), ".rotavoy-cj-stock-harvest.json");
 
 function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
@@ -153,7 +153,7 @@ async function run() {
       if (MAX_PAGES && pagesThisRun >= MAX_PAGES) break;
       const data = await retry(`${category.label} page ${page}`, () => listCjProducts({
         page, size: PAGE_SIZE, categoryId: category.id, countryCode: COUNTRY_CODE,
-        startWarehouseInventory: 1, verifiedWarehouse: 1, sort: "asc", orderBy: 3,
+        startWarehouseInventory: 1, verifiedWarehouse: 1, sort: "desc", orderBy: 1,
       }));
       if (!data || !Array.isArray(data.content)) {
         throw new Error(`Unexpected CJ response for ${category.id} page ${page}; checkpoint unchanged.`);
