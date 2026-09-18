@@ -48,17 +48,26 @@ async function audit(candidate) {
   );
   const flags = [];
   const title = String(detail?.productNameEn || detail?.nameEn || "").trim();
-  const imageUrl = detail?.productImage || detail?.bigImage || candidate.imageUrl;
+  const imageUrl = [
+    detail?.productImage, detail?.bigImage, detail?.productImageSet?.[0],
+    viable[0]?.variantImage, variants[0]?.variantImage, candidate.imageUrl,
+  ].find(validImage) || "";
   if (!title) flags.push("missing_title");
   if (!validImage(imageUrl)) flags.push("missing_image");
   if (!variants.length) flags.push("missing_variants");
   if (!stockMap.size) flags.push("inventory_unverified");
   if (!viable.length) flags.push("no_priced_in_stock_variant");
-  if (candidate.categoryLabel && title) flags.push("category_and_title_require_manual_review");
+  // Supplier category names can be wrong; display the label for review without
+  // asserting that every product is miscategorised.
 
   const shipping = {};
   if (viable.length) {
     for (const country of DESTINATIONS) {
+      if (candidate.audit?.sampledVariantId === String(viable[0].vid) &&
+        candidate.audit?.shipping?.[country] === "methods_returned") {
+        shipping[country] = "methods_returned";
+        continue;
+      }
       try {
         const rows = await retry(() => calculateCjFreight({
           endCountryCode: country,
@@ -78,7 +87,7 @@ async function audit(candidate) {
   return {
     status: "candidate",
     audit: {
-      checkedAt: new Date(), title, imageUrl: String(imageUrl || "").slice(0, 2048),
+      version: 2, checkedAt: new Date(), title, imageUrl: String(imageUrl || "").slice(0, 2048),
       variants: variants.length, pricedInStockVariants: viable.length,
       sampledVariantId: viable[0]?.vid || "",
       sampledVariantStock: viable.length ? Number(stockMap.get(String(viable[0].vid))) : 0,
@@ -92,7 +101,7 @@ try {
   await connectDatabase();
   const collection = mongoose.connection.collection("cj_stock_candidates");
   const candidates = await collection.find({
-    countryCode: COUNTRY, status: "candidate", "audit.checkedAt": { $exists: false },
+    countryCode: COUNTRY, status: "candidate", "audit.version": { $ne: 2 },
   }).sort({ listedNum: -1, firstSeenAt: 1 }).limit(LIMIT).toArray();
   console.log(`Auditing ${candidates.length} candidates; storefront remains unchanged.`);
   for (const candidate of candidates) {
