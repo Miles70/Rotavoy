@@ -14,7 +14,6 @@
     "cj:expand-horeca": "node src/scripts/expandHorecaCatalog.js",
     "cj:expand-wave2": "node src/scripts/expandSecondWaveCatalog.js",
     "cj:harvest-stock": "node src/scripts/harvestCjStockCatalog.js",
-    "cj:harvest-stock": "node src/scripts/harvestCjStockCatalog.js",
     "content:translate": "node src/scripts/backfillProductTranslations.js",
     "content:enrich": "node src/scripts/enrichProductContent.js",
     "content:audit-languages": "node src/scripts/auditProductLanguages.js",
