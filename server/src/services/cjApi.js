@@ -1,5 +1,11 @@
 const CJ_BASE_URL = "https://developers.cjdropshipping.com/api2.0/v1";
-const MIN_REQUEST_INTERVAL_MS = 1050;
+const configuredMinRequestInterval = Number.parseInt(
+  process.env.CJ_MIN_REQUEST_INTERVAL_MS || "1500",
+  10,
+);
+const MIN_REQUEST_INTERVAL_MS = Number.isInteger(configuredMinRequestInterval)
+  ? Math.max(configuredMinRequestInterval, 1100)
+  : 1500;
 
 let cachedToken = "";
 let tokenExpiresAt = 0;
@@ -52,7 +58,7 @@ async function fetchJson(url, options = {}) {
       if (!response.ok) {
         throw createCjError(
           payload?.message || `CJ API request failed with ${response.status}.`,
-          response.status >= 500 ? 502 : 400,
+          response.status === 429 ? 429 : response.status >= 500 ? 502 : 400,
           payload,
         );
       }
@@ -80,9 +86,19 @@ function assertCjSuccess(payload) {
   }
 
   const message = String(payload?.message || "CJ API returned an error.");
+  const code = Number(payload?.code || 0);
   const authFailure =
-    Number(payload?.code) === 1600001 || /auth|token|access/i.test(message);
-  throw createCjError(message, authFailure ? 401 : 502, payload);
+    code === 1600001 || /auth|token|access/i.test(message);
+  const rateLimited =
+    code === 1600200 || /too many requests|qps limit|rate limit/i.test(message);
+  const temporarilyUnavailable =
+    /system busy|temporar|service unavailable|gateway|timed out|timeout/i.test(message);
+
+  throw createCjError(
+    message,
+    authFailure ? 401 : rateLimited ? 429 : temporarilyUnavailable ? 503 : 502,
+    payload,
+  );
 }
 
 async function createAccessToken() {
@@ -178,18 +194,33 @@ export function isCjConfigured() {
   return Boolean(String(process.env.CJ_API_KEY || "").trim());
 }
 
+export async function getCjCategories() {
+  return authenticatedRequest("/product/getCategory");
+}
+
 export async function listCjProducts({
   page = 1,
   size = 20,
   keyWord = "",
+  categoryId = "",
+  countryCode = "",
+  startWarehouseInventory,
+  verifiedWarehouse = 1,
+  sort = "",
+  orderBy,
 } = {}) {
   return authenticatedRequest("/product/listV2", {
     query: {
       page,
       size,
       keyWord,
+      categoryId,
+      countryCode,
+      startWarehouseInventory,
       features: ["enable_category", "enable_description", "enable_video"],
-      verifiedWarehouse: 1,
+      verifiedWarehouse,
+      sort,
+      orderBy,
     },
   });
 }
