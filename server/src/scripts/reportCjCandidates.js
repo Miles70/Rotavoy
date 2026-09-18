@@ -15,7 +15,12 @@ try {
   ]).toArray();
   const sample = await candidates.find(match, { projection: { _id: 0, pid: 1, title: 1, categoryLabel: 1, listedNum: 1 } })
     .sort({ listedNum: -1 }).limit(20).toArray();
-  console.log(JSON.stringify({ count, departments, topListingSignals: sample }, null, 2));
+  const audited = await candidates.find(
+    { ...match, "audit.checkedAt": { $exists: true } },
+    { projection: { _id: 0, pid: 1, title: 1, listedNum: 1, "audit.pricedInStockVariants": 1, "audit.sampledCostUsd": 1, "audit.shipping": 1, "audit.flags": 1, "audit.decision": 1 } },
+  ).sort({ listedNum: -1 }).limit(100).toArray();
+  const auditErrors = await candidates.countDocuments({ ...match, auditError: { $exists: true }, "audit.checkedAt": { $exists: false } });
+  console.log(JSON.stringify({ count, departments, topListingSignals: sample, audited, auditErrors }, null, 2));
   console.log("listedNum is a CJ listing signal; it does not establish sales or shipping demand.");
 } catch (error) {
   console.error("Candidate report failed:", error);
