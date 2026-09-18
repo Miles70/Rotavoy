@@ -16,6 +16,7 @@
     "cj:harvest-stock": "node src/scripts/harvestCjStockCatalog.js",
     "cj:harvest-report": "node src/scripts/reportCjCandidates.js",
     "cj:harvest-audit": "node src/scripts/auditCjCandidates.js",
+    "cj:harvest-import": "node src/scripts/importCjCandidates.js",
     "content:translate": "node src/scripts/backfillProductTranslations.js",
     "content:enrich": "node src/scripts/enrichProductContent.js",
     "content:audit-languages": "node src/scripts/auditProductLanguages.js",
