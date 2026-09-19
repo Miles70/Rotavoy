@@ -33,9 +33,9 @@ test("related products prioritize semantic accessories from the same supplier fa
     8,
   );
 
-  assert.equal(ranked[0].groupKey, "purifier:image:https://img.example/filter.jpg");
+  assert.equal(ranked[0].groupKey, "lamp");
   assert.equal(
-    ranked.some((group) => group.groupKey === "purifier:image:https://img.example/purifier.jpg"),
+    ranked.some((group) => group.groupKey === "purifier"),
     false,
   );
 });
@@ -67,7 +67,7 @@ test("popular catalog prioritizes video products without changing newest sorting
   assert.equal(buildCatalogGroupSummaries(rows, "newest")[0].groupKey, "popular");
 });
 
-test("catalog grouping keeps ordinary variants on one card and accessories separate", () => {
+test("catalog grouping keeps every variant of one supplier parent on one card", () => {
   const rows = [
     { _id: "small", key: "small", supplierProductId: "mat", variantGroupKey: "product", imageUrl: "https://img.example/mat.jpg", price: 3.05, stock: 2 },
     { _id: "medium", key: "medium", supplierProductId: "mat", variantGroupKey: "product", imageUrl: "https://img.example/mat.jpg", price: 6.24, stock: 2 },
@@ -78,28 +78,22 @@ test("catalog grouping keeps ordinary variants on one card and accessories separ
 
   const groups = buildCatalogGroupSummaries(rows);
 
-  assert.equal(groups.length, 2);
-  assert.equal(
-    groups.find((group) => group.groupKey === "mat:image:https://img.example/mat.jpg").variantCount,
-    4,
-  );
-  assert.equal(
-    groups.find((group) => group.groupKey === "mat:image:https://img.example/filter.jpg").variantCount,
-    1,
-  );
+  assert.equal(groups.length, 1);
+  assert.equal(groups[0].groupKey, "mat");
+  assert.equal(groups[0].variantCount, 5);
 });
 
 
-test("catalog grouping keeps different primary images as separate visual cards", () => {
+test("catalog grouping collapses different primary images under one parent card", () => {
   const groups = buildCatalogGroupSummaries([
     { _id: "black-39", key: "black-39", supplierProductId: "shoe", imageUrl: "https://img.example/black.jpg", price: 10, stock: 2 },
     { _id: "black-40", key: "black-40", supplierProductId: "shoe", imageUrl: "https://img.example/black.jpg", price: 11, stock: 3 },
     { _id: "white-39", key: "white-39", supplierProductId: "shoe", imageUrl: "https://img.example/white.jpg", price: 12, stock: 4 },
   ]);
 
-  assert.equal(groups.length, 2);
-  assert.equal(groups.find((group) => group.groupKey.includes("black.jpg")).variantCount, 2);
-  assert.equal(groups.find((group) => group.groupKey.includes("white.jpg")).variantCount, 1);
+  assert.equal(groups.length, 1);
+  assert.equal(groups[0].groupKey, "shoe");
+  assert.equal(groups[0].variantCount, 3);
 });
 
 test("storefront language is constrained to Rotavoy languages", () => {

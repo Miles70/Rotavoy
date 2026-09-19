@@ -114,18 +114,7 @@ export function buildGroupedStorefrontProduct(group, language) {
 
 function getCatalogGroupKey(row) {
   const supplierProductId = String(row?.supplierProductId || "").trim();
-  const productKey = String(row?.key || "").trim();
-  if (!supplierProductId) return productKey;
-
-  const primaryImage = String(
-    row?.imageUrl || (Array.isArray(row?.images) ? row.images[0] : "") || "",
-  ).trim();
-
-  // One visual card per parent + primary image. Size/capacity variants sharing
-  // the same image collapse; genuinely different color/style imagery may stay.
-  return primaryImage
-    ? `${supplierProductId}:image:${primaryImage}`
-    : supplierProductId;
+  return supplierProductId || String(row?.key || "").trim();
 }
 
 function compareCatalogRepresentatives(left, right) {
