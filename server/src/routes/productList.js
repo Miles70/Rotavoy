@@ -9,7 +9,6 @@ import {
 } from "../services/catalogSearch.js";
 import {
   buildGroupedStorefrontProduct,
-  buildCatalogGroupSummaries,
   getLocalizedSearchFields,
   normalizeStorefrontLanguage,
   STOREFRONT_PRIVATE_FIELDS,
