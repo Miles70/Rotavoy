@@ -8,6 +8,7 @@ import { connectDatabase, disconnectDatabase } from "../config/database.js";
 const CHECKPOINT = path.resolve(process.cwd(), ".rotavoy-cj-stock-harvest.json");
 const COUNTRY = String(process.env.ROTAVOY_CJ_HARVEST_COUNTRY || "CN").toUpperCase();
 const MAX_CYCLES = Math.max(1, Number.parseInt(process.env.ROTAVOY_CJ_GROW_CYCLES || "1000", 10) || 1000);
+const API_POINTS_EXIT_CODE = 75;
 const scripts = [
   "harvestCjStockCatalog.js",
   "auditCjCandidates.js",
@@ -22,8 +23,12 @@ function runScript(name) {
     });
     child.once("error", reject);
     child.once("exit", (code, signal) => {
-      if (code === 0) resolve();
-      else reject(new Error(`${name} stopped (${signal || code}). Resume with the same command.`));
+      if (code === 0) resolve("completed");
+      else if (name === "importCjCandidates.js" && code === API_POINTS_EXIT_CODE) {
+        resolve("api_points_exhausted");
+      } else {
+        reject(new Error(`${name} stopped (${signal || code}). Resume with the same command.`));
+      }
     });
   });
 }
@@ -36,10 +41,17 @@ async function checkpoint() {
 try {
   console.log("Growing CJ catalog in resumable discovery/audit/import batches. Ctrl+C stops the run.");
 
+  catalogCycles:
   for (let cycle = 1; cycle <= MAX_CYCLES; cycle += 1) {
     const before = await checkpoint();
     console.log(`\n=== CJ catalog cycle ${cycle}: ${before.completedCategoryIds?.length || 0} categories complete ===`);
-    for (const name of scripts) await runScript(name);
+    for (const name of scripts) {
+      const result = await runScript(name);
+      if (result === "api_points_exhausted") {
+        console.log("CJ catalog growth stopped cleanly because today's API points are exhausted. Resume later with the same command.");
+        break catalogCycles;
+      }
+    }
 
     await connectDatabase();
     const collection = mongoose.connection.collection("cj_stock_candidates");
