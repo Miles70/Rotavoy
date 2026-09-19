@@ -78,15 +78,9 @@ test("catalog grouping keeps every variant of one supplier parent on one card", 
 
   const groups = buildCatalogGroupSummaries(rows);
 
-  assert.equal(groups.length, 2);
-  assert.equal(
-    groups.find((group) => group.groupKey === "mat:image:https://img.example/mat.jpg").variantCount,
-    4,
-  );
-  assert.equal(
-    groups.find((group) => group.groupKey === "mat:image:https://img.example/filter.jpg").variantCount,
-    1,
-  );
+  assert.equal(groups.length, 1);
+  assert.equal(groups[0].groupKey, "mat");
+  assert.equal(groups[0].variantCount, 5);
 });
 
 
@@ -97,9 +91,9 @@ test("catalog grouping collapses different primary images under one parent card"
     { _id: "white-39", key: "white-39", supplierProductId: "shoe", imageUrl: "https://img.example/white.jpg", price: 12, stock: 4 },
   ]);
 
-  assert.equal(groups.length, 2);
-  assert.equal(groups.find((group) => group.groupKey.includes("black.jpg")).variantCount, 2);
-  assert.equal(groups.find((group) => group.groupKey.includes("white.jpg")).variantCount, 1);
+  assert.equal(groups.length, 1);
+  assert.equal(groups[0].groupKey, "shoe");
+  assert.equal(groups[0].variantCount, 3);
 });
 
 test("storefront language is constrained to Rotavoy languages", () => {
