@@ -89,6 +89,9 @@ function buildCatalogGroupKeyExpression() {
 async function getGroupedCjCatalog({ filter, sortMode, requestedPage, limit, language }) {
   // Group lightweight variant rows in MongoDB so the API does not pull every
   // matching variant into Node before it can return one storefront card.
+  // Pick the cheapest representative inside each group with $top instead of
+  // globally sorting every matching variant first. This keeps large catalogs
+  // under Atlas shared-tier aggregation memory limits.
   const groupSort = sortMode === "newest"
     ? { representativeCreatedAt: -1, representativeKey: 1 }
     : {
@@ -113,19 +116,38 @@ async function getGroupedCjCatalog({ filter, sortMode, requestedPage, limit, lan
         groupKey: buildCatalogGroupKeyExpression(),
       },
     },
-    { $sort: { groupKey: 1, price: 1, key: 1 } },
     {
       $group: {
         _id: "$groupKey",
-        representativeId: { $first: "$_id" },
-        representativeKey: { $first: "$key" },
-        representativePopularity: { $first: "$popularity" },
-        representativeCreatedAt: { $first: "$createdAt" },
+        representative: {
+          $top: {
+            sortBy: { price: 1, key: 1 },
+            output: {
+              id: "$_id",
+              key: "$key",
+              popularity: "$popularity",
+              createdAt: "$createdAt",
+            },
+          },
+        },
         variantCount: { $sum: 1 },
         priceMin: { $min: "$price" },
         priceMax: { $max: "$price" },
         stockTotal: { $sum: "$stock" },
         hasVideo: { $max: { $cond: ["$hasVideo", 1, 0] } },
+      },
+    },
+    {
+      $project: {
+        representativeId: "$representative.id",
+        representativeKey: "$representative.key",
+        representativePopularity: "$representative.popularity",
+        representativeCreatedAt: "$representative.createdAt",
+        variantCount: 1,
+        priceMin: 1,
+        priceMax: 1,
+        stockTotal: 1,
+        hasVideo: 1,
       },
     },
     { $sort: groupSort },
