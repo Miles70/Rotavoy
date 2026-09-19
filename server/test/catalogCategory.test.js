@@ -276,6 +276,45 @@ test("category classifier catches appliance and beauty product types in noisy st
   );
 });
 
+
+test("category classifier handles remaining audited title edge cases", () => {
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Home, Garden & Furniture > Home Storage > Home Office Storage",
+      title: "Baby Dining Chair Multifunctional Foldable Portable Outdoor Beach Seat",
+    }),
+    "baby",
+  );
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Home Improvement > Indoor Lighting > Night Lights",
+      title: "Night Light For Bedroom Bedside Lamp For Sleep Baby Feeding",
+    }),
+    "home",
+  );
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Home, Garden & Furniture > Home Storage > Home Office Storage",
+      title: "3D Jewelry Coin Display Stand Case Rack Collections Storage Box For Doll Coin",
+    }),
+    "home",
+  );
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Home, Garden & Furniture > Home Storage > Home Office Storage",
+      title: "Christmas Advent Calendar Santa Claus Faceless Doll Hanging Christmas Decor",
+    }),
+    "home",
+  );
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Home, Garden & Furniture > Home Storage > Home Office Storage",
+      title: "Simple Temperament PU Travel Portable Zipper Jewelry Box",
+    }),
+    "home",
+  );
+});
+
 test("category classifier keeps genuinely generic merchandise visible in home", () => {
   assert.equal(
     classifyCatalogCategory({ categoryLabel: "General Merchandise", title: "Everyday Utility Item" }),
