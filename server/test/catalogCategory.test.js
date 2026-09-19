@@ -59,6 +59,69 @@ test("category classifier uses title to disambiguate broad mixed supplier catego
   );
 });
 
+
+test("category classifier respects strong CJ department taxonomy", () => {
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Pet Supplies > Pet Toys > Pet Plush Toys",
+      title: "Dog Plush Toy",
+    }),
+    "pets",
+  );
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Automobiles & Motorcycles > Tools, Maintenance & Care > Paint Care",
+      title: "Car Wax Polishing Tool",
+    }),
+    "automotive",
+  );
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Sports & Outdoors > Sportswear > Pants",
+      title: "Men's Running Pants",
+    }),
+    "sports",
+  );
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Consumer Electronics > Smart Electronics > Smart Watches",
+      title: "LED Digital Watch",
+    }),
+    "electronics",
+  );
+});
+
+test("category classifier routes CJ household and children taxonomy by branch", () => {
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Home & Garden, Furniture / Home Textiles / Bedding Sets",
+      title: "Cooling Summer Blanket",
+    }),
+    "home",
+  );
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Home Improvement > Home Appliances > Kitchen Appliances",
+      title: "Heating Lunch Box",
+    }),
+    "appliances",
+  );
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Toys, Kids & Baby > Baby Clothing > Baby Rompers",
+      title: "Baby Romper",
+    }),
+    "baby",
+  );
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Toys, Kids & Baby > Toys & Hobbies > Action & Toy Figures",
+      title: "Dinosaur Water Gun Toy",
+    }),
+    "toys",
+  );
+});
+
 test("category classifier keeps genuinely generic merchandise visible in home", () => {
   assert.equal(
     classifyCatalogCategory({ categoryLabel: "General Merchandise", title: "Everyday Utility Item" }),
