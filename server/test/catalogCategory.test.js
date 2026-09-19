@@ -47,6 +47,18 @@ test("category classifier falls back to the product title for generic supplier c
   );
 });
 
+
+test("category classifier uses title to disambiguate broad mixed supplier categories", () => {
+  assert.equal(
+    classifyCatalogCategory({ categoryLabel: "Home & Garden", title: "Kitchen Storage Organizer" }),
+    "home",
+  );
+  assert.equal(
+    classifyCatalogCategory({ categoryLabel: "Home & Garden", title: "Garden Power Tool Set" }),
+    "tools",
+  );
+});
+
 test("category classifier keeps genuinely generic merchandise visible in home", () => {
   assert.equal(
     classifyCatalogCategory({ categoryLabel: "General Merchandise", title: "Everyday Utility Item" }),
