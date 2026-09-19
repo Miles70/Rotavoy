@@ -211,13 +211,26 @@ function classifySupplierTaxonomy(categoryLabel, title = "") {
   }
 
   if (/\bhealth\b.*\bbeauty\b.*\bhair\b/.test(label)) {
-    if (/\bfood\b.*\bhealth\b|\bfood\b|\bbeverage\b|\bcoffee\b|\btea\b/.test(label)) {
+    if (
+      /\bcoffee\b|\btea\b|\bbeverage\b|\bsnack\b|\bcandy\b|\bchocolate\b/.test(titleLower) ||
+      /\bfood\s*&\s*beverage\b/.test(label)
+    ) {
       return "grocery";
     }
+    // "Food & Health > Health Care Products" also contains supplements,
+    // vitamins and wellness items that are a better fit for Beauty/Care than
+    // the supermarket bucket.
     return "beauty";
   }
 
   if (/\bhome improvement\b/.test(label)) {
+    // CJ occasionally files obvious toys, baby items or pet products under
+    // lighting/home-improvement branches. Let explicit product-title evidence
+    // rescue those outliers before the broad home fallback.
+    for (const preferred of ["pets", "baby", "toys", "automotive"]) {
+      if (titleMatches.includes(preferred)) return preferred;
+    }
+
     if (/\bpersonal care appliances\b/.test(label)) return "beauty";
     if (/\bhome appliances\b|\bkitchen appliances\b|\bair conditioning appliances\b|\bhome appliance parts\b/.test(label)) {
       return "appliances";
@@ -231,14 +244,32 @@ function classifySupplierTaxonomy(categoryLabel, title = "") {
     if (/\bgarden tools?\b|\bpower tools?\b|\bhand tools?\b|\bhardware\b/.test(label)) return "tools";
 
     if (/\bhome office storage\b/.test(label)) {
-      for (const preferred of ["office", "appliances", "electronics", "sports", "tools"]) {
+      // This CJ branch is extremely noisy. Prefer the product's concrete type
+      // over the supplier's generic "Home Office Storage" bucket.
+      for (const preferred of [
+        "pets",
+        "baby",
+        "toys",
+        "automotive",
+        "beauty",
+        "appliances",
+        "electronics",
+        "sports",
+        "office",
+        "tools",
+        "fashion",
+        "home",
+      ]) {
         if (titleMatches.includes(preferred)) return preferred;
       }
       return "home";
     }
 
     if (/\barts?\b.*\bcrafts?\b|\bcrafts?\b.*\bsewing\b/.test(label)) {
-      for (const preferred of ["hobby", "office", "home", "fashion", "tools", "electronics"]) {
+      if (/\bwall decoration\b|\bwall decor\b|\bdecor painting\b|\bhanging painting\b/.test(titleLower)) {
+        return "home";
+      }
+      for (const preferred of ["office", "home", "hobby", "fashion", "tools", "electronics"]) {
         if (titleMatches.includes(preferred)) return preferred;
       }
       return "hobby";
