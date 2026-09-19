@@ -29,11 +29,11 @@ const categories = [
   },
   {
     key: "supermarketPets",
-    sourceKeys: ["pets"],
+    sourceKeys: ["pets", "grocery"],
   },
   {
     key: "booksMusicFilmHobby",
-    sourceKeys: ["gaming"],
+    sourceKeys: ["gaming", "hobby"],
   },
 ];
 
