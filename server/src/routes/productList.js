@@ -86,6 +86,18 @@ function buildCatalogGroupKeyExpression() {
   };
 }
 
+function buildCategoryGroupExpression() {
+  return {
+    $switch: {
+      branches: Object.entries(CATEGORY_GROUPS).map(([groupKey, categoryKeys]) => ({
+        case: { $in: ["$categoryKey", categoryKeys] },
+        then: groupKey,
+      })),
+      default: null,
+    },
+  };
+}
+
 async function getGroupedCjCatalog({ filter, sortMode, requestedPage, limit, language }) {
   // Group lightweight variant rows in MongoDB so the API does not pull every
   // matching variant into Node before it can return one storefront card.
@@ -207,40 +219,117 @@ productListRouter.get("/featured-categories", async (request, response, next) =>
           stock: { $gt: 0 },
           categoryKey: { $in: [...new Set(Object.values(CATEGORY_GROUPS).flat())] },
         };
-        const rows = await Product.find(filter)
-          .select("_id key categoryKey supplierProductId variantGroupKey price popularity createdAt stock hasVideo")
-          .lean();
-        const summariesByGroup = new Map();
+        // Collapse variants in MongoDB first. The old implementation loaded every
+        // matching CJ variant into Node and re-filtered/re-sorted the same array for
+        // each storefront category, which became slow as the catalog grew.
+        const groupedRows = await Product.aggregate([
+          { $match: filter },
+          {
+            $project: {
+              key: 1,
+              categoryKey: 1,
+              supplierProductId: 1,
+              variantGroupKey: 1,
+              price: 1,
+              popularity: 1,
+              createdAt: 1,
+              stock: 1,
+              hasVideo: 1,
+              categoryGroup: buildCategoryGroupExpression(),
+              groupKey: buildCatalogGroupKeyExpression(),
+            },
+          },
+          { $match: { categoryGroup: { $ne: null } } },
+          {
+            $group: {
+              _id: {
+                categoryGroup: "$categoryGroup",
+                groupKey: "$groupKey",
+              },
+              representative: {
+                $top: {
+                  sortBy: { price: 1, key: 1 },
+                  output: {
+                    id: "$_id",
+                    key: "$key",
+                    popularity: "$popularity",
+                    createdAt: "$createdAt",
+                  },
+                },
+              },
+              variantCount: { $sum: 1 },
+              priceMin: { $min: "$price" },
+              priceMax: { $max: "$price" },
+              stockTotal: { $sum: "$stock" },
+              hasVideo: { $max: { $cond: ["$hasVideo", 1, 0] } },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              categoryGroup: "$_id.categoryGroup",
+              representativeId: "$representative.id",
+              representativeKey: "$representative.key",
+              representativePopularity: "$representative.popularity",
+              representativeCreatedAt: "$representative.createdAt",
+              variantCount: 1,
+              priceMin: 1,
+              priceMax: 1,
+              stockTotal: 1,
+              hasVideo: 1,
+            },
+          },
+          {
+            $sort: {
+              categoryGroup: 1,
+              hasVideo: -1,
+              representativePopularity: -1,
+              representativeCreatedAt: -1,
+              representativeKey: 1,
+            },
+          },
+        ]).allowDiskUse(true);
+
+        const summariesByGroup = new Map(
+          Object.keys(CATEGORY_GROUPS).map((groupKey) => [groupKey, []]),
+        );
+        const totalsByGroup = new Map(
+          Object.keys(CATEGORY_GROUPS).map((groupKey) => [groupKey, 0]),
+        );
         const representativeIds = new Set();
 
-        for (const [groupKey, sourceKeys] of Object.entries(CATEGORY_GROUPS)) {
-          const sourceKeySet = new Set(sourceKeys);
-          const summaries = buildCatalogGroupSummaries(
-            rows.filter((row) => sourceKeySet.has(String(row?.categoryKey || ""))),
-            "popular",
-          );
-          summariesByGroup.set(groupKey, summaries);
-          for (const summary of summaries.slice(0, FEATURED_CATEGORY_CANDIDATE_LIMIT)) {
-            representativeIds.add(summary.representative._id);
-          }
+        for (const summary of groupedRows) {
+          const groupKey = String(summary.categoryGroup || "");
+          if (!summariesByGroup.has(groupKey)) continue;
+
+          totalsByGroup.set(groupKey, (totalsByGroup.get(groupKey) || 0) + 1);
+          const summaries = summariesByGroup.get(groupKey);
+          if (summaries.length >= FEATURED_CATEGORY_CANDIDATE_LIMIT) continue;
+
+          summaries.push(summary);
+          representativeIds.add(summary.representativeId);
         }
 
-        const representativeProducts = await Product.find({ _id: { $in: [...representativeIds] } })
-          .select(STOREFRONT_PRIVATE_FIELDS)
-          .lean();
+        const representativeProducts = representativeIds.size
+          ? await Product.find({ _id: { $in: [...representativeIds] } })
+              .select(STOREFRONT_PRIVATE_FIELDS)
+              .lean()
+          : [];
         const productsById = new Map(
           representativeProducts.map((product) => [String(product._id), product]),
         );
         const categories = {};
         let total = 0;
 
-        for (const [groupKey, summaries] of summariesByGroup) {
-          total += summaries.length;
+        for (const groupKey of Object.keys(CATEGORY_GROUPS)) {
+          const summaries = summariesByGroup.get(groupKey) || [];
+          const groupTotal = totalsByGroup.get(groupKey) || 0;
+          total += groupTotal;
+
           const candidates = summaries
-            .slice(0, FEATURED_CATEGORY_CANDIDATE_LIMIT)
             .map((summary) => ({
               summary,
-              product: productsById.get(String(summary.representative._id)),
+              product: productsById.get(String(summary.representativeId)),
             }))
             .filter(({ product }) => product);
           const imageCandidates = candidates.filter(({ product }) => hasProductImage(product));
@@ -248,7 +337,7 @@ productListRouter.get("/featured-categories", async (request, response, next) =>
             .slice(0, previewLimit);
 
           categories[groupKey] = {
-            total: summaries.length,
+            total: groupTotal,
             products: chosen.map(({ product, summary }) =>
               buildGroupedStorefrontProduct({
                 product,
