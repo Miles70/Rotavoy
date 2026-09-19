@@ -112,6 +112,22 @@ export function buildGroupedStorefrontProduct(group, language) {
   };
 }
 
+function getCatalogGroupKey(row) {
+  const supplierProductId = String(row?.supplierProductId || "").trim();
+  const productKey = String(row?.key || "").trim();
+  if (!supplierProductId) return productKey;
+
+  const primaryImage = String(
+    row?.imageUrl || (Array.isArray(row?.images) ? row.images[0] : "") || "",
+  ).trim();
+
+  // One visual card per parent + primary image. Size/capacity variants sharing
+  // the same image collapse; genuinely different color/style imagery may stay.
+  return primaryImage
+    ? `${supplierProductId}:image:${primaryImage}`
+    : supplierProductId;
+}
+
 function compareCatalogRepresentatives(left, right) {
   return Number(left.price || 0) - Number(right.price || 0) ||
     String(left.key || "").localeCompare(String(right.key || ""));
@@ -121,8 +137,7 @@ export function buildCatalogGroupSummaries(rows, sortMode = "popular") {
   const groups = new Map();
 
   for (const row of Array.isArray(rows) ? rows : []) {
-    const supplierProductId = String(row?.supplierProductId || "").trim();
-    const groupKey = supplierProductId || String(row?.key || "").trim();
+    const groupKey = getCatalogGroupKey(row);
     if (!groupKey) continue;
 
     const price = Number(row?.price || 0);
@@ -183,7 +198,7 @@ function recommendationTokens(value) {
 
 export function rankRelatedCatalogGroups(product, summaries, limit = 8) {
   const currentSupplierId = String(product?.supplierProductId || "").trim();
-  const currentGroupKey = currentSupplierId || String(product?.key || "").trim();
+  const currentGroupKey = getCatalogGroupKey(product);
   const currentTokens = recommendationTokens(product?.title);
   const currentBrand = String(product?.brand || "").trim().toLocaleLowerCase("en-US");
   const currentCategory = String(product?.categoryKey || "").trim();
