@@ -63,14 +63,22 @@ function getSearchFields(language) {
 
 function buildCatalogGroupKeyExpression() {
   const supplierProductId = { $ifNull: ["$supplierProductId", ""] };
+  const imageUrl = { $ifNull: ["$imageUrl", ""] };
 
-  // One CJ parent product equals one storefront card. Individual supplier
-  // variants stay in MongoDB for stock, pricing and checkout, but they are
-  // selected inside the product detail page instead of occupying catalog slots.
+  // Keep visually identical variants collapsed into one storefront card.
+  // If the same CJ parent has a genuinely different primary image (for
+  // example another color/style), it may keep a separate visual card.
+  // All active variants still remain selectable on the product detail page.
   return {
     $cond: [
       { $gt: [{ $strLenCP: supplierProductId }, 0] },
-      supplierProductId,
+      {
+        $cond: [
+          { $gt: [{ $strLenCP: imageUrl }, 0] },
+          { $concat: [supplierProductId, ":image:", imageUrl] },
+          supplierProductId,
+        ],
+      },
       { $ifNull: ["$key", ""] },
     ],
   };
