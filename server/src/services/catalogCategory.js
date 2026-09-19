@@ -103,6 +103,8 @@ const CATEGORY_RULES = [
     patterns: [
       /\boffice\b/i, /\bstationery\b/i, /\boffice supplies\b/i,
       /\bstapler\b/i, /\bprinter paper\b/i, /\bdesk organizer\b/i,
+      /\bnotebook\b/i, /\bnotepad\b/i, /\bballpoint pen\b/i,
+      /\bfountain pen\b/i, /\bdesk mat\b/i, /\bfile folder\b/i,
     ],
   },
   {
@@ -129,7 +131,8 @@ const CATEGORY_RULES = [
       /\bdecor(?:ation)?\b/i, /\bbedding\b/i, /\bbathroom\b/i,
       /\bstorage\b/i, /\borganizer\b/i, /\blamp\b/i, /\blighting\b/i,
       /\bcookware\b/i, /\btableware\b/i, /\bcurtain\b/i, /\bpillow\b/i,
-      /\bblanket\b/i,
+      /\bblanket\b/i, /\bchristmas tree\b/i, /\bincense burner\b/i,
+      /\bsofa cushion\b/i, /\bbedside table\b/i,
     ],
   },
 ];
@@ -152,14 +155,26 @@ function matchingCategoryKeys(text) {
     .map((rule) => rule.key);
 }
 
-function classifySupplierTaxonomy(categoryLabel) {
+function classifySupplierTaxonomy(categoryLabel, title = "") {
   const label = cleanCategoryText(categoryLabel).toLowerCase();
+  const productTitle = cleanCategoryText(title);
+  const titleLower = productTitle.toLowerCase();
+  const titleMatches = matchingCategoryKeys(productTitle);
   if (!label) return "";
 
   // Prefer CJ's top-level taxonomy over incidental words in a product title.
-  // This prevents categories such as Pet Toys, Car Electronics, Beauty Tools
-  // and Sportswear from leaking into generic Toys/Electronics/Tools/Fashion.
-  if (/\bpet supplies\b/.test(label)) return "pets";
+  // A few known broad/misfiled supplier branches are resolved with title
+  // evidence below instead of blindly trusting a single keyword.
+  if (/\bpet supplies\b/.test(label)) {
+    if (
+      /\braised garden bed\b|\bplanter box\b|\bgreenhouse\b/.test(titleLower) &&
+      !/\bpet\b|\bdog\b|\bcat\b|\banimal\b/.test(titleLower)
+    ) {
+      return "tools";
+    }
+    return "pets";
+  }
+
   if (/\bautomobiles?\b.*\bmotorcycles?\b|\bautomotive\b/.test(label)) return "automotive";
   if (/\bsports?\b.*\boutdoors?\b/.test(label)) return "sports";
   if (/\bconsumer electronics\b|\bphones?\b.*\baccessories\b/.test(label)) return "electronics";
@@ -172,12 +187,26 @@ function classifySupplierTaxonomy(categoryLabel) {
   }
 
   if (/\btoys?\b.*\bkids?\b.*\bbab(?:y|ies)\b/.test(label)) {
+    if (
+      /\belectronic pets\b/.test(label) &&
+      /\banti[- ]?lost\b|\bbluetooth tracker\b|\bgps locator\b|\btracking locator\b/.test(titleLower) &&
+      !/\btoy\b|\bdoll\b|\bsimulation\b|\bpretend\b/.test(titleLower)
+    ) {
+      return "electronics";
+    }
+
+    if (/\bdoll\b/.test(titleLower)) return "toys";
+
+    if (
+      /\bbaby\s*&\s*mother\b|\bbaby clothing\b|\bboys? clothing\b|\bgirls? clothing\b|\bshoes?\s*&\s*bags\b|\bbaby accessories\b|\bfirst walkers\b/.test(label)
+    ) {
+      return "baby";
+    }
+
     if (/\btoys?\s*&\s*hobbies\b|\bstuffed\s*&\s*plush\b|\baction\s*&\s*toy figures\b|\beducational toys\b/.test(label)) {
       return "toys";
     }
-    if (/\bbaby clothing\b|\bboys? clothing\b|\bgirls? clothing\b|\bshoes?\s*&\s*bags\b|\bbaby accessories\b|\bfirst walkers\b/.test(label)) {
-      return "baby";
-    }
+
     return "toys";
   }
 
@@ -198,9 +227,23 @@ function classifySupplierTaxonomy(categoryLabel) {
   }
 
   if (/\bhome\b.*\bgarden\b|\bhome\b.*\bfurniture\b/.test(label)) {
-    if (/\barts?\b.*\bcrafts?\b|\bcrafts?\b.*\bsewing\b/.test(label)) return "hobby";
     if (/\bhome appliances\b|\bkitchen appliances\b/.test(label)) return "appliances";
     if (/\bgarden tools?\b|\bpower tools?\b|\bhand tools?\b|\bhardware\b/.test(label)) return "tools";
+
+    if (/\bhome office storage\b/.test(label)) {
+      for (const preferred of ["office", "appliances", "electronics", "sports", "tools"]) {
+        if (titleMatches.includes(preferred)) return preferred;
+      }
+      return "home";
+    }
+
+    if (/\barts?\b.*\bcrafts?\b|\bcrafts?\b.*\bsewing\b/.test(label)) {
+      for (const preferred of ["hobby", "office", "home", "fashion", "tools", "electronics"]) {
+        if (titleMatches.includes(preferred)) return preferred;
+      }
+      return "hobby";
+    }
+
     return "home";
   }
 
@@ -211,7 +254,7 @@ function classifySupplierTaxonomy(categoryLabel) {
 }
 
 export function classifyCatalogCategory({ categoryLabel = "", title = "" } = {}) {
-  const taxonomyCategory = classifySupplierTaxonomy(categoryLabel);
+  const taxonomyCategory = classifySupplierTaxonomy(categoryLabel, title);
   if (taxonomyCategory) return taxonomyCategory;
 
   const label = cleanCategoryText(categoryLabel);
