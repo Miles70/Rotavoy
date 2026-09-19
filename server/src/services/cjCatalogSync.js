@@ -13,6 +13,7 @@ import {
 } from "./productTranslation.js";
 import { getCjProductVideoMedia } from "./cjProductVideo.js";
 import { buildCjVariantGroupMap } from "./cjVariantGrouping.js";
+import { classifyCatalogCategory } from "./catalogCategory.js";
 
 const LEGACY_DEMO_SOURCE = "amazon-reviews-2023";
 const MAX_CJ_PRODUCT_IMAGES = 8;
@@ -52,22 +53,6 @@ function cleanText(value, maxLength = 300) {
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, maxLength);
-}
-
-function normalizeCategory(categoryName = "") {
-  const value = String(categoryName).toLowerCase();
-  if (/phone|computer|electronic|camera|audio|headphone|charger|smart/.test(value)) return "electronics";
-  if (/clothing|apparel|shoe|bag|jewelry|watch|fashion/.test(value)) return "fashion";
-  if (/beauty|makeup|skin|hair|personal care|cosmetic/.test(value)) return "beauty";
-  if (/sport|outdoor|camp|fitness|cycling|travel/.test(value)) return "sports";
-  if (/baby|kid|toy|child/.test(value)) return "baby";
-  if (/pet|dog|cat|animal/.test(value)) return "pets";
-  if (/automotive|car|motorcycle|vehicle/.test(value)) return "automotive";
-  if (/tool|hardware|garden/.test(value)) return "tools";
-  if (/game|gaming/.test(value)) return "gaming";
-  if (/office|stationery/.test(value)) return "office";
-  if (/appliance/.test(value)) return "appliances";
-  return "home";
 }
 
 function flattenListV2(data) {
@@ -356,7 +341,10 @@ async function syncOneProduct(listProduct, options) {
     detail?.categoryName || listProduct?.threeCategoryName || listProduct?.twoCategoryName || listProduct?.oneCategoryName || "General",
     160,
   );
-  const categoryKey = normalizeCategory(categoryLabel);
+  const categoryKey = classifyCatalogCategory({
+    categoryLabel,
+    title: productTitle,
+  });
   const rawDescription = String(detail?.description || listProduct?.description || "");
   const description = cleanText(rawDescription, 6000);
   const baseImage = detail?.productImage || detail?.bigImage || detail?.productImageSet?.[0] || listProduct?.bigImage || "";
