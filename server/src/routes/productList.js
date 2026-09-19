@@ -63,22 +63,13 @@ function getSearchFields(language) {
 
 function buildCatalogGroupKeyExpression() {
   const supplierProductId = { $ifNull: ["$supplierProductId", ""] };
-  const imageUrl = { $ifNull: ["$imageUrl", ""] };
 
-  // Keep visually identical variants collapsed into one storefront card.
-  // If the same CJ parent has a genuinely different primary image (for
-  // example another color/style), it may keep a separate visual card.
-  // All active variants still remain selectable on the product detail page.
+  // A CJ parent always occupies exactly one storefront card. Color, size,
+  // capacity and image differences remain selectable inside product detail.
   return {
     $cond: [
       { $gt: [{ $strLenCP: supplierProductId }, 0] },
-      {
-        $cond: [
-          { $gt: [{ $strLenCP: imageUrl }, 0] },
-          { $concat: [supplierProductId, ":image:", imageUrl] },
-          supplierProductId,
-        ],
-      },
+      supplierProductId,
       { $ifNull: ["$key", ""] },
     ],
   };
