@@ -63,23 +63,14 @@ function getSearchFields(language) {
 
 function buildCatalogGroupKeyExpression() {
   const supplierProductId = { $ifNull: ["$supplierProductId", ""] };
-  const variantGroupKey = { $ifNull: ["$variantGroupKey", ""] };
 
+  // One CJ parent product equals one storefront card. Individual supplier
+  // variants stay in MongoDB for stock, pricing and checkout, but they are
+  // selected inside the product detail page instead of occupying catalog slots.
   return {
     $cond: [
       { $gt: [{ $strLenCP: supplierProductId }, 0] },
-      {
-        $concat: [
-          supplierProductId,
-          {
-            $cond: [
-              { $gt: [{ $strLenCP: variantGroupKey }, 0] },
-              { $concat: [":", variantGroupKey] },
-              "",
-            ],
-          },
-        ],
-      },
+      supplierProductId,
       { $ifNull: ["$key", ""] },
     ],
   };
