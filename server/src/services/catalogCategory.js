@@ -35,10 +35,12 @@ const CATEGORY_RULES = [
     key: "beauty",
     patterns: [
       /\bbeauty\b/i, /\bmakeup\b/i, /\bcosmetic(?:s)?\b/i, /\bskin care\b/i,
-      /\bskincare\b/i, /\bnail(?:s)?\b/i, /\bmanicure\b/i, /\bpedicure\b/i,
+      /\bskincare\b/i, /\bnail care\b/i, /\bnail art\b/i, /\bnail polish\b/i,
+      /\bmanicure\b/i, /\bpedicure\b/i,
       /\beyelash/i, /\beyebrow/i, /\bface care\b/i, /\bhair care\b/i,
       /\bperfume\b/i, /\bfragrance\b/i, /\bpersonal care\b/i,
-      /\bhair dryer\b/i, /\bhair styling\b/i, /\bshaver\b/i,
+      /\bhair dryer\b/i, /\bhair styling\b/i, /\bhair straightener\b/i,
+      /\bhair curler\b/i, /\bflat iron\b/i, /\bshaver\b/i,
       /\brazor\b/i, /\bepilator\b/i,
     ],
   },
@@ -114,6 +116,8 @@ const CATEGORY_RULES = [
       /\bair fryer\b/i, /\bcoffee maker\b/i, /\bhumidifier\b/i,
       /\bair purifier\b/i, /\bheater\b/i, /\brefrigerator\b/i,
       /\bwashing machine\b/i, /\bmicrowave\b/i, /\bair conditioner\b/i,
+      /\bfoot warmer\b/i, /\bshoe dryer\b/i, /\bcup warmer\b/i,
+      /\bair cooler\b/i,
     ],
   },
   {
@@ -153,6 +157,34 @@ function matchingCategoryKeys(text) {
   return CATEGORY_RULES
     .filter((rule) => matchRule(text, rule))
     .map((rule) => rule.key);
+}
+
+function hasStrongPetTitleSignal(title) {
+  const value = cleanCategoryText(title).toLowerCase();
+  if (!value) return false;
+  if (/\bpet(?:s)?\b|\bpet supplies?\b/.test(value)) return true;
+  if (/\bfor\s+(?:a\s+)?(?:dog|cat)s?\b/.test(value)) return true;
+  if (/\bdog\s+(?:toy|toys|leash|collar|harness|brush|bowl|bed|seat|carrier|traction|poop|sweater|shoe|shoes|vest)\b/.test(value)) return true;
+  if (/\bcat\s+(?:toy|toys|litter|bed|carrier|brush|scratcher|tree)\b/.test(value)) return true;
+  return false;
+}
+
+function hasStrongToyTitleSignal(title) {
+  return /\btoy(?:s)?\b|\bdoll(?:s)?\b|\bplush\b|\bpuzzle\b|\baction figure\b|\bpretend play\b/i.test(
+    cleanCategoryText(title),
+  );
+}
+
+function hasStrongBabyTitleSignal(title) {
+  const value = cleanCategoryText(title);
+  return /\binfant\b|\bnewborn\b|\btoddler\b|\bbaby\s+(?:bottle|chair|seat|bidet|headband|monitor|romper|clothing|shoe|shoes|feeding|stroller|carrier)\b/i.test(value);
+}
+
+function hasStrongAutomotiveTitleSignal(title) {
+  const value = cleanCategoryText(title);
+  return /\bcar\b|\bvehicle\b|\bautomotive\b|\bmotorcycle\b|\btire\b|\btyre\b|\bdash(?:cam|board)\b|\bheadlight\b|\btpms\b|\bdriving recorder\b/i.test(
+    value,
+  );
 }
 
 function classifySupplierTaxonomy(categoryLabel, title = "") {
@@ -212,24 +244,25 @@ function classifySupplierTaxonomy(categoryLabel, title = "") {
 
   if (/\bhealth\b.*\bbeauty\b.*\bhair\b/.test(label)) {
     if (
-      /\bcoffee\b|\btea\b|\bbeverage\b|\bsnack\b|\bcandy\b|\bchocolate\b/.test(titleLower) ||
-      /\bfood\s*&\s*beverage\b/.test(label)
+      /\bfood\s*&\s*beverage\b/.test(label) ||
+      (
+        /\bfood\s*&\s*health\b/.test(label) &&
+        /\bcoffee\b|\btea\b|\bbeverage\b|\bsnack\b|\bcandy\b|\bchocolate\b/.test(titleLower)
+      )
     ) {
       return "grocery";
     }
-    // "Food & Health > Health Care Products" also contains supplements,
-    // vitamins and wellness items that are a better fit for Beauty/Care than
-    // the supermarket bucket.
     return "beauty";
   }
 
   if (/\bhome improvement\b/.test(label)) {
-    // CJ occasionally files obvious toys, baby items or pet products under
-    // lighting/home-improvement branches. Let explicit product-title evidence
-    // rescue those outliers before the broad home fallback.
-    for (const preferred of ["pets", "baby", "toys", "automotive"]) {
-      if (titleMatches.includes(preferred)) return preferred;
-    }
+    // Only strong product-type evidence may override a Home Improvement branch.
+    // Animal words used as decoration ("cat lamp", "rabbit night light") must
+    // not turn ordinary lighting into pet supplies.
+    if (hasStrongPetTitleSignal(productTitle)) return "pets";
+    if (hasStrongToyTitleSignal(productTitle)) return "toys";
+    if (hasStrongBabyTitleSignal(productTitle)) return "baby";
+    if (hasStrongAutomotiveTitleSignal(productTitle)) return "automotive";
 
     if (/\bpersonal care appliances\b/.test(label)) return "beauty";
     if (/\bhome appliances\b|\bkitchen appliances\b|\bair conditioning appliances\b|\bhome appliance parts\b/.test(label)) {
@@ -244,21 +277,22 @@ function classifySupplierTaxonomy(categoryLabel, title = "") {
     if (/\bgarden tools?\b|\bpower tools?\b|\bhand tools?\b|\bhardware\b/.test(label)) return "tools";
 
     if (/\bhome office storage\b/.test(label)) {
-      // This CJ branch is extremely noisy. Prefer the product's concrete type
-      // over the supplier's generic "Home Office Storage" bucket.
+      // This CJ branch is extremely noisy. First rescue only strong, explicit
+      // product types; then use the broader title classifier.
+      if (hasStrongPetTitleSignal(productTitle)) return "pets";
+      if (hasStrongToyTitleSignal(productTitle)) return "toys";
+      if (hasStrongBabyTitleSignal(productTitle)) return "baby";
+      if (hasStrongAutomotiveTitleSignal(productTitle)) return "automotive";
+
       for (const preferred of [
-        "pets",
-        "baby",
-        "toys",
-        "automotive",
         "beauty",
         "appliances",
         "electronics",
         "sports",
+        "home",
         "office",
         "tools",
         "fashion",
-        "home",
       ]) {
         if (titleMatches.includes(preferred)) return preferred;
       }
