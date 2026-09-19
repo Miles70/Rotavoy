@@ -168,6 +168,72 @@ test("category classifier handles supplier taxonomy edge cases found by the cata
   );
 });
 
+
+test("category classifier rescues noisy CJ home-office and home-improvement branches", () => {
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Home, Garden & Furniture > Home Storage > Home Office Storage",
+      title: "Portable Wireless Rechargeable Baby Bottle Warmer USB Charging",
+    }),
+    "baby",
+  );
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Home, Garden & Furniture > Home Storage > Home Office Storage",
+      title: "800ml Dogs Water Bottle Portable Leakproof Pet Drinking Bowl",
+    }),
+    "pets",
+  );
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Home, Garden & Furniture > Home Storage > Home Office Storage",
+      title: "Rocket Launcher Toys Outdoor Water Spray Toy For Kids",
+    }),
+    "toys",
+  );
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Home, Garden & Furniture > Home Storage > Home Office Storage",
+      title: "2 In1 Car Heating Cooling Cup 12V Smart Car Cup Holder",
+    }),
+    "automotive",
+  );
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Home Improvement > Outdoor Lighting > Flashlights & Torches",
+      title: "Cartoon Projection Flashlight Toy Projector Baby Toys",
+    }),
+    "baby",
+  );
+});
+
+test("category classifier keeps supplements out of grocery unless the title is actual food or drink", () => {
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Health, Beauty & Hair > Food & Health > Health Care Products",
+      title: "Lutein Capsules",
+    }),
+    "beauty",
+  );
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Health, Beauty & Hair > Food & Health > Health Care Products",
+      title: "Mushroom Coffee",
+    }),
+    "grocery",
+  );
+});
+
+test("category classifier treats finished wall decor as home instead of hobby", () => {
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Home, Garden & Furniture > Arts, Crafts & Sewing > Decor Paintings",
+      title: "Creative Butterfly Theme Home Wall Decoration Acrylic Hanging Painting",
+    }),
+    "home",
+  );
+});
+
 test("category classifier keeps genuinely generic merchandise visible in home", () => {
   assert.equal(
     classifyCatalogCategory({ categoryLabel: "General Merchandise", title: "Everyday Utility Item" }),
