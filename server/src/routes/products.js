@@ -57,7 +57,7 @@ productsRouter.get("/:productKey/related", async (request, response, next) => {
       isActive: true,
       source: { $in: storefrontSources },
     })
-      .select("key source title brand categoryKey supplierProductId variantGroupKey")
+      .select("key source title brand categoryKey supplierProductId variantGroupKey imageUrl images")
       .lean();
 
     if (!product) {
@@ -76,7 +76,7 @@ productsRouter.get("/:productKey/related", async (request, response, next) => {
       ],
     };
     const rows = await Product.find(relationshipFilter)
-      .select("_id key title brand categoryKey supplierProductId variantGroupKey price popularity createdAt stock hasVideo")
+      .select("_id key title brand categoryKey supplierProductId variantGroupKey imageUrl images price popularity createdAt stock hasVideo")
       .lean();
     const rankedGroups = rankRelatedCatalogGroups(
       product,
