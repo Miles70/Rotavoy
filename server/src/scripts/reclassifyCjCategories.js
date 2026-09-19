@@ -46,27 +46,78 @@ async function applyChanges(changes) {
 try {
   await connectDatabase();
 
-  const parents = await Product.aggregate([
-    {
-      $match: {
-        source: "cj",
-        supplierProductId: { $nin: ["", null] },
-      },
-    },
-    { $sort: { supplierProductId: 1, createdAt: 1, key: 1 } },
-    {
-      $group: {
-        _id: "$supplierProductId",
-        currentCategory: { $first: "$categoryKey" },
-        supplierCategoryLabel: { $first: "$supplierContent.categoryLabel" },
-        supplierTitle: { $first: "$supplierContent.title" },
-        fallbackCategoryLabel: { $first: "$categoryLabel" },
-        fallbackTitle: { $first: "$title" },
-        variants: { $sum: 1 },
-      },
-    },
-    { $sort: { _id: 1 } },
-  ]).allowDiskUse(true);
+  // Stream CJ variants and group them in Node instead of asking Atlas to sort
+  // the whole collection. Some shared Atlas tiers reject that aggregation sort
+  // at ~32 MiB even with allowDiskUse(true).
+  const parentMap = new Map();
+  const cursor = Product.find({
+    source: "cj",
+    supplierProductId: { $nin: ["", null] },
+  })
+    .select({
+      supplierProductId: 1,
+      categoryKey: 1,
+      "supplierContent.categoryLabel": 1,
+      "supplierContent.title": 1,
+      categoryLabel: 1,
+      title: 1,
+    })
+    .lean()
+    .cursor();
+
+  for await (const row of cursor) {
+    const supplierProductId = String(row?.supplierProductId || "").trim();
+    if (!supplierProductId) continue;
+
+    let parent = parentMap.get(supplierProductId);
+    if (!parent) {
+      parent = {
+        _id: supplierProductId,
+        currentCategory: "",
+        supplierCategoryLabel: "",
+        supplierTitle: "",
+        fallbackCategoryLabel: "",
+        fallbackTitle: "",
+        variants: 0,
+        categoryCounts: new Map(),
+      };
+      parentMap.set(supplierProductId, parent);
+    }
+
+    parent.variants += 1;
+
+    const categoryKey = String(row?.categoryKey || "").trim();
+    if (categoryKey) {
+      parent.categoryCounts.set(
+        categoryKey,
+        (parent.categoryCounts.get(categoryKey) || 0) + 1,
+      );
+    }
+
+    if (!parent.supplierCategoryLabel) {
+      parent.supplierCategoryLabel = String(
+        row?.supplierContent?.categoryLabel || "",
+      ).trim();
+    }
+    if (!parent.supplierTitle) {
+      parent.supplierTitle = String(row?.supplierContent?.title || "").trim();
+    }
+    if (!parent.fallbackCategoryLabel) {
+      parent.fallbackCategoryLabel = String(row?.categoryLabel || "").trim();
+    }
+    if (!parent.fallbackTitle) {
+      parent.fallbackTitle = String(row?.title || "").trim();
+    }
+  }
+
+  const parents = [...parentMap.values()]
+    .map((parent) => {
+      parent.currentCategory = [...parent.categoryCounts.entries()]
+        .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))[0]?.[0] || "";
+      delete parent.categoryCounts;
+      return parent;
+    })
+    .sort((left, right) => String(left._id).localeCompare(String(right._id)));
 
   const changes = [];
   const transitionCounts = new Map();
