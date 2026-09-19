@@ -234,6 +234,48 @@ test("category classifier treats finished wall decor as home instead of hobby", 
   );
 });
 
+
+test("category classifier avoids decorative animal and food-word false positives", () => {
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Home Improvement > Indoor Lighting > Night Lights",
+      title: "3D Animal Cat Vintage Table Lamp Home Decoration",
+    }),
+    "home",
+  );
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Health, Beauty & Hair > Makeup > Lipstick",
+      title: "Glossy Mirror Tea Red Liquid Lipstick",
+    }),
+    "beauty",
+  );
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Home & Garden, Furniture > Home Storage > Home Office Storage",
+      title: "Hot Dog Maker Meat Strip Squeezer Kitchen Cooking Tool",
+    }),
+    "home",
+  );
+});
+
+test("category classifier catches appliance and beauty product types in noisy storage branches", () => {
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Home & Garden, Furniture > Home Storage > Home Office Storage",
+      title: "Cordless USB Hair Straightener Mini Ceramic Flat Iron",
+    }),
+    "beauty",
+  );
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Home & Garden, Furniture > Home Storage > Home Office Storage",
+      title: "Intelligent Household Shoe Dryer",
+    }),
+    "appliances",
+  );
+});
+
 test("category classifier keeps genuinely generic merchandise visible in home", () => {
   assert.equal(
     classifyCatalogCategory({ categoryLabel: "General Merchandise", title: "Everyday Utility Item" }),
