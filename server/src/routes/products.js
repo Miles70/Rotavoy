@@ -135,10 +135,9 @@ productsRouter.get("/:productKey", async (request, response, next) => {
         isActive: true,
         stock: { $gt: 0 },
       };
-      if (product.variantGroupKey) {
-        variantFilter.variantGroupKey = product.variantGroupKey;
-      }
-
+      // Return every active variant for the CJ parent. The catalog itself shows
+      // only one card per parent product; shoppers choose color/size/capacity/etc.
+      // here on the product detail page.
       variants = await Product.find(variantFilter)
         .select(STOREFRONT_PRIVATE_FIELDS)
         .sort({ price: 1, key: 1 })
