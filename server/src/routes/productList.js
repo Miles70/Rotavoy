@@ -27,8 +27,8 @@ const CATEGORY_GROUPS = {
   motherBabyToys: ["baby", "toys"],
   sportsOutdoor: ["sports"],
   beautyCare: ["beauty"],
-  supermarketPets: ["pets"],
-  booksMusicFilmHobby: ["gaming"],
+  supermarketPets: ["pets", "grocery"],
+  booksMusicFilmHobby: ["gaming", "hobby"],
 };
 
 const FEATURED_CATEGORY_DEFAULT_LIMIT = 3;
