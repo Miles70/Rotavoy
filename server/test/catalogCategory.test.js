@@ -122,6 +122,52 @@ test("category classifier routes CJ household and children taxonomy by branch", 
   );
 });
 
+
+test("category classifier handles supplier taxonomy edge cases found by the catalog audit", () => {
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Toys, Kids & Baby > Baby & Mother > Activity & Gear",
+      title: "Child Safety Seat For Tourist Car",
+    }),
+    "baby",
+  );
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Toys, Kids & Baby > Baby Clothing > Baby Accessories",
+      title: "American Girl Doll 18 Inch Solid Color Stockings",
+    }),
+    "toys",
+  );
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Toys, Kids & Baby > Toys & Hobbies > Electronic Pets",
+      title: "Square Bluetooth anti-lost device",
+    }),
+    "electronics",
+  );
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Pet Supplies > Pet Outdoor Supplies > Pet Guardrails",
+      title: "Outsunny Galvanized Raised Garden Bed With Mini Greenhouse Cover",
+    }),
+    "tools",
+  );
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Home & Garden, Furniture > Home Storage > Home Office Storage",
+      title: "PU Leather Notebooks Office Leaflet Notepad",
+    }),
+    "office",
+  );
+  assert.equal(
+    classifyCatalogCategory({
+      categoryLabel: "Home & Garden, Furniture > Arts, Crafts & Sewing > Decor Paintings",
+      title: "4 FT White Artificial Christmas Tree With Pot Stand",
+    }),
+    "home",
+  );
+});
+
 test("category classifier keeps genuinely generic merchandise visible in home", () => {
   assert.equal(
     classifyCatalogCategory({ categoryLabel: "General Merchandise", title: "Everyday Utility Item" }),
