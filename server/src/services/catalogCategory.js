@@ -170,14 +170,21 @@ function hasStrongPetTitleSignal(title) {
 }
 
 function hasStrongToyTitleSignal(title) {
-  return /\btoy(?:s)?\b|\bdoll(?:s)?\b|\bplush\b|\bpuzzle\b|\baction figure\b|\bpretend play\b/i.test(
-    cleanCategoryText(title),
-  );
+  const value = cleanCategoryText(title).toLowerCase();
+  if (!value) return false;
+  if (/\btoy(?:s)?\b/.test(value)) return true;
+  if (
+    /\bdisplay (?:stand|case)\b|\bstorage (?:box|case)\b|\bpackaging box\b|\bchristmas decor\b|\bhome decor\b|\bwall decor\b/.test(value)
+  ) {
+    return false;
+  }
+  return /\bdoll(?:s)?\b|\bplush\b|\bpuzzle\b|\baction figure\b|\bpretend play\b/.test(value);
 }
 
 function hasStrongBabyTitleSignal(title) {
   const value = cleanCategoryText(title);
-  return /\binfant\b|\bnewborn\b|\btoddler\b|\bbaby\s+(?:bottle|chair|seat|bidet|headband|monitor|romper|clothing|shoe|shoes|feeding|stroller|carrier)\b/i.test(value);
+  if (/\binfant\b|\bnewborn\b|\btoddler\b/i.test(value)) return true;
+  return /\bbaby(?:\s+[a-z0-9'-]+){0,2}\s+(?:bottle|chair|seat|bidet|headband|monitor|romper|clothing|shoe|shoes|stroller|carrier)\b/i.test(value);
 }
 
 function hasStrongAutomotiveTitleSignal(title) {
@@ -277,8 +284,17 @@ function classifySupplierTaxonomy(categoryLabel, title = "") {
     if (/\bgarden tools?\b|\bpower tools?\b|\bhand tools?\b|\bhardware\b/.test(label)) return "tools";
 
     if (/\bhome office storage\b/.test(label)) {
-      // This CJ branch is extremely noisy. First rescue only strong, explicit
-      // product types; then use the broader title classifier.
+      // This CJ branch is extremely noisy. Finished storage/display goods stay
+      // in Home even when their titles contain fashion/toy words such as
+      // "jewelry" or "doll".
+      if (
+        /\bjewelry box\b|\bdisplay (?:stand|case)\b|\bstorage (?:box|case)\b|\bpackaging box\b|\bchristmas decor\b|\bhome decor\b/.test(titleLower)
+      ) {
+        return "home";
+      }
+
+      // First rescue only strong, explicit product types; then use the broader
+      // title classifier.
       if (hasStrongPetTitleSignal(productTitle)) return "pets";
       if (hasStrongToyTitleSignal(productTitle)) return "toys";
       if (hasStrongBabyTitleSignal(productTitle)) return "baby";
