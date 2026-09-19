@@ -122,12 +122,7 @@ export function buildCatalogGroupSummaries(rows, sortMode = "popular") {
 
   for (const row of Array.isArray(rows) ? rows : []) {
     const supplierProductId = String(row?.supplierProductId || "").trim();
-    const variantGroupKey = String(row?.variantGroupKey || "").trim();
-    const groupKey = supplierProductId
-      ? variantGroupKey
-        ? `${supplierProductId}:${variantGroupKey}`
-        : supplierProductId
-      : String(row?.key || "").trim();
+    const groupKey = supplierProductId || String(row?.key || "").trim();
     if (!groupKey) continue;
 
     const price = Number(row?.price || 0);
@@ -188,12 +183,7 @@ function recommendationTokens(value) {
 
 export function rankRelatedCatalogGroups(product, summaries, limit = 8) {
   const currentSupplierId = String(product?.supplierProductId || "").trim();
-  const currentVariantGroup = String(product?.variantGroupKey || "").trim();
-  const currentGroupKey = currentSupplierId
-    ? currentVariantGroup
-      ? `${currentSupplierId}:${currentVariantGroup}`
-      : currentSupplierId
-    : String(product?.key || "").trim();
+  const currentGroupKey = currentSupplierId || String(product?.key || "").trim();
   const currentTokens = recommendationTokens(product?.title);
   const currentBrand = String(product?.brand || "").trim().toLocaleLowerCase("en-US");
   const currentCategory = String(product?.categoryKey || "").trim();
