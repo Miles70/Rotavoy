@@ -37,7 +37,9 @@ const CATEGORY_RULES = [
       /\bbeauty\b/i, /\bmakeup\b/i, /\bcosmetic(?:s)?\b/i, /\bskin care\b/i,
       /\bskincare\b/i, /\bnail(?:s)?\b/i, /\bmanicure\b/i, /\bpedicure\b/i,
       /\beyelash/i, /\beyebrow/i, /\bface care\b/i, /\bhair care\b/i,
-      /\bperfume\b/i, /\bfragrance\b/i,
+      /\bperfume\b/i, /\bfragrance\b/i, /\bpersonal care\b/i,
+      /\bhair dryer\b/i, /\bhair styling\b/i, /\bshaver\b/i,
+      /\brazor\b/i, /\bepilator\b/i,
     ],
   },
   {
@@ -68,6 +70,7 @@ const CATEGORY_RULES = [
       /\bhandbag\b/i, /\bbackpack\b/i, /\bbag(?:s)?\b/i, /\bjewel(?:ry|lery)\b/i,
       /\bnecklace\b/i, /\bbracelet\b/i, /\bring\b/i, /\bwatch(?:es)?\b/i,
       /\bdress\b/i, /\bshirt\b/i, /\btrouser/i, /\bpants?\b/i,
+      /\bluggage\b/i, /\bsuitcase\b/i,
       /\bunderwear\b/i, /\bbra\b/i, /\bsocks?\b/i, /\bhat\b/i, /\bcap\b/i,
     ],
   },
@@ -108,7 +111,7 @@ const CATEGORY_RULES = [
       /\bappliance(?:s)?\b/i, /\bvacuum cleaner\b/i, /\bblender\b/i,
       /\bair fryer\b/i, /\bcoffee maker\b/i, /\bhumidifier\b/i,
       /\bair purifier\b/i, /\bheater\b/i, /\brefrigerator\b/i,
-      /\bwashing machine\b/i, /\bmicrowave\b/i,
+      /\bwashing machine\b/i, /\bmicrowave\b/i, /\bair conditioner\b/i,
     ],
   },
   {
@@ -143,21 +146,33 @@ function matchRule(text, rule) {
   return rule.patterns.some((pattern) => pattern.test(text));
 }
 
+function matchingCategoryKeys(text) {
+  return CATEGORY_RULES
+    .filter((rule) => matchRule(text, rule))
+    .map((rule) => rule.key);
+}
+
 export function classifyCatalogCategory({ categoryLabel = "", title = "" } = {}) {
   const label = cleanCategoryText(categoryLabel);
   const productTitle = cleanCategoryText(title);
+  const labelMatches = matchingCategoryKeys(label);
+  const titleMatches = matchingCategoryKeys(productTitle);
 
-  // Supplier taxonomy is the strongest signal. Priority resolves mixed labels
-  // such as "baby clothing", "car charger", "pet bag" and "smart watch".
-  for (const rule of CATEGORY_RULES) {
-    if (matchRule(label, rule)) return rule.key;
+  if (labelMatches.length === 1) return labelMatches[0];
+
+  if (labelMatches.length > 1) {
+    // Broad/mixed supplier labels such as "Home & Garden", "Baby Clothing",
+    // "Car Electronics" or "Pet Bags" can legitimately match two departments.
+    // Use the product title to break the tie when it supports one of them.
+    const titleSupported = labelMatches.find((key) => titleMatches.includes(key));
+    if (titleSupported) return titleSupported;
+
+    // Otherwise keep deterministic priority from CATEGORY_RULES. Specific
+    // departments intentionally appear before broad fashion/home matches.
+    return labelMatches[0];
   }
 
-  // Fall back to the parent product title only when the supplier category is
-  // too generic or missing.
-  for (const rule of CATEGORY_RULES) {
-    if (matchRule(productTitle, rule)) return rule.key;
-  }
+  if (titleMatches.length) return titleMatches[0];
 
   // Keep uncategorised household/general merchandise visible rather than
   // dropping it from the storefront.
