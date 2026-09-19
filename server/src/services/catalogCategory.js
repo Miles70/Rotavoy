@@ -152,7 +152,68 @@ function matchingCategoryKeys(text) {
     .map((rule) => rule.key);
 }
 
+function classifySupplierTaxonomy(categoryLabel) {
+  const label = cleanCategoryText(categoryLabel).toLowerCase();
+  if (!label) return "";
+
+  // Prefer CJ's top-level taxonomy over incidental words in a product title.
+  // This prevents categories such as Pet Toys, Car Electronics, Beauty Tools
+  // and Sportswear from leaking into generic Toys/Electronics/Tools/Fashion.
+  if (/\bpet supplies\b/.test(label)) return "pets";
+  if (/\bautomobiles?\b.*\bmotorcycles?\b|\bautomotive\b/.test(label)) return "automotive";
+  if (/\bsports?\b.*\boutdoors?\b/.test(label)) return "sports";
+  if (/\bconsumer electronics\b|\bphones?\b.*\baccessories\b/.test(label)) return "electronics";
+
+  if (/\bcomputer\b.*\boffice\b/.test(label)) {
+    if (/\boffice electronics\b|\boffice\s*&\s*school supplies\b|\bstationery\b|\bhome office storage\b/.test(label)) {
+      return "office";
+    }
+    return "electronics";
+  }
+
+  if (/\btoys?\b.*\bkids?\b.*\bbab(?:y|ies)\b/.test(label)) {
+    if (/\btoys?\s*&\s*hobbies\b|\bstuffed\s*&\s*plush\b|\baction\s*&\s*toy figures\b|\beducational toys\b/.test(label)) {
+      return "toys";
+    }
+    if (/\bbaby clothing\b|\bboys? clothing\b|\bgirls? clothing\b|\bshoes?\s*&\s*bags\b|\bbaby accessories\b|\bfirst walkers\b/.test(label)) {
+      return "baby";
+    }
+    return "toys";
+  }
+
+  if (/\bhealth\b.*\bbeauty\b.*\bhair\b/.test(label)) {
+    if (/\bfood\b.*\bhealth\b|\bfood\b|\bbeverage\b|\bcoffee\b|\btea\b/.test(label)) {
+      return "grocery";
+    }
+    return "beauty";
+  }
+
+  if (/\bhome improvement\b/.test(label)) {
+    if (/\bpersonal care appliances\b/.test(label)) return "beauty";
+    if (/\bhome appliances\b|\bkitchen appliances\b|\bair conditioning appliances\b|\bhome appliance parts\b/.test(label)) {
+      return "appliances";
+    }
+    if (/\bpower tools?\b|\bhand tools?\b|\bgarden tools?\b|\bhardware\b/.test(label)) return "tools";
+    return "home";
+  }
+
+  if (/\bhome\b.*\bgarden\b|\bhome\b.*\bfurniture\b/.test(label)) {
+    if (/\barts?\b.*\bcrafts?\b|\bcrafts?\b.*\bsewing\b/.test(label)) return "hobby";
+    if (/\bhome appliances\b|\bkitchen appliances\b/.test(label)) return "appliances";
+    if (/\bgarden tools?\b|\bpower tools?\b|\bhand tools?\b|\bhardware\b/.test(label)) return "tools";
+    return "home";
+  }
+
+  if (/\bjewelry\b.*\bwatches\b/.test(label)) return "fashion";
+  if (/\bfood\b.*\bbeverage\b|\bgrocery\b|\bsupermarket\b/.test(label)) return "grocery";
+
+  return "";
+}
+
 export function classifyCatalogCategory({ categoryLabel = "", title = "" } = {}) {
+  const taxonomyCategory = classifySupplierTaxonomy(categoryLabel);
+  if (taxonomyCategory) return taxonomyCategory;
+
   const label = cleanCategoryText(categoryLabel);
   const productTitle = cleanCategoryText(title);
   const labelMatches = matchingCategoryKeys(label);
@@ -161,14 +222,8 @@ export function classifyCatalogCategory({ categoryLabel = "", title = "" } = {})
   if (labelMatches.length === 1) return labelMatches[0];
 
   if (labelMatches.length > 1) {
-    // Broad/mixed supplier labels such as "Home & Garden", "Baby Clothing",
-    // "Car Electronics" or "Pet Bags" can legitimately match two departments.
-    // Use the product title to break the tie when it supports one of them.
     const titleSupported = labelMatches.find((key) => titleMatches.includes(key));
     if (titleSupported) return titleSupported;
-
-    // Otherwise keep deterministic priority from CATEGORY_RULES. Specific
-    // departments intentionally appear before broad fashion/home matches.
     return labelMatches[0];
   }
 
