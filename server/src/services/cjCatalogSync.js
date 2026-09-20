@@ -14,6 +14,11 @@ import {
 import { getCjProductVideoMedia } from "./cjProductVideo.js";
 import { buildCjVariantGroupMap } from "./cjVariantGrouping.js";
 import { classifyCatalogCategory } from "./catalogCategory.js";
+import {
+  chooseSharedContentOwner,
+  compactVariantSupplierContent,
+  compactVariantTranslations,
+} from "./cjProductStorage.js";
 
 const LEGACY_DEMO_SOURCE = "amazon-reviews-2023";
 const MAX_CJ_PRODUCT_IMAGES = 8;
@@ -382,6 +387,13 @@ async function syncOneProduct(listProduct, options) {
         contentMeta: 1,
         translations: 1,
         translationMeta: 1,
+        sharedContentOwner: 1,
+        isActive: 1,
+        images: 1,
+        imageUrl: 1,
+        videoUrl: 1,
+        videoPosterUrl: 1,
+        hasVideo: 1,
       })
       .lean()
     : [];
@@ -389,6 +401,12 @@ async function syncOneProduct(listProduct, options) {
   const existingByVariantId = new Map(
     existingProducts.map((product) => [String(product.supplierVariantId || ""), product]),
   );
+  const existingOwner = chooseSharedContentOwner(existingProducts);
+  const sharedContentOwnerVariantId = selectedVariantIds.includes(
+    String(existingOwner?.supplierVariantId || ""),
+  )
+    ? String(existingOwner.supplierVariantId)
+    : [...selectedVariantIds].sort((left, right) => left.localeCompare(right))[0] || "";
 
   const canReuseTranslations = selectedVariantIds.length > 0 && selectedVariantIds.every((vid) => {
     const existing = existingByVariantId.get(vid);
@@ -457,6 +475,24 @@ async function syncOneProduct(listProduct, options) {
         categoryLabel,
         variant: variantLabel,
       });
+    const isSharedContentOwner = vid === sharedContentOwnerVariantId;
+    const storedTranslations = isSharedContentOwner
+      ? translations
+      : compactVariantTranslations(translations);
+    const fullSupplierContent = {
+      title: productTitle,
+      description,
+      categoryLabel,
+      variant: variantLabel,
+      brand: cleanText(detail?.supplierName || detail?.brandName, 160),
+      facts: structuredFacts[variantIndex],
+    };
+    const storedSupplierContent = isSharedContentOwner
+      ? fullSupplierContent
+      : compactVariantSupplierContent(fullSupplierContent);
+    const storedImages = isSharedContentOwner
+      ? images
+      : uniqueUrls([variant?.variantImage || "", baseImage], 2);
     const translationMeta = preserveProfessional ||
       (canReuseTranslations && existing?.translationMeta) ||
       (preserveExistingTranslations && existing?.translationMeta)
@@ -485,8 +521,12 @@ async function syncOneProduct(listProduct, options) {
       {
         $set: {
           title: preserveProfessional ? (existing.title || title) : title,
-          description: preserveProfessional ? (existing.description ?? description) : description,
-          features: preserveProfessional && Array.isArray(existing.features) ? existing.features : [],
+          description: isSharedContentOwner
+            ? (preserveProfessional ? (existing.description ?? description) : description)
+            : "",
+          features: isSharedContentOwner && preserveProfessional && Array.isArray(existing.features)
+            ? existing.features
+            : [],
           details: {
             supplier: "CJdropshipping",
             variant: variantLabel,
@@ -494,16 +534,9 @@ async function syncOneProduct(listProduct, options) {
             originCountry: options.originCountryCode,
             weightGrams: Number(variant?.variantWeight || 0),
           },
-          supplierContent: {
-            title: productTitle,
-            description,
-            categoryLabel,
-            variant: variantLabel,
-            brand: cleanText(detail?.supplierName || detail?.brandName, 160),
-            facts: structuredFacts[variantIndex],
-          },
+          supplierContent: storedSupplierContent,
           contentMeta,
-          translations,
+          translations: storedTranslations,
           translationMeta,
           sourceLanguage: "en",
           sourceHash,
@@ -518,14 +551,16 @@ async function syncOneProduct(listProduct, options) {
           badge: "stock",
           image: "🛍️",
           imageUrl: images[0] || "",
-          images,
+          images: storedImages,
           ...(videoMedia.checked
             ? {
-              videoUrl: videoMedia.videoUrl,
-              videoPosterUrl: videoMedia.videoPosterUrl,
+              videoUrl: isSharedContentOwner ? videoMedia.videoUrl : "",
+              videoPosterUrl: isSharedContentOwner ? videoMedia.videoPosterUrl : "",
               hasVideo: videoMedia.hasVideo,
             }
-            : {}),
+            : isSharedContentOwner
+              ? {}
+              : { videoUrl: "", videoPosterUrl: "" }),
           stock,
           rating: 0,
           reviewCount: 0,
@@ -538,6 +573,7 @@ async function syncOneProduct(listProduct, options) {
           supplierProductId: pid,
           supplierVariantId: vid,
           variantGroupKey: variantGroupById.get(vid) || "product",
+          sharedContentOwner: isSharedContentOwner,
           supplierSku: cleanText(variant?.variantSku, 100),
           isActive: stock > 0,
         },
@@ -556,7 +592,19 @@ async function syncOneProduct(listProduct, options) {
         supplierProductId: pid,
         supplierVariantId: { $nin: selectedVariantIds },
       },
-      { $set: { isActive: false, stock: 0 } },
+      { $set: { isActive: false, stock: 0, sharedContentOwner: false } },
+    );
+  }
+
+  if (sharedContentOwnerVariantId) {
+    await Product.updateMany(
+      {
+        source: "cj",
+        supplierProductId: pid,
+        supplierVariantId: { $ne: sharedContentOwnerVariantId },
+        sharedContentOwner: true,
+      },
+      { $set: { sharedContentOwner: false } },
     );
   }
 
