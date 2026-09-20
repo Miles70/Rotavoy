@@ -309,7 +309,7 @@ function ProductDetailsLive() {
   const seoDescription = String(
     product?.description || labels.fallbackDescription || "",
   )
-    .replace(/\\s+/g, " ")
+    .replace(/\s+/g, " ")
     .trim()
     .slice(0, 160);
   const seoImage = product?.imageUrl || product?.images?.[0] || "";
