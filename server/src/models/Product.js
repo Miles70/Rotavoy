@@ -46,14 +46,6 @@ const productSchema = new mongoose.Schema(
   { timestamps: true, versionKey: false },
 );
 
-productSchema.index({
-  title: "text",
-  brand: "text",
-  categoryLabel: "text",
-  description: "text",
-  features: "text",
-});
-
 productSchema.index({ source: 1, supplierProductId: 1, isActive: 1 });
 productSchema.index({ source: 1, "contentMeta.status": 1, supplierProductId: 1 });
 productSchema.index({ source: 1, isActive: 1, categoryKey: 1, stock: 1 });
