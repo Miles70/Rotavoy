@@ -1,5 +1,6 @@
 import { Product } from "../models/Product.js";
 import { getRotavoyProductLanguages } from "./productTranslation.js";
+import { chooseSharedContentOwner, compactVariantTranslations } from "./cjProductStorage.js";
 
 export const PRODUCT_CONTENT_VERSION = "rotavoy-ai-copy-v8";
 
@@ -413,8 +414,13 @@ async function enrichSupplierProduct(supplierProductId) {
 
   if (!products.length) return { status: "skipped", supplierProductId };
 
-  const rawEntries = products.map(getSupplierContent);
-  const sourceHash = String(products[0].sourceHash || "").trim();
+  const sharedContentOwner = chooseSharedContentOwner(products) || products[0];
+  const orderedProducts = [
+    sharedContentOwner,
+    ...products.filter((product) => String(product._id) !== String(sharedContentOwner._id)),
+  ];
+  const rawEntries = orderedProducts.map(getSupplierContent);
+  const sourceHash = String(sharedContentOwner.sourceHash || "").trim();
   const source = {
     supplier: "CJdropshipping",
     supplierProductId,
@@ -438,8 +444,12 @@ async function enrichSupplierProduct(supplierProductId) {
   const generated = await requestProfessionalContent(source);
   const now = new Date();
   const english = generated.translations.en;
-  const operations = products.map((product, index) => {
+  const operations = orderedProducts.map((product, index) => {
     const translations = buildVariantTranslations(generated.translations, index);
+    const isSharedContentOwner = String(product._id) === String(sharedContentOwner._id);
+    const storedTranslations = isSharedContentOwner
+      ? translations
+      : compactVariantTranslations(translations);
     const englishVariant = translations.en;
 
     return {
@@ -451,10 +461,11 @@ async function enrichSupplierProduct(supplierProductId) {
         update: {
           $set: {
             title: englishVariant.title,
-            description: english.description,
-            features: english.features,
+            description: isSharedContentOwner ? english.description : "",
+            features: isSharedContentOwner ? english.features : [],
             categoryLabel: english.categoryLabel,
-            translations,
+            translations: storedTranslations,
+            sharedContentOwner: isSharedContentOwner,
             translationMeta: {
               provider: "openai",
               model: generated.model,
@@ -481,14 +492,14 @@ async function enrichSupplierProduct(supplierProductId) {
 
   const result = await Product.bulkWrite(operations, { ordered: false });
   const matched = Number(result.matchedCount || 0);
-  if (matched !== products.length) {
+  if (matched !== orderedProducts.length) {
     throw new Error(`CJ source changed while enriching ${supplierProductId}; content was not applied to every variant.`);
   }
 
   return {
     status: "ready",
     supplierProductId,
-    variants: products.length,
+    variants: orderedProducts.length,
     model: generated.model,
     usage: generated.usage,
   };
