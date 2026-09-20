@@ -12,6 +12,10 @@ const DEFAULT_INITIAL_DELAY_MS = 15_000;
 
 let syncRunning = false;
 
+function isApiPointsExhausted(error) {
+  return /insufficient api points/i.test(String(error?.message || error || ""));
+}
+
 function parseInterval(value, fallback, minimum) {
   const parsed = Number.parseInt(value, 10);
   if (!Number.isInteger(parsed) || parsed < minimum) return fallback;
@@ -201,6 +205,7 @@ export async function syncCjAvailability() {
     let failedProducts = 0;
     let updatedVariants = 0;
     let deactivatedVariants = 0;
+    let apiPointsExhausted = false;
 
     for (const supplierProductId of supplierProductIds) {
       try {
@@ -210,6 +215,15 @@ export async function syncCjAvailability() {
         deactivatedVariants += result.deactivatedVariants;
       } catch (error) {
         failedProducts += 1;
+
+        if (isApiPointsExhausted(error)) {
+          apiPointsExhausted = true;
+          console.warn(
+            `CJ availability sync paused: daily API points are exhausted. First blocked product: ${supplierProductId}.`,
+          );
+          break;
+        }
+
         console.warn(
           `CJ availability sync skipped for ${supplierProductId}:`,
           error.message,
@@ -228,6 +242,7 @@ export async function syncCjAvailability() {
       failedProducts,
       updatedVariants,
       deactivatedVariants,
+      apiPointsExhausted,
     };
   } finally {
     syncRunning = false;
