@@ -59,7 +59,7 @@ const CATEGORY_RULES = [
       /\belectronic(?:s)?\b/i, /\bsmart ?phone\b/i, /\bmobile phone\b/i,
       /\bphone\b/i, /\btablet\b/i, /\bcomputer\b/i, /\blaptop\b/i,
       /\bcamera\b/i, /\baudio\b/i, /\bheadphone/i, /\bearphone/i,
-      /\bearbuds?\b/i, /\bbluetooth\b/i, /\bsmart ?watch\b/i,
+      /\bearbuds?\b/i, /\bbluetooth\b/i, /\bsmart ?watch(?:es)?\b/i,
       /\bpower bank\b/i, /\bcharger\b/i, /\busb\b/i, /\bkeyboard\b/i,
       /\bprojector\b/i, /\bspeaker\b/i, /\bdrone\b/i,
     ],
@@ -184,7 +184,7 @@ function hasStrongToyTitleSignal(title) {
 function hasStrongBabyTitleSignal(title) {
   const value = cleanCategoryText(title);
   if (/\binfant\b|\bnewborn\b|\btoddler\b/i.test(value)) return true;
-  return /\bbaby(?:\s+[a-z0-9'-]+){0,2}\s+(?:bottle|chair|seat|bidet|headband|monitor|romper|clothing|shoe|shoes|stroller|carrier)\b/i.test(value);
+  return /\bbaby(?:\s+[a-z0-9'-]+){0,2}\s+(?:bottle|chair|seat|bidet|headband|monitor|romper|clothing|shoe|shoes|stroller|carrier|toy|toys)\b/i.test(value);
 }
 
 function hasStrongAutomotiveTitleSignal(title) {
@@ -267,8 +267,8 @@ function classifySupplierTaxonomy(categoryLabel, title = "") {
     // Animal words used as decoration ("cat lamp", "rabbit night light") must
     // not turn ordinary lighting into pet supplies.
     if (hasStrongPetTitleSignal(productTitle)) return "pets";
-    if (hasStrongToyTitleSignal(productTitle)) return "toys";
     if (hasStrongBabyTitleSignal(productTitle)) return "baby";
+    if (hasStrongToyTitleSignal(productTitle)) return "toys";
     if (hasStrongAutomotiveTitleSignal(productTitle)) return "automotive";
 
     if (/\bpersonal care appliances\b/.test(label)) return "beauty";
@@ -282,6 +282,7 @@ function classifySupplierTaxonomy(categoryLabel, title = "") {
   if (/\bhome\b.*\bgarden\b|\bhome\b.*\bfurniture\b/.test(label)) {
     if (/\bhome appliances\b|\bkitchen appliances\b/.test(label)) return "appliances";
     if (/\bgarden tools?\b|\bpower tools?\b|\bhand tools?\b|\bhardware\b/.test(label)) return "tools";
+    if (/\b(?:garden|power|hand) tools?\b|\bpower tool set\b/.test(titleLower)) return "tools";
 
     if (/\bhome office storage\b/.test(label)) {
       // This CJ branch is extremely noisy. Finished storage/display goods stay
@@ -296,8 +297,8 @@ function classifySupplierTaxonomy(categoryLabel, title = "") {
       // First rescue only strong, explicit product types; then use the broader
       // title classifier.
       if (hasStrongPetTitleSignal(productTitle)) return "pets";
-      if (hasStrongToyTitleSignal(productTitle)) return "toys";
       if (hasStrongBabyTitleSignal(productTitle)) return "baby";
+      if (hasStrongToyTitleSignal(productTitle)) return "toys";
       if (hasStrongAutomotiveTitleSignal(productTitle)) return "automotive";
 
       for (const preferred of [
