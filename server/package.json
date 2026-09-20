@@ -27,7 +27,8 @@
     "catalog:audit-categories": "node src/scripts/reclassifyCjCategories.js",
     "catalog:reclassify-categories": "node src/scripts/reclassifyCjCategories.js --apply",
     "db:storage-report": "node src/scripts/reportMongoStorage.js",
-    "db:drop-unused-text-index": "node src/scripts/dropUnusedProductTextIndex.js"
+    "db:drop-unused-text-index": "node src/scripts/dropUnusedProductTextIndex.js",
+    "db:compact-cj-products": "node src/scripts/compactCjProductStorage.js"
   },
   "dependencies": {
     "cors": "^2.8.6",
