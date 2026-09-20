@@ -485,9 +485,11 @@ function ProductDetailsLive() {
               </>
             ) : null}
 
-            {product.badge ? (
-              <span className={`liveProductBadge ${product.badge}`}>
-                {product.badge === "stock" ? labels.inStock : product.badge}
+            {product.badge || !isInStock ? (
+              <span className={`liveProductBadge ${isInStock ? product.badge : "out-of-stock"}`}>
+                {isInStock
+                  ? (product.badge === "stock" ? labels.inStock : product.badge)
+                  : labels.outOfStock}
               </span>
             ) : null}
           </div>
@@ -554,7 +556,10 @@ function ProductDetailsLive() {
                     aria-current={variant.key === product.key ? "true" : undefined}
                   >
                     <strong>{variant.variantLabel || variant.title}</strong>
-                    <small>{formatPrice(variant.price, numberLocale)}</small>
+                    <small>
+                      {formatPrice(variant.price, numberLocale)} ·{" "}
+                      {Number(variant.stock || 0) > 0 ? labels.inStock : labels.outOfStock}
+                    </small>
                   </Link>
                 ))}
               </div>
@@ -590,12 +595,17 @@ function ProductDetailsLive() {
             <div className="liveProductQuantity">
               <span>{labels.quantity}</span>
               <div>
-                <button type="button" onClick={() => setQuantity((current) => Math.max(1, current - 1))}>
+                <button
+                  type="button"
+                  disabled={!isInStock}
+                  onClick={() => setQuantity((current) => Math.max(1, current - 1))}
+                >
                   <Minus size={16} />
                 </button>
                 <strong>{quantity}</strong>
                 <button
                   type="button"
+                  disabled={!isInStock}
                   onClick={() => setQuantity((current) => Math.min(Number(product.stock) || 99, current + 1))}
                 >
                   <Plus size={16} />
