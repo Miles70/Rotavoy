@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, PackageSearch } from "lucide-react";
-import { useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import ProductCard from "../components/ProductCard/ProductCard";
 import SearchBar from "../components/SearchBar/SearchBar";
 import Seo from "../components/Seo/Seo";
@@ -72,6 +72,7 @@ function groupLabel(groupKey, language) {
 
 function Products() {
   const { t, language } = useLanguage();
+  const { groupKey = "" } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
@@ -88,7 +89,9 @@ function Products() {
 
   const searchQuery = searchParams.get("search")?.trim() || "";
   const categoryQuery = searchParams.get("category")?.trim().toLowerCase() || "";
-  const groupQuery = searchParams.get("group")?.trim() || "";
+  const legacyGroupQuery = searchParams.get("group")?.trim() || "";
+  const groupQuery = groupKey.trim() || legacyGroupQuery;
+  const isValidGroup = !groupQuery || categories.some((category) => category.key === groupQuery);
   const requestedPage = Math.max(Number.parseInt(searchParams.get("page"), 10) || 1, 1);
 
   useEffect(() => {
@@ -145,12 +148,11 @@ function Products() {
   const recommendationText = recommendationLabels[language] || recommendationLabels.en;
   const seoPage = pagination.page || requestedPage;
   const seoParams = new URLSearchParams();
-  if (groupQuery) seoParams.set("group", groupQuery);
   if (categoryQuery) seoParams.set("category", categoryQuery);
   if (seoPage > 1) seoParams.set("page", String(seoPage));
   const seoPath = searchQuery
     ? "/products"
-    : `/products${seoParams.toString() ? `?${seoParams.toString()}` : ""}`;
+    : `${groupQuery ? `/category/${groupQuery}` : "/products"}${seoParams.toString() ? `?${seoParams.toString()}` : ""}`;
   const seoTitle = selectedCategoryTitle
     ? `${selectedCategoryTitle} Products${seoPage > 1 ? ` - Page ${seoPage}` : ""} | Rotavoy`
     : `Shop Products${seoPage > 1 ? ` - Page ${seoPage}` : ""} | Rotavoy`;
@@ -173,12 +175,35 @@ function Products() {
         title={seoTitle}
         description={seoDescription}
         path={seoPath}
-        noIndex={Boolean(searchQuery)}
+        noIndex={Boolean(searchQuery) || !isValidGroup}
+        previousPath={seoPage > 1
+          ? `${groupQuery ? `/category/${groupQuery}` : "/products"}${seoPage > 2 ? `?page=${seoPage - 1}` : ""}`
+          : ""}
+        nextPath={pagination.hasNextPage
+          ? `${groupQuery ? `/category/${groupQuery}` : "/products"}?page=${seoPage + 1}`
+          : ""}
         jsonLd={searchQuery ? null : {
           "@context": "https://schema.org",
-          "@type": "CollectionPage",
-          name: selectedCategoryTitle || "Rotavoy Products",
-          url: `https://rotavoy.com${seoPath}`,
+          "@graph": [
+            {
+              "@type": "CollectionPage",
+              name: selectedCategoryTitle || "Rotavoy Products",
+              description: seoDescription,
+              url: `https://rotavoy.com${seoPath}`,
+            },
+            {
+              "@type": "BreadcrumbList",
+              itemListElement: [
+                { "@type": "ListItem", position: 1, name: "Rotavoy", item: "https://rotavoy.com/" },
+                ...(selectedCategoryTitle ? [{
+                  "@type": "ListItem",
+                  position: 2,
+                  name: selectedCategoryTitle,
+                  item: `https://rotavoy.com/category/${groupQuery}`,
+                }] : []),
+              ],
+            },
+          ],
         }}
       />
       <section className="productsHero">

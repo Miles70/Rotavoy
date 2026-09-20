@@ -64,6 +64,7 @@ productsRouter.get("/sitemap", async (request, response, next) => {
           $project: {
             key: 1,
             updatedAt: 1,
+            imageUrl: 1,
             groupKey: {
               $cond: [
                 {
@@ -83,14 +84,15 @@ productsRouter.get("/sitemap", async (request, response, next) => {
             _id: "$groupKey",
             key: { $first: "$key" },
             updatedAt: { $max: "$updatedAt" },
+            imageUrl: { $first: "$imageUrl" },
           },
         },
-        { $project: { _id: 0, key: 1, updatedAt: 1 } },
+        { $project: { _id: 0, key: 1, updatedAt: 1, imageUrl: 1 } },
         { $sort: { key: 1 } },
       ]).allowDiskUse(true);
     } else {
       products = await Product.find(filter)
-        .select("key updatedAt -_id")
+        .select("key updatedAt imageUrl -_id")
         .sort({ key: 1 })
         .lean();
     }

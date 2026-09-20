@@ -9,6 +9,14 @@
       "destination": "/api/sitemap"
     },
     {
+      "source": "/products/:productKey",
+      "destination": "/api/product-page?productKey=:productKey"
+    },
+    {
+      "source": "/category/:groupKey",
+      "destination": "/api/category-page?groupKey=:groupKey"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

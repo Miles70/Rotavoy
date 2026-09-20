@@ -12,6 +12,17 @@ const STATIC_PATHS = [
   "/terms",
   "/refund",
 ];
+const CATEGORY_PATHS = [
+  "electronics",
+  "fashion",
+  "homeLivingOffice",
+  "autoGardenTools",
+  "motherBabyToys",
+  "sportsOutdoor",
+  "beautyCare",
+  "supermarketPets",
+  "booksMusicFilmHobby",
+].map((key) => `/category/${key}`);
 
 function escapeXml(value) {
   return String(value || "")
@@ -24,6 +35,12 @@ function escapeXml(value) {
 
 function normalizeApiBase(value) {
   return String(value || "").trim().replace(/\/$/, "");
+}
+
+function normalizeLastModified(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toISOString();
 }
 
 async function loadProductUrls(apiBaseUrl) {
@@ -46,7 +63,8 @@ async function loadProductUrls(apiBaseUrl) {
       if (!key) return null;
       return {
         loc: `${SITE_URL}/products/${encodeURIComponent(key)}`,
-        lastmod: product?.updatedAt || "",
+        lastmod: normalizeLastModified(product?.updatedAt),
+        image: product?.imageUrl || "",
       };
     })
     .filter(Boolean);
@@ -57,8 +75,14 @@ export default async function handler(request, response) {
     const apiBaseUrl = normalizeApiBase(
       process.env.ROTAVOY_API_BASE_URL || process.env.VITE_API_BASE_URL,
     );
-    const products = await loadProductUrls(apiBaseUrl);
-    const staticUrls = STATIC_PATHS.map((path) => ({ loc: `${SITE_URL}${path}` }));
+    let products = [];
+    try {
+      products = await loadProductUrls(apiBaseUrl);
+    } catch (error) {
+      console.error("Product sitemap feed failed; serving static URLs:", error);
+    }
+    const staticUrls = [...STATIC_PATHS, ...CATEGORY_PATHS]
+      .map((path) => ({ loc: `${SITE_URL}${path}` }));
     const seen = new Set();
     const urls = [...staticUrls, ...products].filter((entry) => {
       if (!entry.loc || seen.has(entry.loc)) return false;
@@ -67,12 +91,13 @@ export default async function handler(request, response) {
     });
 
     const body = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 ${urls
   .map(
-    ({ loc, lastmod }) => `  <url>
+    ({ loc, lastmod, image }) => `  <url>
     <loc>${escapeXml(loc)}</loc>${lastmod ? `
-    <lastmod>${escapeXml(new Date(lastmod).toISOString())}</lastmod>` : ""}
+    <lastmod>${escapeXml(lastmod)}</lastmod>` : ""}${image ? `
+    <image:image><image:loc>${escapeXml(image)}</image:loc></image:image>` : ""}
   </url>`,
   )
   .join("\n")}

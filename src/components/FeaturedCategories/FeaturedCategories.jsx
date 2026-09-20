@@ -85,7 +85,7 @@ function FeaturedCategories() {
                 className="featuredCategoryCard"
                 data-category={category.key}
                 key={category.key}
-                to={`/products?group=${category.key}&page=1`}
+                to={`/category/${category.key}`}
                 aria-label={categoryTitle}
               >
                 <div className="featuredCategoryGlow" aria-hidden="true" />

@@ -316,7 +316,7 @@ function ProductDetailsLive() {
   const productPath = `/products/${encodeURIComponent(product?.key || productKey || "")}`;
   const productUrl = `https://rotavoy.com${productPath}`;
   const productStructuredData = product
-    ? {
+    ? [{
         "@context": "https://schema.org",
         "@type": "Product",
         name: product.title,
@@ -357,7 +357,15 @@ function ProductDetailsLive() {
             name: "Rotavoy",
           },
         },
-      }
+      }, {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Rotavoy", item: "https://rotavoy.com/" },
+          { "@type": "ListItem", position: 2, name: "Products", item: "https://rotavoy.com/products" },
+          { "@type": "ListItem", position: 3, name: product.title, item: productUrl },
+        ],
+      }]
     : null;
 
   function changeImage(direction) {

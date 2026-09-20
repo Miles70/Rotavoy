@@ -17,6 +17,10 @@ import App from "./App.jsx";
 
 const queryClient = new QueryClient();
 
+// Product requests receive SEO-complete HTML from the server. Remove those
+// temporary head nodes before React installs the live route metadata.
+document.querySelectorAll('[data-seo-server="true"]').forEach((element) => element.remove());
+
 createRoot(document.getElementById("root")).render(
   <WagmiProvider config={wagmiAdapter.wagmiConfig}>
     <QueryClientProvider client={queryClient}>

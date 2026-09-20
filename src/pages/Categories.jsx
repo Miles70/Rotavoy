@@ -283,7 +283,7 @@ function Categories() {
           const previewProducts = groupData.products.slice(0, 3);
           const categoryTitle = getCategoryGroupText(language, category.key, "title");
           const categoryDescription = getCategoryGroupText(language, category.key, "description");
-          const productsPath = `/products?group=${category.key}&page=1`;
+          const productsPath = `/category/${category.key}`;
 
           return (
             <article

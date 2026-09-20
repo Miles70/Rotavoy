@@ -22,6 +22,9 @@ export default function Seo({
   type = "website",
   noIndex = false,
   jsonLd = null,
+  alternates = [],
+  previousPath = "",
+  nextPath = "",
 }) {
   const canonicalUrl = absoluteUrl(path || "/");
   const imageUrl = absoluteUrl(image);
@@ -40,6 +43,16 @@ export default function Seo({
       <meta name="description" content={description} />
       <meta name="robots" content={robots} />
       <link rel="canonical" href={canonicalUrl} />
+      {alternates.map(({ language, path: alternatePath }) => (
+        <link
+          key={`${language}-${alternatePath}`}
+          rel="alternate"
+          hrefLang={language}
+          href={absoluteUrl(alternatePath)}
+        />
+      ))}
+      {previousPath ? <link rel="prev" href={absoluteUrl(previousPath)} /> : null}
+      {nextPath ? <link rel="next" href={absoluteUrl(nextPath)} /> : null}
 
       <meta property="og:site_name" content="Rotavoy" />
       <meta property="og:type" content={type} />
