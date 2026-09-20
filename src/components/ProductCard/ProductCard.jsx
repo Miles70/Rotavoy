@@ -13,6 +13,7 @@ const badgeTranslations = {
   en: {
     new: "New",
     stock: "In Stock",
+    outOfStock: "Out of stock",
     add: "Add to cart",
     added: "Added to cart",
     options: "Choose options",
@@ -20,6 +21,7 @@ const badgeTranslations = {
   tr: {
     new: "Yeni",
     stock: "Stokta",
+    outOfStock: "Stokta yok",
     add: "Sepete ekle",
     added: "Sepete eklendi",
     options: "Seçenekleri gör",
@@ -27,6 +29,7 @@ const badgeTranslations = {
   ru: {
     new: "Новинка",
     stock: "В наличии",
+    outOfStock: "Нет в наличии",
     add: "Добавить в корзину",
     added: "Добавлено",
     options: "Выбрать вариант",
@@ -34,6 +37,7 @@ const badgeTranslations = {
   ar: {
     new: "جديد",
     stock: "متوفر",
+    outOfStock: "غير متوفر",
     add: "أضف إلى السلة",
     added: "تمت الإضافة",
     options: "اختر الخيار",
@@ -41,6 +45,7 @@ const badgeTranslations = {
   zh: {
     new: "新品",
     stock: "有货",
+    outOfStock: "缺货",
     add: "加入购物车",
     added: "已加入购物车",
     options: "选择规格",
@@ -48,6 +53,8 @@ const badgeTranslations = {
   es: {
     new: "Nuevo",
     stock: "En stock",
+    outOfStock: "Rupture de stock",
+    outOfStock: "Agotado",
     add: "Añadir al carrito",
     added: "Añadido al carrito",
     options: "Elegir opciones",
@@ -55,6 +62,7 @@ const badgeTranslations = {
   pt: {
     new: "Novo",
     stock: "Em estoque",
+    outOfStock: "Fora de estoque",
     add: "Adicionar ao carrinho",
     added: "Adicionado ao carrinho",
     options: "Escolher opções",
@@ -69,6 +77,7 @@ const badgeTranslations = {
   de: {
     new: "Neu",
     stock: "Auf Lager",
+    outOfStock: "Nicht auf Lager",
     add: "In den Warenkorb",
     added: "Zum Warenkorb hinzugefügt",
     options: "Optionen wählen",
@@ -76,6 +85,7 @@ const badgeTranslations = {
   it: {
     new: "Nuovo",
     stock: "Disponibile",
+    outOfStock: "Esaurito",
     add: "Aggiungi al carrello",
     added: "Aggiunto al carrello",
     options: "Scegli opzioni",
@@ -111,6 +121,7 @@ function ProductCard({ product }) {
   const productPath = `/products/${product.key}`;
   const favorite = isFavorite(product.key);
   const hasMultipleVariants = Number(product.variantCount || 0) > 1;
+  const isInStock = Number(product.stock || 0) > 0;
   const variantLabel = String(product.variantLabel || "").trim();
   const showVariantLabel = variantLabel && variantLabel.toLowerCase() !== "default";
   const hasVideo = Boolean(product.hasVideo && product.videoUrl && !videoFailed);
@@ -121,6 +132,8 @@ function ProductCard({ product }) {
   };
 
   function handleAddToCart() {
+    if (!isInStock) return;
+
     if (hasMultipleVariants) {
       navigate(productPath, { state: { product, language } });
       return;
@@ -170,6 +183,8 @@ function ProductCard({ product }) {
   }
 
   function getBadgeLabel() {
+    if (!isInStock) return labels.outOfStock;
+
     if (
       product.badge === "sale" &&
       product.oldPrice &&
@@ -184,16 +199,19 @@ function ProductCard({ product }) {
     return labels[product.badge] || "";
   }
 
-  const buttonLabel = hasMultipleVariants
-    ? labels.options
-    : isAdded
-      ? labels.added
-      : labels.add;
+  const buttonLabel = !isInStock
+    ? labels.outOfStock
+    : hasMultipleVariants
+      ? labels.options
+      : isAdded
+        ? labels.added
+        : labels.add;
   const favoriteLabel = favorite
     ? text("account.removeFavorite", "Remove from favorites")
     : text("account.addFavorite", "Add to favorites");
   const fallbackLetter = product.title?.charAt(0)?.toUpperCase() || "G";
   const badgeLabel = getBadgeLabel();
+  const badgeClass = isInStock ? product.badge : "out-of-stock";
   const displayOldPrice =
     !hasMultipleVariants && Number(product.oldPrice || 0) > Number(product.price || 0)
       ? Number(product.oldPrice)
@@ -255,8 +273,8 @@ function ProductCard({ product }) {
             )}
 
             {badgeLabel && (
-              <span className={`productBadge ${product.badge}`}>
-                {product.badge === "stock" && (
+              <span className={`productBadge ${badgeClass}`}>
+                {badgeClass === "stock" && (
                   <span className="productBadgeDot" aria-hidden="true" />
                 )}
                 {badgeLabel}
@@ -297,6 +315,7 @@ function ProductCard({ product }) {
             type="button"
             className={isAdded ? "addButton added" : "addButton"}
             onClick={handleAddToCart}
+            disabled={!isInStock}
             aria-label={buttonLabel}
             title={buttonLabel}
           >
