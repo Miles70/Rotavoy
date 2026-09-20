@@ -407,7 +407,10 @@ async function enrichSupplierProduct(supplierProductId) {
   const products = await Product.find({
     source: "cj",
     supplierProductId,
-    isActive: true,
+    $or: [
+      { isActive: true },
+      { sharedContentOwner: true },
+    ],
   })
     .sort({ supplierVariantId: 1, key: 1 })
     .lean();
