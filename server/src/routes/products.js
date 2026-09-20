@@ -20,15 +20,28 @@ function getStorefrontSources() {
   return isCjConfigured() ? ["cj"] : LEGACY_SOURCES;
 }
 
+function buildStorefrontFilter(storefrontSources) {
+  if (storefrontSources.includes("cj")) {
+    return {
+      source: { $in: storefrontSources },
+      supplierProductId: { $ne: "" },
+      price: { $gt: 0 },
+      imageUrl: { $regex: "^https?://" },
+    };
+  }
+
+  return {
+    isActive: true,
+    source: { $in: storefrontSources },
+    stock: { $gt: 0 },
+  };
+}
+
 productsRouter.get("/", async (request, response, next) => {
   try {
     const category = String(request.query.category || "").trim();
     const language = normalizeStorefrontLanguage(request.query.language);
-    const filter = {
-      isActive: true,
-      source: { $in: getStorefrontSources() },
-      stock: { $gt: 0 },
-    };
+    const filter = buildStorefrontFilter(getStorefrontSources());
 
     if (category) filter.categoryKey = category;
 
@@ -50,17 +63,13 @@ productsRouter.get("/", async (request, response, next) => {
 productsRouter.get("/sitemap", async (request, response, next) => {
   try {
     const storefrontSources = getStorefrontSources();
-    const filter = {
-      isActive: true,
-      source: { $in: storefrontSources },
-      stock: { $gt: 0 },
-    };
+    const filter = buildStorefrontFilter(storefrontSources);
 
     let products;
     if (storefrontSources.includes("cj")) {
       products = await Product.aggregate([
         { $match: filter },
-        { $sort: { price: 1, key: 1 } },
+        { $sort: { stock: -1, price: 1, key: 1 } },
         {
           $project: {
             key: 1,
@@ -113,8 +122,7 @@ productsRouter.get("/:productKey/related", async (request, response, next) => {
     const storefrontSources = getStorefrontSources();
     const product = await Product.findOne({
       key: request.params.productKey,
-      isActive: true,
-      source: { $in: storefrontSources },
+      ...buildStorefrontFilter(storefrontSources),
     })
       .select("key source title brand categoryKey supplierProductId variantGroupKey imageUrl images")
       .lean();
@@ -124,9 +132,7 @@ productsRouter.get("/:productKey/related", async (request, response, next) => {
     }
 
     const relationshipFilter = {
-      isActive: true,
-      source: { $in: storefrontSources },
-      stock: { $gt: 0 },
+      ...buildStorefrontFilter(storefrontSources),
       $or: [
         { categoryKey: product.categoryKey },
         ...(product.supplierProductId
@@ -176,8 +182,7 @@ productsRouter.get("/:productKey", async (request, response, next) => {
     const storefrontSources = getStorefrontSources();
     const product = await Product.findOne({
       key: request.params.productKey,
-      isActive: true,
-      source: { $in: storefrontSources },
+      ...buildStorefrontFilter(storefrontSources),
     })
       .select(STOREFRONT_PRIVATE_FIELDS)
       .lean();
@@ -204,12 +209,11 @@ productsRouter.get("/:productKey", async (request, response, next) => {
       const variantFilter = {
         source: "cj",
         supplierProductId: product.supplierProductId,
-        isActive: true,
-        stock: { $gt: 0 },
+        price: { $gt: 0 },
+        imageUrl: { $regex: "^https?://" },
       };
-      // Return every active variant for the CJ parent. The catalog itself shows
-      // only one card per parent product; shoppers choose color/size/capacity/etc.
-      // here on the product detail page.
+      // Keep out-of-stock variants visible so shoppers can inspect every option.
+      // Stock status still controls whether a concrete variant can be purchased.
       variants = await Product.find(variantFilter)
         .select(STOREFRONT_PRIVATE_FIELDS)
         .sort({ price: 1, key: 1 })
