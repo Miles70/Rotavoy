@@ -53,7 +53,6 @@ const badgeTranslations = {
   es: {
     new: "Nuevo",
     stock: "En stock",
-    outOfStock: "Rupture de stock",
     outOfStock: "Agotado",
     add: "Añadir al carrito",
     added: "Añadido al carrito",
@@ -70,6 +69,7 @@ const badgeTranslations = {
   fr: {
     new: "Nouveau",
     stock: "En stock",
+    outOfStock: "Rupture de stock",
     add: "Ajouter au panier",
     added: "Ajouté au panier",
     options: "Choisir les options",
