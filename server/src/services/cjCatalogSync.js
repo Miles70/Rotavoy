@@ -554,13 +554,11 @@ async function syncOneProduct(listProduct, options) {
           images: storedImages,
           ...(videoMedia.checked
             ? {
-              videoUrl: isSharedContentOwner ? videoMedia.videoUrl : "",
-              videoPosterUrl: isSharedContentOwner ? videoMedia.videoPosterUrl : "",
+              videoUrl: videoMedia.videoUrl,
+              videoPosterUrl: videoMedia.videoPosterUrl,
               hasVideo: videoMedia.hasVideo,
             }
-            : isSharedContentOwner
-              ? {}
-              : { videoUrl: "", videoPosterUrl: "" }),
+            : {}),
           stock,
           rating: 0,
           reviewCount: 0,
