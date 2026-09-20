@@ -61,6 +61,23 @@ function getSearchFields(language) {
   return [...new Set([...BASE_SEARCH_FIELDS, ...localizedFields])];
 }
 
+function buildStorefrontFilter(cjConfigured) {
+  if (cjConfigured) {
+    return {
+      source: { $in: ["cj"] },
+      supplierProductId: { $ne: "" },
+      price: { $gt: 0 },
+      imageUrl: { $regex: "^https?://" },
+    };
+  }
+
+  return {
+    isActive: true,
+    source: { $in: LEGACY_SOURCES },
+    stock: { $gt: 0 },
+  };
+}
+
 function buildCatalogGroupKeyExpression() {
   const supplierProductId = { $ifNull: ["$supplierProductId", ""] };
 
@@ -94,8 +111,9 @@ async function getGroupedCjCatalog({ filter, sortMode, requestedPage, limit, lan
   // globally sorting every matching variant first. This keeps large catalogs
   // under Atlas shared-tier aggregation memory limits.
   const groupSort = sortMode === "newest"
-    ? { representativeCreatedAt: -1, representativeKey: 1 }
+    ? { inStock: -1, representativeCreatedAt: -1, representativeKey: 1 }
     : {
+        inStock: -1,
         hasVideo: -1,
         representativePopularity: -1,
         representativeCreatedAt: -1,
@@ -114,6 +132,7 @@ async function getGroupedCjCatalog({ filter, sortMode, requestedPage, limit, lan
         createdAt: 1,
         stock: 1,
         hasVideo: 1,
+        inStock: { $cond: [{ $gt: ["$stock", 0] }, 1, 0] },
         groupKey: buildCatalogGroupKeyExpression(),
       },
     },
@@ -122,7 +141,7 @@ async function getGroupedCjCatalog({ filter, sortMode, requestedPage, limit, lan
         _id: "$groupKey",
         representative: {
           $top: {
-            sortBy: { price: 1, key: 1 },
+            sortBy: { inStock: -1, price: 1, key: 1 },
             output: {
               id: "$_id",
               key: "$key",
@@ -135,6 +154,7 @@ async function getGroupedCjCatalog({ filter, sortMode, requestedPage, limit, lan
         priceMin: { $min: "$price" },
         priceMax: { $max: "$price" },
         stockTotal: { $sum: "$stock" },
+        inStock: { $max: "$inStock" },
         hasVideo: { $max: { $cond: ["$hasVideo", 1, 0] } },
       },
     },
@@ -148,6 +168,7 @@ async function getGroupedCjCatalog({ filter, sortMode, requestedPage, limit, lan
         priceMin: 1,
         priceMax: 1,
         stockTotal: 1,
+        inStock: 1,
         hasVideo: 1,
       },
     },
@@ -203,9 +224,7 @@ productListRouter.get("/featured-categories", async (request, response, next) =>
       cacheKey,
       async () => {
         const filter = {
-          isActive: true,
-          source: { $in: cjConfigured ? ["cj"] : LEGACY_SOURCES },
-          stock: { $gt: 0 },
+          ...buildStorefrontFilter(cjConfigured),
           categoryKey: { $in: [...new Set(Object.values(CATEGORY_GROUPS).flat())] },
         };
         // Collapse variants in MongoDB first. The old implementation loaded every
@@ -224,6 +243,7 @@ productListRouter.get("/featured-categories", async (request, response, next) =>
               createdAt: 1,
               stock: 1,
               hasVideo: 1,
+              inStock: { $cond: [{ $gt: ["$stock", 0] }, 1, 0] },
               categoryGroup: buildCategoryGroupExpression(),
               groupKey: buildCatalogGroupKeyExpression(),
             },
@@ -237,7 +257,7 @@ productListRouter.get("/featured-categories", async (request, response, next) =>
               },
               representative: {
                 $top: {
-                  sortBy: { price: 1, key: 1 },
+                  sortBy: { inStock: -1, price: 1, key: 1 },
                   output: {
                     id: "$_id",
                     key: "$key",
@@ -250,6 +270,7 @@ productListRouter.get("/featured-categories", async (request, response, next) =>
               priceMin: { $min: "$price" },
               priceMax: { $max: "$price" },
               stockTotal: { $sum: "$stock" },
+              inStock: { $max: "$inStock" },
               hasVideo: { $max: { $cond: ["$hasVideo", 1, 0] } },
             },
           },
@@ -265,12 +286,14 @@ productListRouter.get("/featured-categories", async (request, response, next) =>
               priceMin: 1,
               priceMax: 1,
               stockTotal: 1,
+              inStock: 1,
               hasVideo: 1,
             },
           },
           {
             $sort: {
               categoryGroup: 1,
+              inStock: -1,
               hasVideo: -1,
               representativePopularity: -1,
               representativeCreatedAt: -1,
@@ -378,11 +401,7 @@ productListRouter.get("/", async (request, response, next) => {
     const payload = await withStorefrontResponseCache(
       cacheKey,
       async () => {
-        const filter = {
-          isActive: true,
-          source: { $in: cjConfigured ? ["cj"] : LEGACY_SOURCES },
-          stock: { $gt: 0 },
-        };
+        const filter = buildStorefrontFilter(cjConfigured);
 
         if (group && CATEGORY_GROUPS[group]) {
           filter.categoryKey = { $in: CATEGORY_GROUPS[group] };
@@ -412,9 +431,7 @@ productListRouter.get("/", async (request, response, next) => {
           const profileRecommendationPromise = profileRecommendationCategories.length
             ? getGroupedCjCatalog({
                 filter: {
-                  isActive: true,
-                  source: { $in: ["cj"] },
-                  stock: { $gt: 0 },
+                  ...buildStorefrontFilter(true),
                   categoryKey: { $in: profileRecommendationCategories },
                   $nor: [buildCatalogProductTypeCondition(search, searchFields)].filter(Boolean),
                 },
@@ -441,9 +458,7 @@ productListRouter.get("/", async (request, response, next) => {
             if (recommendationCategories.length) {
               recommendationResult = await getGroupedCjCatalog({
                 filter: {
-                  isActive: true,
-                  source: { $in: ["cj"] },
-                  stock: { $gt: 0 },
+                  ...buildStorefrontFilter(true),
                   categoryKey: { $in: recommendationCategories },
                   $nor: [buildCatalogProductTypeCondition(search, searchFields)].filter(Boolean),
                 },
