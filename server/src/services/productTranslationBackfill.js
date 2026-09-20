@@ -121,12 +121,12 @@ async function backfillSupplierProduct(supplierProductId) {
               ? translations
               : compactVariantTranslations(translations),
             sharedContentOwner: isSharedContentOwner,
-          translationMeta: {
-            provider: "google-translate",
-            sourceHash: product.sourceHash,
-            sourceLanguage: "en",
-            languages: getRotavoyProductLanguages(),
-            updatedAt: now,
+            translationMeta: {
+              provider: "google-translate",
+              sourceHash: product.sourceHash,
+              sourceLanguage: "en",
+              languages: getRotavoyProductLanguages(),
+              updatedAt: now,
             },
           },
         },
