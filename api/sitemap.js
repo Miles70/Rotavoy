@@ -29,43 +29,27 @@ function normalizeApiBase(value) {
 async function loadProductUrls(apiBaseUrl) {
   if (!apiBaseUrl) return [];
 
-  const productUrls = [];
-  let page = 1;
-  let totalPages = 1;
+  const response = await fetch(`${apiBaseUrl}/api/products/sitemap`, {
+    headers: { accept: "application/json" },
+  });
 
-  do {
-    const query = new URLSearchParams({
-      page: String(page),
-      limit: "100",
-      sort: "newest",
-      language: "en",
-      recommendations: "0",
-    });
-    const response = await fetch(`${apiBaseUrl}/api/products?${query.toString()}`, {
-      headers: { accept: "application/json" },
-    });
+  if (!response.ok) {
+    throw new Error(`Product sitemap request failed with ${response.status}`);
+  }
 
-    if (!response.ok) {
-      throw new Error(`Product sitemap request failed with ${response.status}`);
-    }
+  const data = await response.json();
+  const products = Array.isArray(data.products) ? data.products : [];
 
-    const data = await response.json();
-    const products = Array.isArray(data.products) ? data.products : [];
-
-    for (const product of products) {
+  return products
+    .map((product) => {
       const key = String(product?.key || "").trim();
-      if (!key) continue;
-      productUrls.push({
+      if (!key) return null;
+      return {
         loc: `${SITE_URL}/products/${encodeURIComponent(key)}`,
-        lastmod: product?.updatedAt || product?.createdAt || "",
-      });
-    }
-
-    totalPages = Math.max(Number(data?.pagination?.totalPages || 1), 1);
-    page += 1;
-  } while (page <= totalPages && page <= 250);
-
-  return productUrls;
+        lastmod: product?.updatedAt || "",
+      };
+    })
+    .filter(Boolean);
 }
 
 export default async function handler(request, response) {
