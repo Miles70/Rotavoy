@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import ProductCard from "../components/ProductCard/ProductCard";
+import Seo from "../components/Seo/Seo";
 import categories from "../data/categories";
 import { getCategoryGroupText } from "../i18n/categoryGroupText";
 import { useLanguage } from "../i18n/LanguageContext";
@@ -212,6 +213,17 @@ function Categories() {
 
   return (
     <main className="categoriesPage">
+      <Seo
+        title="Shop by Category | Rotavoy"
+        description="Browse Rotavoy collections across electronics, fashion, home, beauty, sports, toys and more."
+        path="/categories"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: "Rotavoy Categories",
+          url: "https://rotavoy.com/categories",
+        }}
+      />
       <section className="categoriesHero">
         <span>{copy.tag}</span>
         <h1>{copy.title}</h1>
