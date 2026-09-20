@@ -48,6 +48,13 @@ async function refreshCjAvailability() {
     const result = await syncCjAvailability();
     if (result.skipped) return;
 
+    if (result.apiPointsExhausted) {
+      console.warn(
+        `CJ availability refresh paused after ${result.checkedProducts} products because daily API points are exhausted. Cached catalog data was preserved.`,
+      );
+      return;
+    }
+
     console.log(
       `CJ availability refreshed: ${result.checkedProducts}/${result.catalogProducts} products, ${result.updatedVariants} variants updated, ${result.deactivatedVariants} unavailable.`,
     );
