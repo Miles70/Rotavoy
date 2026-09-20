@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import ProductCard from "../components/ProductCard/ProductCard";
+import Seo from "../components/Seo/Seo";
 import { useCart } from "../context/CartContext";
 import { useLanguage } from "../i18n/LanguageContext";
 import regionalProductDetailsTranslations from "../i18n/regionalProductDetailsTranslations";
@@ -305,6 +306,59 @@ function ProductDetailsLive() {
     product?.details && typeof product.details === "object" && !Array.isArray(product.details)
       ? Object.entries(product.details).filter(([, value]) => value !== "").slice(0, 12)
       : [];
+  const seoDescription = String(
+    product?.description || labels.fallbackDescription || "",
+  )
+    .replace(/\\s+/g, " ")
+    .trim()
+    .slice(0, 160);
+  const seoImage = product?.imageUrl || product?.images?.[0] || "";
+  const productPath = `/products/${encodeURIComponent(product?.key || productKey || "")}`;
+  const productUrl = `https://rotavoy.com${productPath}`;
+  const productStructuredData = product
+    ? {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        name: product.title,
+        description: seoDescription,
+        sku: product.key,
+        image: [...new Set([
+          ...(Array.isArray(product.images) ? product.images : []),
+          product.imageUrl,
+        ].filter(Boolean))],
+        ...(product.brand
+          ? {
+              brand: {
+                "@type": "Brand",
+                name: product.brand,
+              },
+            }
+          : {}),
+        ...(Number(product.rating || 0) > 0 && Number(product.reviewCount || 0) > 0
+          ? {
+              aggregateRating: {
+                "@type": "AggregateRating",
+                ratingValue: Number(product.rating).toFixed(1),
+                reviewCount: Number(product.reviewCount),
+              },
+            }
+          : {}),
+        offers: {
+          "@type": "Offer",
+          url: productUrl,
+          priceCurrency: product.currency || "USD",
+          price: Number(product.price || 0).toFixed(2),
+          availability: isInStock
+            ? "https://schema.org/InStock"
+            : "https://schema.org/OutOfStock",
+          itemCondition: "https://schema.org/NewCondition",
+          seller: {
+            "@type": "Organization",
+            name: "Rotavoy",
+          },
+        },
+      }
+    : null;
 
   function changeImage(direction) {
     if (galleryItems.length < 2) return;
@@ -334,6 +388,12 @@ function ProductDetailsLive() {
   if (!product || error) {
     return (
       <main className="liveProductState liveProductNotFound">
+        <Seo
+          title="Product Not Found | Rotavoy"
+          description="The requested Rotavoy product is no longer available or the product address is incorrect."
+          path={`/products/${encodeURIComponent(productKey || "")}`}
+          noIndex
+        />
         <ShoppingCart size={42} />
         <h1>{labels.notFound}</h1>
         <p>{labels.notFoundText}</p>
@@ -346,6 +406,14 @@ function ProductDetailsLive() {
 
   return (
     <main className="liveProductPage">
+      <Seo
+        title={`${product.title} | Rotavoy`}
+        description={seoDescription}
+        path={productPath}
+        image={seoImage}
+        type="product"
+        jsonLd={productStructuredData}
+      />
       <Link to="/products" className="liveProductBack">
         <ArrowLeft size={18} /> {labels.back}
       </Link>
