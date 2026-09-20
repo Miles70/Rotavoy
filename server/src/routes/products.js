@@ -9,6 +9,7 @@ import {
   STOREFRONT_PRIVATE_FIELDS,
   trimStorefrontTranslations,
 } from "../services/storefrontProduct.js";
+import { mergeSharedProductContent } from "../services/cjProductStorage.js";
 
 export const productsRouter = Router();
 
@@ -186,7 +187,20 @@ productsRouter.get("/:productKey", async (request, response, next) => {
     }
 
     let variants = [];
+    let hydratedProduct = product;
     if (product.source === "cj" && product.supplierProductId) {
+      const sharedProduct = product.sharedContentOwner
+        ? product
+        : await Product.findOne({
+            source: "cj",
+            supplierProductId: product.supplierProductId,
+            sharedContentOwner: true,
+          })
+            .select(STOREFRONT_PRIVATE_FIELDS)
+            .lean();
+
+      hydratedProduct = mergeSharedProductContent(product, sharedProduct);
+
       const variantFilter = {
         source: "cj",
         supplierProductId: product.supplierProductId,
@@ -204,7 +218,7 @@ productsRouter.get("/:productKey", async (request, response, next) => {
 
     response.set("Cache-Control", STOREFRONT_CACHE_CONTROL);
     return response.json({
-      product: trimStorefrontTranslations(product, language),
+      product: trimStorefrontTranslations(hydratedProduct, language),
       variants: variants.map((variant) => trimStorefrontTranslations(variant, language)),
     });
   } catch (error) {
