@@ -46,6 +46,62 @@ productsRouter.get("/", async (request, response, next) => {
   }
 });
 
+productsRouter.get("/sitemap", async (request, response, next) => {
+  try {
+    const storefrontSources = getStorefrontSources();
+    const filter = {
+      isActive: true,
+      source: { $in: storefrontSources },
+      stock: { $gt: 0 },
+    };
+
+    let products;
+    if (storefrontSources.includes("cj")) {
+      products = await Product.aggregate([
+        { $match: filter },
+        { $sort: { price: 1, key: 1 } },
+        {
+          $project: {
+            key: 1,
+            updatedAt: 1,
+            groupKey: {
+              $cond: [
+                {
+                  $gt: [
+                    { $strLenCP: { $ifNull: ["$supplierProductId", ""] } },
+                    0,
+                  ],
+                },
+                "$supplierProductId",
+                "$key",
+              ],
+            },
+          },
+        },
+        {
+          $group: {
+            _id: "$groupKey",
+            key: { $first: "$key" },
+            updatedAt: { $max: "$updatedAt" },
+          },
+        },
+        { $project: { _id: 0, key: 1, updatedAt: 1 } },
+        { $sort: { key: 1 } },
+      ]).allowDiskUse(true);
+    } else {
+      products = await Product.find(filter)
+        .select("key updatedAt -_id")
+        .sort({ key: 1 })
+        .lean();
+    }
+
+    response.set("Cache-Control", "public, max-age=300, stale-while-revalidate=1800");
+    return response.json({ products });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 productsRouter.get("/:productKey/related", async (request, response, next) => {
   try {
     const language = normalizeStorefrontLanguage(request.query.language);
