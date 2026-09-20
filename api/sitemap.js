@@ -15,13 +15,13 @@ const STATIC_PATHS = [
 const CATEGORY_PATHS = [
   "electronics",
   "fashion",
-  "homeLivingOffice",
-  "autoGardenTools",
-  "motherBabyToys",
-  "sportsOutdoor",
-  "beautyCare",
-  "supermarketPets",
-  "booksMusicFilmHobby",
+  "home-living-office",
+  "auto-garden-diy",
+  "mother-baby-toys",
+  "sports-outdoor",
+  "beauty-personal-care",
+  "supermarket-pets",
+  "books-music-film-hobby",
 ].map((key) => `/category/${key}`);
 
 function escapeXml(value) {

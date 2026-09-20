@@ -132,13 +132,9 @@ ${image ? `<meta data-seo-server="true" property="og:image" content="${escapeHtm
     return response.status(200).send(html);
   } catch (error) {
     console.error("Product page rendering failed:", error);
-    try {
-      const shell = await loadShell(request);
-      response.setHeader("Content-Type", "text/html; charset=utf-8");
-      response.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
-      return response.status(200).send(shell);
-    } catch {
-      return response.status(500).send("Product page rendering failed.");
-    }
+    response.setHeader("Content-Type", "text/plain; charset=utf-8");
+    response.setHeader("Cache-Control", "no-store");
+    response.setHeader("Retry-After", "300");
+    return response.status(503).send("Product page is temporarily unavailable.");
   }
 }

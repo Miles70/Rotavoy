@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, PackageSearch } from "lucide-react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import ProductCard from "../components/ProductCard/ProductCard";
 import SearchBar from "../components/SearchBar/SearchBar";
 import Seo from "../components/Seo/Seo";
@@ -90,8 +90,11 @@ function Products() {
   const searchQuery = searchParams.get("search")?.trim() || "";
   const categoryQuery = searchParams.get("category")?.trim().toLowerCase() || "";
   const legacyGroupQuery = searchParams.get("group")?.trim() || "";
-  const groupQuery = groupKey.trim() || legacyGroupQuery;
-  const isValidGroup = !groupQuery || categories.some((category) => category.key === groupQuery);
+  const routeCategory = categories.find((category) =>
+    category.slug === groupKey.trim() || category.key === groupKey.trim());
+  const groupQuery = routeCategory?.key || legacyGroupQuery;
+  const groupSlug = routeCategory?.slug || categories.find((category) => category.key === groupQuery)?.slug || "";
+  const isValidGroup = !groupKey || Boolean(routeCategory);
   const requestedPage = Math.max(Number.parseInt(searchParams.get("page"), 10) || 1, 1);
 
   useEffect(() => {
@@ -150,9 +153,10 @@ function Products() {
   const seoParams = new URLSearchParams();
   if (categoryQuery) seoParams.set("category", categoryQuery);
   if (seoPage > 1) seoParams.set("page", String(seoPage));
+  const categoryBasePath = groupSlug ? `/category/${groupSlug}` : "/products";
   const seoPath = searchQuery
     ? "/products"
-    : `${groupQuery ? `/category/${groupQuery}` : "/products"}${seoParams.toString() ? `?${seoParams.toString()}` : ""}`;
+    : `${categoryBasePath}${seoParams.toString() ? `?${seoParams.toString()}` : ""}`;
   const seoTitle = selectedCategoryTitle
     ? `${selectedCategoryTitle} Products${seoPage > 1 ? ` - Page ${seoPage}` : ""} | Rotavoy`
     : `Shop Products${seoPage > 1 ? ` - Page ${seoPage}` : ""} | Rotavoy`;
@@ -160,13 +164,12 @@ function Products() {
     ? `Shop ${selectedCategoryTitle} products on Rotavoy. Discover in-stock items, variants and current marketplace prices.`
     : "Shop electronics, fashion, home, beauty, sports, toys and more across the Rotavoy marketplace.";
 
-  function changePage(nextPage) {
-    if (nextPage < 1 || nextPage > pagination.totalPages || nextPage === pagination.page) return;
-
+  function pagePath(nextPage) {
     const nextParams = new URLSearchParams(searchParams);
-    nextParams.set("page", String(nextPage));
-    setSearchParams(nextParams);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    nextParams.delete("group");
+    if (nextPage > 1) nextParams.set("page", String(nextPage));
+    else nextParams.delete("page");
+    return `${categoryBasePath}${nextParams.toString() ? `?${nextParams.toString()}` : ""}`;
   }
 
   return (
@@ -176,12 +179,6 @@ function Products() {
         description={seoDescription}
         path={seoPath}
         noIndex={Boolean(searchQuery) || !isValidGroup}
-        previousPath={seoPage > 1
-          ? `${groupQuery ? `/category/${groupQuery}` : "/products"}${seoPage > 2 ? `?page=${seoPage - 1}` : ""}`
-          : ""}
-        nextPath={pagination.hasNextPage
-          ? `${groupQuery ? `/category/${groupQuery}` : "/products"}?page=${seoPage + 1}`
-          : ""}
         jsonLd={searchQuery ? null : {
           "@context": "https://schema.org",
           "@graph": [
@@ -199,7 +196,7 @@ function Products() {
                   "@type": "ListItem",
                   position: 2,
                   name: selectedCategoryTitle,
-                  item: `https://rotavoy.com/category/${groupQuery}`,
+                  item: `https://rotavoy.com/category/${groupSlug}`,
                 }] : []),
               ],
             },
@@ -262,43 +259,34 @@ function Products() {
 
             {pagination.totalPages > 1 ? (
               <nav className="storePagination" aria-label="Product pages">
-                <button
-                  type="button"
-                  className="storePaginationArrow"
-                  disabled={!pagination.hasPreviousPage}
-                  onClick={() => changePage(pagination.page - 1)}
-                  aria-label="Previous page"
-                >
-                  <ChevronLeft size={18} />
-                </button>
+                {pagination.hasPreviousPage ? (
+                  <Link className="storePaginationArrow" to={pagePath(pagination.page - 1)} aria-label="Previous page">
+                    <ChevronLeft size={18} />
+                  </Link>
+                ) : <span className="storePaginationArrow is-disabled" aria-hidden="true"><ChevronLeft size={18} /></span>}
 
                 <div className="storePaginationNumbers">
                   {pageItems.map((item) =>
                     typeof item === "number" ? (
-                      <button
-                        type="button"
+                      <Link
                         key={item}
                         className={item === pagination.page ? "is-active" : ""}
-                        onClick={() => changePage(item)}
+                        to={pagePath(item)}
                         aria-current={item === pagination.page ? "page" : undefined}
                       >
                         {item}
-                      </button>
+                      </Link>
                     ) : (
                       <span key={item}>…</span>
                     ),
                   )}
                 </div>
 
-                <button
-                  type="button"
-                  className="storePaginationArrow"
-                  disabled={!pagination.hasNextPage}
-                  onClick={() => changePage(pagination.page + 1)}
-                  aria-label="Next page"
-                >
-                  <ChevronRight size={18} />
-                </button>
+                {pagination.hasNextPage ? (
+                  <Link className="storePaginationArrow" to={pagePath(pagination.page + 1)} aria-label="Next page">
+                    <ChevronRight size={18} />
+                  </Link>
+                ) : <span className="storePaginationArrow is-disabled" aria-hidden="true"><ChevronRight size={18} /></span>}
               </nav>
             ) : null}
           </>
