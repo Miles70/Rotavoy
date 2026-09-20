@@ -160,6 +160,12 @@
   color: #15803d;
 }
 
+.productBadge.out-of-stock {
+  border: 1px solid rgba(100, 116, 139, 0.24);
+  background: rgba(255, 255, 255, 0.95);
+  color: #64748b;
+}
+
 .productBadgeDot {
   width: 7px;
   height: 7px;
@@ -288,6 +294,16 @@
 
 .addButton:active {
   transform: translateY(0) scale(0.96);
+}
+
+.addButton:disabled,
+.addButton:disabled:hover {
+  border-color: rgba(148, 163, 184, 0.28);
+  background: #f1f5f9;
+  color: #94a3b8;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
 }
 
 .addButton:focus-visible {
