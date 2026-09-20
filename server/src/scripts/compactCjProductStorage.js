@@ -112,8 +112,6 @@ try {
               description: "",
               features: [],
               images: compactImages(product),
-              videoUrl: "",
-              videoPosterUrl: "",
               supplierContent: compactVariantSupplierContent(product.supplierContent),
               translations: compactVariantTranslations(product.translations),
             },
