@@ -118,7 +118,11 @@ function getCatalogGroupKey(row) {
 }
 
 function compareCatalogRepresentatives(left, right) {
-  return Number(left.price || 0) - Number(right.price || 0) ||
+  const stockDifference =
+    Number(Number(right?.stock || 0) > 0) - Number(Number(left?.stock || 0) > 0);
+
+  return stockDifference ||
+    Number(left.price || 0) - Number(right.price || 0) ||
     String(left.key || "").localeCompare(String(right.key || ""));
 }
 
@@ -141,6 +145,7 @@ export function buildCatalogGroupSummaries(rows, sortMode = "popular") {
         priceMin: price,
         priceMax: price,
         stockTotal: stock,
+        inStock: stock > 0,
         hasVideo: Boolean(row?.hasVideo),
       });
       continue;
@@ -150,6 +155,7 @@ export function buildCatalogGroupSummaries(rows, sortMode = "popular") {
     existing.priceMin = Math.min(existing.priceMin, price);
     existing.priceMax = Math.max(existing.priceMax, price);
     existing.stockTotal += stock;
+    existing.inStock = existing.inStock || stock > 0;
     existing.hasVideo = existing.hasVideo || Boolean(row?.hasVideo);
     if (compareCatalogRepresentatives(row, existing.representative) < 0) {
       existing.representative = row;
@@ -166,9 +172,11 @@ export function buildCatalogGroupSummaries(rows, sortMode = "popular") {
       return createdDifference || String(leftProduct?.key || "").localeCompare(String(rightProduct?.key || ""));
     }
 
+    const stockDifference = Number(Boolean(right.inStock)) - Number(Boolean(left.inStock));
     const videoDifference = Number(Boolean(right.hasVideo)) - Number(Boolean(left.hasVideo));
 
-    return videoDifference ||
+    return stockDifference ||
+      videoDifference ||
       Number(rightProduct?.popularity || 0) - Number(leftProduct?.popularity || 0) ||
       createdDifference ||
       String(leftProduct?.key || "").localeCompare(String(rightProduct?.key || ""));
