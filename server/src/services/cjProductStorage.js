@@ -29,7 +29,7 @@ export function compactVariantSupplierContent(supplierContent) {
 
   return {
     variant: String(source.variant || "").trim(),
-    ...(source.facts && typeof source.facts === "object" ? { facts: source.facts } : {}),
+    ...(source.facts && typeof source.facts === "object" ? { facts: Object.fromEntries(Object.entries(source.facts).filter(([key]) => key === "originCountry" || key.startsWith("variant"))) } : {}),
   };
 }
 
