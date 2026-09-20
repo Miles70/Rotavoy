@@ -57,6 +57,25 @@ test("catalog grouping selects the cheapest variant and sorts lightweight parent
   assert.equal(groups[0].stockTotal, 5);
 });
 
+test("catalog grouping keeps out-of-stock parents but prefers an in-stock representative", () => {
+  const rows = [
+    { _id: "cheap-empty", key: "shoe-empty", supplierProductId: "shoe", price: 4, stock: 0, popularity: 50, createdAt: "2026-01-03" },
+    { _id: "stocked", key: "shoe-stocked", supplierProductId: "shoe", price: 6, stock: 3, popularity: 10, createdAt: "2026-01-02" },
+    { _id: "empty-parent", key: "lamp-empty", supplierProductId: "lamp", price: 3, stock: 0, popularity: 999, hasVideo: true, createdAt: "2026-01-04" },
+  ];
+
+  const groups = buildCatalogGroupSummaries(rows, "popular");
+
+  assert.equal(groups.length, 2);
+  assert.equal(groups[0].groupKey, "shoe");
+  assert.equal(groups[0].representative._id, "stocked");
+  assert.equal(groups[0].stockTotal, 3);
+  assert.equal(groups[0].inStock, true);
+  assert.equal(groups[1].groupKey, "lamp");
+  assert.equal(groups[1].stockTotal, 0);
+  assert.equal(groups[1].inStock, false);
+});
+
 test("popular catalog prioritizes video products without changing newest sorting", () => {
   const rows = [
     { _id: "popular", key: "popular", supplierProductId: "popular", price: 5, stock: 1, popularity: 999, hasVideo: false, createdAt: "2026-02-01" },
