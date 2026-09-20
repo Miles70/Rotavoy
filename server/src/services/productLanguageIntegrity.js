@@ -12,6 +12,7 @@ export async function auditProductLanguageIntegrity({ repair = false } = {}) {
   const products = await Product.find({
     source: "cj",
     isActive: true,
+    sharedContentOwner: true,
     "contentMeta.status": "ready",
     "contentMeta.provider": "openai",
   })
