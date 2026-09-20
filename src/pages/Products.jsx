@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, PackageSearch } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import ProductCard from "../components/ProductCard/ProductCard";
 import SearchBar from "../components/SearchBar/SearchBar";
+import Seo from "../components/Seo/Seo";
 import categories from "../data/categories";
 import { getCategoryGroupText } from "../i18n/categoryGroupText";
 import { useLanguage } from "../i18n/LanguageContext";
@@ -142,6 +143,20 @@ function Products() {
   const selectedCategoryTitle =
     groupLabel(groupQuery, language) || categoryLabel(categoryQuery, t);
   const recommendationText = recommendationLabels[language] || recommendationLabels.en;
+  const seoPage = pagination.page || requestedPage;
+  const seoParams = new URLSearchParams();
+  if (groupQuery) seoParams.set("group", groupQuery);
+  if (categoryQuery) seoParams.set("category", categoryQuery);
+  if (seoPage > 1) seoParams.set("page", String(seoPage));
+  const seoPath = searchQuery
+    ? "/products"
+    : `/products${seoParams.toString() ? `?${seoParams.toString()}` : ""}`;
+  const seoTitle = selectedCategoryTitle
+    ? `${selectedCategoryTitle} Products${seoPage > 1 ? ` - Page ${seoPage}` : ""} | Rotavoy`
+    : `Shop Products${seoPage > 1 ? ` - Page ${seoPage}` : ""} | Rotavoy`;
+  const seoDescription = selectedCategoryTitle
+    ? `Shop ${selectedCategoryTitle} products on Rotavoy. Discover in-stock items, variants and current marketplace prices.`
+    : "Shop electronics, fashion, home, beauty, sports, toys and more across the Rotavoy marketplace.";
 
   function changePage(nextPage) {
     if (nextPage < 1 || nextPage > pagination.totalPages || nextPage === pagination.page) return;
@@ -154,6 +169,18 @@ function Products() {
 
   return (
     <main className="productsPage">
+      <Seo
+        title={seoTitle}
+        description={seoDescription}
+        path={seoPath}
+        noIndex={Boolean(searchQuery)}
+        jsonLd={searchQuery ? null : {
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: selectedCategoryTitle || "Rotavoy Products",
+          url: `https://rotavoy.com${seoPath}`,
+        }}
+      />
       <section className="productsHero">
         <span>{t("productsPage.tag")}</span>
         <h1>{t("productsPage.title")}</h1>
