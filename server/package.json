@@ -25,7 +25,8 @@
     "catalog:audit-duplicates": "node src/scripts/auditProductDuplicates.js",
     "catalog:cleanup-duplicates": "node src/scripts/cleanupProductDuplicates.js",
     "catalog:audit-categories": "node src/scripts/reclassifyCjCategories.js",
-    "catalog:reclassify-categories": "node src/scripts/reclassifyCjCategories.js --apply"
+    "catalog:reclassify-categories": "node src/scripts/reclassifyCjCategories.js --apply",
+    "db:storage-report": "node src/scripts/reportMongoStorage.js"
   },
   "dependencies": {
     "cors": "^2.8.6",
