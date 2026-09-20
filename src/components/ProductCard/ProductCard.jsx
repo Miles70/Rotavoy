@@ -216,9 +216,9 @@ function ProductCard({ product }) {
     !hasMultipleVariants && Number(product.oldPrice || 0) > Number(product.price || 0)
       ? Number(product.oldPrice)
       : null;
-  // Grouped CJ cards point to one concrete active variant (the cheapest one,
-  // selected by the backend). Show that variant's actual sale price as a
-  // single amount; other variant prices remain visible after opening details.
+  // Grouped CJ cards prefer a stocked representative when one exists.
+  // If the whole parent is out of stock, the card stays browsable but cannot
+  // be added to cart until CJ inventory becomes available again.
   const displayPrice = formatPrice(product.price);
 
   return (
