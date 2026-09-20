@@ -4,6 +4,7 @@ import {
   productTranslationsComplete,
   translateProductBundle,
 } from "./productTranslation.js";
+import { chooseSharedContentOwner, compactVariantTranslations } from "./cjProductStorage.js";
 
 const DEFAULT_LIMIT = 20;
 
@@ -84,9 +85,14 @@ async function backfillSupplierProduct(supplierProductId) {
     return { status: "skipped", supplierProductId };
   }
 
-  const first = products[0];
+  const sharedContentOwner = chooseSharedContentOwner(products) || products[0];
+  const orderedProducts = [
+    sharedContentOwner,
+    ...products.filter((product) => String(product._id) !== String(sharedContentOwner._id)),
+  ];
+  const first = sharedContentOwner;
   const supplierContent = first.supplierContent || {};
-  const variants = products.map((product) => cleanText(
+  const variants = orderedProducts.map((product) => cleanText(
     product.supplierContent?.variant || product.details?.variant || product.supplierSku || "Default",
     160,
   ));
@@ -102,28 +108,36 @@ async function backfillSupplierProduct(supplierProductId) {
   }
 
   const now = new Date();
-  const operations = products.map((product, index) => ({
-    updateOne: {
-      filter: { _id: product._id, sourceHash: product.sourceHash },
-      update: {
-        $set: {
-          translations: buildVariantTranslations(bundle, index, variants[index]),
+  const operations = orderedProducts.map((product, index) => {
+    const translations = buildVariantTranslations(bundle, index, variants[index]);
+    const isSharedContentOwner = String(product._id) === String(sharedContentOwner._id);
+
+    return {
+      updateOne: {
+        filter: { _id: product._id, sourceHash: product.sourceHash },
+        update: {
+          $set: {
+            translations: isSharedContentOwner
+              ? translations
+              : compactVariantTranslations(translations),
+            sharedContentOwner: isSharedContentOwner,
           translationMeta: {
             provider: "google-translate",
             sourceHash: product.sourceHash,
             sourceLanguage: "en",
             languages: getRotavoyProductLanguages(),
             updatedAt: now,
+            },
           },
         },
       },
-    },
-  }));
+    };
+  });
   const result = await Product.bulkWrite(operations, { ordered: false });
-  if (Number(result.matchedCount || 0) !== products.length) {
+  if (Number(result.matchedCount || 0) !== orderedProducts.length) {
     throw new Error("Supplier data changed during translation; retry this product.");
   }
-  return { status: "translated", supplierProductId, variants: products.length };
+  return { status: "translated", supplierProductId, variants: orderedProducts.length };
 }
 
 export async function backfillMissingProductTranslations({ limit } = {}) {
