@@ -40,6 +40,7 @@ const productSchema = new mongoose.Schema(
     supplierProductId: { type: String, trim: true, default: "", index: true },
     supplierVariantId: { type: String, trim: true, default: "", index: true },
     variantGroupKey: { type: String, trim: true, default: "", index: true },
+    sharedContentOwner: { type: Boolean, default: false },
     supplierSku: { type: String, trim: true, default: "", index: true },
     isActive: { type: Boolean, default: true, index: true },
   },
