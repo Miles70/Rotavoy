@@ -183,24 +183,6 @@ export function buildCatalogGroupSummaries(rows, sortMode = "popular") {
   });
 }
 
-const SHOWCASE_CATEGORY_BONUS = Object.freeze({
-  appliances: 36,
-  home: 32,
-  electronics: 30,
-  tools: 26,
-  automotive: 24,
-  office: 18,
-  sports: 16,
-  pets: 14,
-  beauty: 12,
-  baby: 10,
-  grocery: 8,
-  fashion: 6,
-  toys: 5,
-  hobby: 3,
-  gaming: 2,
-});
-
 const SHOWCASE_IGNORED_TITLE_TOKENS = new Set([
   "with", "from", "this", "that", "for", "and", "the", "new", "hot", "sale",
   "fashion", "style", "stylish", "casual", "premium", "high", "quality", "latest",
@@ -209,6 +191,7 @@ const SHOWCASE_IGNORED_TITLE_TOKENS = new Set([
   "grey", "brown", "beige", "gold", "silver", "women", "womens", "woman",
   "men", "mens", "male", "female", "girl", "girls", "boy", "boys", "adult",
   "piece", "pieces", "pack", "set", "pcs", "pc", "model", "version",
+  "2024", "2025", "2026",
 ]);
 
 function normalizeShowcaseToken(token) {
@@ -257,13 +240,26 @@ function showcaseSimilarity(leftTitle, rightTitle) {
   return Math.max(containment, jaccard);
 }
 
-function showcaseScore(group) {
-  const meta = getShowcaseMeta(group);
-  const categoryBonus = SHOWCASE_CATEGORY_BONUS[meta.categoryKey] || 0;
+function showcaseTypeKey(title) {
+  const tokens = showcaseTitleTokens(title);
+  if (!tokens.length) return "";
+  // Product titles often begin with marketing adjectives and end with the real
+  // product type. Keeping the last two meaningful words catches separate CJ
+  // parents that are effectively the same item (e.g. "... smoothie blender").
+  return tokens.slice(-2).join(" ");
+}
+
+function compareShowcaseDemand(left, right) {
+  const leftMeta = getShowcaseMeta(left);
+  const rightMeta = getShowcaseMeta(right);
+
   return (
-    categoryBonus +
-    Math.log1p(Math.max(meta.popularity, 0)) * 8 +
-    Math.log1p(Math.max(meta.stock, 0)) * 3
+    rightMeta.popularity - leftMeta.popularity ||
+    rightMeta.stock - leftMeta.stock ||
+    new Date(rightMeta.createdAt || 0).getTime() - new Date(leftMeta.createdAt || 0).getTime() ||
+    String(left?.groupKey || left?.representativeKey || "").localeCompare(
+      String(right?.groupKey || right?.representativeKey || ""),
+    )
   );
 }
 
@@ -272,65 +268,73 @@ export function selectShowcaseCatalogGroups(groups, limit = 100) {
   const eligible = (Array.isArray(groups) ? groups : [])
     .filter((group) => Boolean(group?.inStock))
     .filter((group) => Boolean(group?.inStockVideo ?? group?.hasVideo))
-    .sort((left, right) => {
-      const scoreDifference = showcaseScore(right) - showcaseScore(left);
-      if (scoreDifference) return scoreDifference;
-
-      const leftMeta = getShowcaseMeta(left);
-      const rightMeta = getShowcaseMeta(right);
-      const createdDifference = new Date(rightMeta.createdAt || 0).getTime() -
-        new Date(leftMeta.createdAt || 0).getTime();
-      return createdDifference ||
-        String(left?.groupKey || left?.representativeKey || "").localeCompare(
-          String(right?.groupKey || right?.representativeKey || ""),
-        );
-    });
+    .sort(compareShowcaseDemand);
 
   const selected = [];
   const selectedKeys = new Set();
+  const selectedTypeKeys = new Set();
   const categoryCounts = new Map();
-  const categoryCap = Math.max(8, Math.ceil(target / 7));
+  const categoryCap = Math.max(10, Math.ceil(target / 5));
 
   function groupKey(group) {
     return String(group?.groupKey || group?._id || group?.representativeKey || "").trim();
   }
 
-  function canAdd(group, enforceCategoryCap, similarityLimit) {
-    const key = groupKey(group);
-    if (!key || selectedKeys.has(key)) return false;
-
+  function isTooSimilar(group, similarityLimit) {
     const meta = getShowcaseMeta(group);
-    if (enforceCategoryCap && meta.categoryKey) {
-      if ((categoryCounts.get(meta.categoryKey) || 0) >= categoryCap) return false;
-    }
+    const typeKey = showcaseTypeKey(meta.title);
 
-    return !selected.some((chosen) => (
-      showcaseSimilarity(meta.title, getShowcaseMeta(chosen).title) >= similarityLimit
-    ));
+    if (typeKey && selectedTypeKeys.has(typeKey)) return true;
+
+    return selected.some((chosen) => {
+      const chosenMeta = getShowcaseMeta(chosen);
+      if (meta.categoryKey && chosenMeta.categoryKey && meta.categoryKey !== chosenMeta.categoryKey) {
+        return showcaseSimilarity(meta.title, chosenMeta.title) >= 0.82;
+      }
+      return showcaseSimilarity(meta.title, chosenMeta.title) >= similarityLimit;
+    });
   }
 
-  function addPass(enforceCategoryCap, similarityLimit) {
+  function addPass({ enforceCategoryCap, similarityLimit, enforceTypeKey }) {
     for (const group of eligible) {
       if (selected.length >= target) break;
-      if (!canAdd(group, enforceCategoryCap, similarityLimit)) continue;
+
+      const key = groupKey(group);
+      if (!key || selectedKeys.has(key)) continue;
 
       const meta = getShowcaseMeta(group);
+      if (
+        enforceCategoryCap &&
+        meta.categoryKey &&
+        (categoryCounts.get(meta.categoryKey) || 0) >= categoryCap
+      ) {
+        continue;
+      }
+
+      const typeKey = showcaseTypeKey(meta.title);
+      if (enforceTypeKey && typeKey && selectedTypeKeys.has(typeKey)) continue;
+      if (isTooSimilar(group, similarityLimit)) continue;
+
       selected.push(group);
-      selectedKeys.add(groupKey(group));
+      selectedKeys.add(key);
+      if (typeKey) selectedTypeKeys.add(typeKey);
       if (meta.categoryKey) {
         categoryCounts.set(meta.categoryKey, (categoryCounts.get(meta.categoryKey) || 0) + 1);
       }
     }
   }
 
-  // First pass keeps both product-type similarity and category domination low.
-  addPass(true, 0.72);
-  // If a sparse category mix cannot fill the shelf, keep the same similarity bar
-  // but relax only the per-category cap.
-  if (selected.length < target) addPass(false, 0.72);
-  // Last fill remains conservative: only products that are very close in wording
-  // may enter, which is preferable to leaving a 100-card homepage half empty.
-  if (selected.length < target) addPass(false, 0.9);
+  // Start with the strongest CJ demand signals while enforcing hard variety.
+  addPass({ enforceCategoryCap: true, similarityLimit: 0.5, enforceTypeKey: true });
+  // Relax only the category cap before allowing anything visually repetitive.
+  if (selected.length < target) {
+    addPass({ enforceCategoryCap: false, similarityLimit: 0.55, enforceTypeKey: true });
+  }
+  // Final fill keeps duplicate titles blocked but allows a second product type
+  // only when the wording is clearly different.
+  if (selected.length < target) {
+    addPass({ enforceCategoryCap: false, similarityLimit: 0.68, enforceTypeKey: false });
+  }
 
   return selected.slice(0, target);
 }
