@@ -1,5 +1,5 @@
 .logo {
-  gap: 0;
+  gap: 11px;
   isolation: isolate;
   transition:
     transform var(--transition-fast),
@@ -8,12 +8,63 @@
 
 .logo:hover {
   transform: translateY(-1px);
-  filter: saturate(1.03);
+  filter: saturate(1.05);
+}
+
+.logoMark {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  background: #082b4f;
+  box-shadow:
+    0 9px 20px rgba(8, 43, 79, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.logo:hover .logoMark {
+  transform: rotate(-2deg) scale(1.035);
+  box-shadow:
+    0 12px 25px rgba(8, 43, 79, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.logoGlyph {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.logoLetter {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 6.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.logoWheel {
+  fill: #082b4f;
+  stroke: #18c6b3;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.logoWheelHub {
+  fill: #18c6b3;
+  stroke: none;
 }
 
 .logoText {
   position: relative;
-  padding: 2px 15px 12px 0;
+  padding-bottom: 11px;
   display: inline-flex;
   align-items: baseline;
   line-height: 1;
@@ -24,9 +75,9 @@
     "Avenir Next",
     "Trebuchet MS",
     sans-serif;
-  font-size: 1.72rem;
+  font-size: 1.5rem;
   font-weight: 950;
-  letter-spacing: -0.078em;
+  letter-spacing: -0.073em;
   text-rendering: geometricPrecision;
 }
 
@@ -44,67 +95,30 @@
   white-space: nowrap;
 }
 
-.logoTextCore,
-.logoTextCompass {
+.logoTextCore {
   color: #082b4f;
 }
 
-.logoTextCompass {
-  position: relative;
-  display: inline-block;
-}
-
-.logoTextCompass::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 52%;
-  width: 0;
-  height: 0;
-  border-top: 3px solid transparent;
-  border-bottom: 3px solid transparent;
-  border-left: 6px solid #ff6b57;
-  transform: translate(-42%, -50%) rotate(-28deg);
-  filter: drop-shadow(0 1px 1px rgba(151, 42, 29, 0.16));
-}
-
 .logoTextAccent {
-  position: relative;
-  z-index: 1;
   margin-left: 2px;
-  color: #0eb8ad;
+  color: #0daea5;
   font-style: italic;
-  letter-spacing: -0.095em;
-  transform: skewX(-3deg);
-}
-
-.logoTextAccent::after {
-  content: "";
-  position: absolute;
-  right: -9px;
-  bottom: -6px;
-  width: 21px;
-  height: 11px;
-  border-bottom: 3px solid #0eb8ad;
-  border-radius: 0 0 70% 45%;
-  transform: rotate(-8deg);
-}
-
-.logoRouteDot {
-  position: absolute;
-  right: 0;
-  bottom: 9px;
-  width: 7px;
-  height: 7px;
-  border: 2px solid #ffffff;
-  border-radius: 50%;
-  background: #ff6b57;
-  box-shadow: 0 2px 7px rgba(255, 107, 87, 0.35);
+  letter-spacing: -0.09em;
 }
 
 @media (max-width: 620px) {
+  .logo {
+    gap: 8px;
+  }
+
+  .logoMark {
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+    border-radius: 12px;
+  }
+
   .logoText {
-    padding-right: 13px;
-    font-size: 1.48rem;
+    font-size: 1.38rem;
   }
 }
