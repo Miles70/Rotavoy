@@ -9,28 +9,68 @@ const CHECKPOINT = path.resolve(process.cwd(), ".rotavoy-cj-stock-harvest.json")
 const COUNTRY = String(process.env.ROTAVOY_CJ_HARVEST_COUNTRY || "CN").toUpperCase();
 const MAX_CYCLES = Math.max(1, Number.parseInt(process.env.ROTAVOY_CJ_GROW_CYCLES || "1000", 10) || 1000);
 const API_POINTS_EXIT_CODE = 75;
+const WINDOWS_FAST_FAIL_EXIT_CODES = new Set([3221226505, -1073740791]);
+const TRANSIENT_CRASH_RETRIES = Math.max(
+  0,
+  Number.parseInt(process.env.ROTAVOY_CJ_TRANSIENT_CRASH_RETRIES || "3", 10) || 0,
+);
+const TRANSIENT_CRASH_RETRY_DELAY_MS = Math.max(
+  250,
+  Number.parseInt(process.env.ROTAVOY_CJ_TRANSIENT_CRASH_RETRY_DELAY_MS || "2000", 10) || 2000,
+);
 const scripts = [
   "harvestCjStockCatalog.js",
   "auditCjCandidates.js",
   "importCjCandidates.js",
 ];
 
-function runScript(name) {
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function runScriptOnce(name) {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [path.resolve("src/scripts", name)], {
       stdio: "inherit",
       env: process.env,
     });
+
     child.once("error", reject);
     child.once("exit", (code, signal) => {
-      if (code === 0) resolve("completed");
-      else if (name === "importCjCandidates.js" && code === API_POINTS_EXIT_CODE) {
-        resolve("api_points_exhausted");
-      } else {
-        reject(new Error(`${name} stopped (${signal || code}). Resume with the same command.`));
-      }
+      resolve({ code, signal });
     });
   });
+}
+
+async function runScript(name) {
+  for (let attempt = 0; attempt <= TRANSIENT_CRASH_RETRIES; attempt += 1) {
+    const { code, signal } = await runScriptOnce(name);
+
+    if (code === 0) return "completed";
+
+    if (name === "importCjCandidates.js" && code === API_POINTS_EXIT_CODE) {
+      return "api_points_exhausted";
+    }
+
+    const isTransientWindowsCrash =
+      !signal && WINDOWS_FAST_FAIL_EXIT_CODES.has(Number(code));
+
+    if (isTransientWindowsCrash && attempt < TRANSIENT_CRASH_RETRIES) {
+      const retryNumber = attempt + 1;
+      console.warn(
+        `${name} hit Windows fast-fail exit ${code}; retrying automatically ` +
+        `(${retryNumber}/${TRANSIENT_CRASH_RETRIES}) after ${TRANSIENT_CRASH_RETRY_DELAY_MS}ms.`,
+      );
+      await delay(TRANSIENT_CRASH_RETRY_DELAY_MS);
+      continue;
+    }
+
+    throw new Error(
+      `${name} stopped (${signal || code}). Resume with the same command.`,
+    );
+  }
+
+  throw new Error(`${name} exhausted its transient crash retries.`);
 }
 
 async function checkpoint() {
