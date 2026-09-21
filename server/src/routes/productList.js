@@ -11,6 +11,7 @@ import {
   buildGroupedStorefrontProduct,
   getLocalizedSearchFields,
   normalizeStorefrontLanguage,
+  selectShowcaseCatalogGroups,
   STOREFRONT_PRIVATE_FIELDS,
   trimStorefrontTranslations,
 } from "../services/storefrontProduct.js";
@@ -125,6 +126,8 @@ async function getGroupedCjCatalog({ filter, sortMode, requestedPage, limit, lan
     {
       $project: {
         key: 1,
+        title: 1,
+        categoryKey: 1,
         supplierProductId: 1,
         variantGroupKey: 1,
         price: 1,
@@ -141,10 +144,14 @@ async function getGroupedCjCatalog({ filter, sortMode, requestedPage, limit, lan
         _id: "$groupKey",
         representative: {
           $top: {
-            sortBy: { inStock: -1, price: 1, key: 1 },
+            sortBy: sortMode === "showcase"
+              ? { inStock: -1, hasVideo: -1, price: 1, key: 1 }
+              : { inStock: -1, price: 1, key: 1 },
             output: {
               id: "$_id",
               key: "$key",
+              title: "$title",
+              categoryKey: "$categoryKey",
               popularity: "$popularity",
               createdAt: "$createdAt",
             },
@@ -156,12 +163,23 @@ async function getGroupedCjCatalog({ filter, sortMode, requestedPage, limit, lan
         stockTotal: { $sum: "$stock" },
         inStock: { $max: "$inStock" },
         hasVideo: { $max: { $cond: ["$hasVideo", 1, 0] } },
+        inStockVideo: {
+          $max: {
+            $cond: [
+              { $and: [{ $gt: ["$stock", 0] }, "$hasVideo"] },
+              1,
+              0,
+            ],
+          },
+        },
       },
     },
     {
       $project: {
         representativeId: "$representative.id",
         representativeKey: "$representative.key",
+        representativeTitle: "$representative.title",
+        representativeCategoryKey: "$representative.categoryKey",
         representativePopularity: "$representative.popularity",
         representativeCreatedAt: "$representative.createdAt",
         variantCount: 1,
@@ -170,16 +188,23 @@ async function getGroupedCjCatalog({ filter, sortMode, requestedPage, limit, lan
         stockTotal: 1,
         inStock: 1,
         hasVideo: 1,
+        inStockVideo: 1,
       },
     },
     { $sort: groupSort },
   ]).allowDiskUse(true);
 
-  const total = summaries.length;
+  const orderedSummaries = sortMode === "showcase"
+    ? selectShowcaseCatalogGroups(
+        summaries,
+        Math.min(Math.max(requestedPage * limit, limit), 100),
+      )
+    : summaries;
+  const total = orderedSummaries.length;
   const totalPages = Math.max(Math.ceil(total / limit), 1);
   const page = Math.min(Math.max(requestedPage, 1), totalPages);
   const skip = (page - 1) * limit;
-  const pageSummaries = summaries.slice(skip, skip + limit);
+  const pageSummaries = orderedSummaries.slice(skip, skip + limit);
   const representativeIds = pageSummaries.map((summary) => summary.representativeId);
   const representativeProducts = representativeIds.length
     ? await Product.find({ _id: { $in: representativeIds } })
