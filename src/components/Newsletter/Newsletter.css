@@ -1,6 +1,6 @@
 .newsletter {
   padding: 28px 24px 88px;
-  background: #ffffff;
+  background: #f7fcfb;
 }
 
 .newsletterInner {
@@ -14,10 +14,10 @@
   background:
     radial-gradient(
       circle at top right,
-      rgba(240, 24, 96, 0.12),
+      rgba(24, 198, 179, 0.14),
       transparent 34%
     ),
-    #f6f7fb;
+    #ecf9f7;
 }
 
 .newsletterContent h2 {
