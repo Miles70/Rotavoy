@@ -7,7 +7,7 @@
     sans-serif;
 
   color: #101326;
-  background: #ffffff;
+  background: #f7fcfb;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -30,17 +30,17 @@
   --color-text-secondary: #4f586d;
   --color-text-muted: #747d91;
 
-  --color-background: #ffffff;
-  --color-background-soft: #f5f6fa;
-  --color-background-muted: #eef0f6;
+  --color-background: #f7fcfb;
+  --color-background-soft: #ecf9f7;
+  --color-background-muted: #e4f4f1;
 
   --color-surface: #ffffff;
-  --color-border: #e2e5ed;
-  --color-border-strong: #d4d8e3;
+  --color-border: #d8ebe7;
+  --color-border-strong: #c8e2dc;
 
-  --shadow-small: 0 8px 24px rgba(20, 27, 45, 0.06);
-  --shadow-medium: 0 18px 45px rgba(20, 27, 45, 0.09);
-  --shadow-large: 0 26px 80px rgba(20, 27, 45, 0.12);
+  --shadow-small: 0 8px 24px rgba(10, 74, 66, 0.06);
+  --shadow-medium: 0 18px 45px rgba(10, 74, 66, 0.09);
+  --shadow-large: 0 26px 80px rgba(10, 74, 66, 0.12);
 
   --container-width: 1180px;
 
