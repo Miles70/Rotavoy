@@ -183,6 +183,158 @@ export function buildCatalogGroupSummaries(rows, sortMode = "popular") {
   });
 }
 
+const SHOWCASE_CATEGORY_BONUS = Object.freeze({
+  appliances: 36,
+  home: 32,
+  electronics: 30,
+  tools: 26,
+  automotive: 24,
+  office: 18,
+  sports: 16,
+  pets: 14,
+  beauty: 12,
+  baby: 10,
+  grocery: 8,
+  fashion: 6,
+  toys: 5,
+  hobby: 3,
+  gaming: 2,
+});
+
+const SHOWCASE_IGNORED_TITLE_TOKENS = new Set([
+  "with", "from", "this", "that", "for", "and", "the", "new", "hot", "sale",
+  "fashion", "style", "stylish", "casual", "premium", "high", "quality", "latest",
+  "portable", "mini", "small", "large", "extra", "plus", "size", "sizes",
+  "black", "white", "red", "blue", "green", "pink", "purple", "yellow", "gray",
+  "grey", "brown", "beige", "gold", "silver", "women", "womens", "woman",
+  "men", "mens", "male", "female", "girl", "girls", "boy", "boys", "adult",
+  "piece", "pieces", "pack", "set", "pcs", "pc", "model", "version",
+]);
+
+function normalizeShowcaseToken(token) {
+  const value = String(token || "").toLocaleLowerCase("en-US");
+  if (value.length > 4 && value.endsWith("ies")) return `${value.slice(0, -3)}y`;
+  if (value.length > 4 && value.endsWith("s") && !value.endsWith("ss")) return value.slice(0, -1);
+  return value;
+}
+
+function showcaseTitleTokens(value) {
+  return [...new Set(
+    String(value || "")
+      .toLocaleLowerCase("en-US")
+      .replace(/[^\p{L}\p{N}]+/gu, " ")
+      .split(/\s+/)
+      .map(normalizeShowcaseToken)
+      .filter((token) => token.length >= 3)
+      .filter((token) => !/^\d+$/.test(token))
+      .filter((token) => !SHOWCASE_IGNORED_TITLE_TOKENS.has(token)),
+  )];
+}
+
+function getShowcaseMeta(group) {
+  const product = group?.representative || group?.product || {};
+  return {
+    title: String(group?.representativeTitle || product?.title || ""),
+    categoryKey: String(group?.representativeCategoryKey || product?.categoryKey || ""),
+    popularity: Number(group?.representativePopularity ?? product?.popularity ?? 0),
+    createdAt: group?.representativeCreatedAt || product?.createdAt || 0,
+    stock: Number(group?.stockTotal ?? product?.stock ?? 0),
+  };
+}
+
+function showcaseSimilarity(leftTitle, rightTitle) {
+  const left = showcaseTitleTokens(leftTitle);
+  const right = showcaseTitleTokens(rightTitle);
+  if (!left.length || !right.length) return 0;
+
+  const rightSet = new Set(right);
+  const shared = left.reduce((sum, token) => sum + Number(rightSet.has(token)), 0);
+  const containment = shared / Math.max(Math.min(left.length, right.length), 1);
+  const union = new Set([...left, ...right]).size;
+  const jaccard = shared / Math.max(union, 1);
+
+  if (left.join(" ") === right.join(" ")) return 1;
+  return Math.max(containment, jaccard);
+}
+
+function showcaseScore(group) {
+  const meta = getShowcaseMeta(group);
+  const categoryBonus = SHOWCASE_CATEGORY_BONUS[meta.categoryKey] || 0;
+  return (
+    categoryBonus +
+    Math.log1p(Math.max(meta.popularity, 0)) * 8 +
+    Math.log1p(Math.max(meta.stock, 0)) * 3
+  );
+}
+
+export function selectShowcaseCatalogGroups(groups, limit = 100) {
+  const target = Math.max(1, Math.min(Number(limit) || 100, 100));
+  const eligible = (Array.isArray(groups) ? groups : [])
+    .filter((group) => Boolean(group?.inStock))
+    .filter((group) => Boolean(group?.inStockVideo ?? group?.hasVideo))
+    .sort((left, right) => {
+      const scoreDifference = showcaseScore(right) - showcaseScore(left);
+      if (scoreDifference) return scoreDifference;
+
+      const leftMeta = getShowcaseMeta(left);
+      const rightMeta = getShowcaseMeta(right);
+      const createdDifference = new Date(rightMeta.createdAt || 0).getTime() -
+        new Date(leftMeta.createdAt || 0).getTime();
+      return createdDifference ||
+        String(left?.groupKey || left?.representativeKey || "").localeCompare(
+          String(right?.groupKey || right?.representativeKey || ""),
+        );
+    });
+
+  const selected = [];
+  const selectedKeys = new Set();
+  const categoryCounts = new Map();
+  const categoryCap = Math.max(8, Math.ceil(target / 7));
+
+  function groupKey(group) {
+    return String(group?.groupKey || group?._id || group?.representativeKey || "").trim();
+  }
+
+  function canAdd(group, enforceCategoryCap, similarityLimit) {
+    const key = groupKey(group);
+    if (!key || selectedKeys.has(key)) return false;
+
+    const meta = getShowcaseMeta(group);
+    if (enforceCategoryCap && meta.categoryKey) {
+      if ((categoryCounts.get(meta.categoryKey) || 0) >= categoryCap) return false;
+    }
+
+    return !selected.some((chosen) => (
+      showcaseSimilarity(meta.title, getShowcaseMeta(chosen).title) >= similarityLimit
+    ));
+  }
+
+  function addPass(enforceCategoryCap, similarityLimit) {
+    for (const group of eligible) {
+      if (selected.length >= target) break;
+      if (!canAdd(group, enforceCategoryCap, similarityLimit)) continue;
+
+      const meta = getShowcaseMeta(group);
+      selected.push(group);
+      selectedKeys.add(groupKey(group));
+      if (meta.categoryKey) {
+        categoryCounts.set(meta.categoryKey, (categoryCounts.get(meta.categoryKey) || 0) + 1);
+      }
+    }
+  }
+
+  // First pass keeps both product-type similarity and category domination low.
+  addPass(true, 0.72);
+  // If a sparse category mix cannot fill the shelf, keep the same similarity bar
+  // but relax only the per-category cap.
+  if (selected.length < target) addPass(false, 0.72);
+  // Last fill remains conservative: only products that are very close in wording
+  // may enter, which is preferable to leaving a 100-card homepage half empty.
+  if (selected.length < target) addPass(false, 0.9);
+
+  return selected.slice(0, target);
+}
+
 function recommendationTokens(value) {
   return new Set(
     String(value || "")
