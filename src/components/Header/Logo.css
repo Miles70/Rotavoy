@@ -49,15 +49,17 @@
 }
 
 .logoMark::after {
-  content: "✦";
+  content: "☀";
   position: absolute;
   z-index: 3;
   top: 3px;
   right: 4px;
-  color: #18c6b3;
-  font-size: 0.57rem;
+  color: #fbbf24;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.64rem;
+  font-weight: 700;
   line-height: 1;
-  text-shadow: 0 1px 4px rgba(24, 198, 179, 0.35);
+  text-shadow: 0 1px 4px rgba(251, 191, 36, 0.38);
 }
 
 .logo:hover .logoMark {
