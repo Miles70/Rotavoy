@@ -134,20 +134,12 @@ function Header() {
             className="logo"
             aria-label={`${siteConfig.brandName} home`}
           >
-            <span className="logoMark" aria-hidden="true">
-              <svg className="logoGlyph" viewBox="0 0 48 48">
-                <path
-                  className="logoGlyphStroke"
-                  d="M13 37V11H25.5C32 11 36 14.8 36 20.2C36 25.4 32.2 29 25.8 29H13M25 29L37 37"
-                />
-                <circle className="logoGlyphDot" cx="34.4" cy="25" r="2.3" />
-              </svg>
-              <span className="logoSpark" />
-            </span>
-
             <span className="logoText" aria-hidden="true">
-              <span className="logoTextCore">Rota</span>
+              <span className="logoTextCore">R</span>
+              <span className="logoTextCompass">o</span>
+              <span className="logoTextCore">ta</span>
               <span className="logoTextAccent">voy</span>
+              <span className="logoRouteDot" />
             </span>
           </Link>
 
