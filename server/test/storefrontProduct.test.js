@@ -8,6 +8,7 @@ import {
   normalizeStorefrontLanguage,
   rankRelatedCatalogGroups,
   sanitizeStorefrontProduct,
+  selectShowcaseCatalogGroups,
   trimStorefrontTranslations,
 } from "../src/services/storefrontProduct.js";
 
@@ -84,6 +85,90 @@ test("popular catalog prioritizes video products without changing newest sorting
 
   assert.equal(buildCatalogGroupSummaries(rows, "popular")[0].groupKey, "video");
   assert.equal(buildCatalogGroupSummaries(rows, "newest")[0].groupKey, "popular");
+});
+
+test("homepage showcase keeps only stocked video products and removes near-duplicates", () => {
+  const selected = selectShowcaseCatalogGroups([
+    {
+      groupKey: "blender-a",
+      inStock: true,
+      inStockVideo: true,
+      stockTotal: 12,
+      representativeTitle: "Portable USB Smoothie Blender",
+      representativeCategoryKey: "appliances",
+      representativePopularity: 100,
+    },
+    {
+      groupKey: "blender-b",
+      inStock: true,
+      inStockVideo: true,
+      stockTotal: 8,
+      representativeTitle: "USB Smoothie Blender Black",
+      representativeCategoryKey: "appliances",
+      representativePopularity: 90,
+    },
+    {
+      groupKey: "lamp",
+      inStock: true,
+      inStockVideo: true,
+      stockTotal: 15,
+      representativeTitle: "Rechargeable LED Desk Lamp",
+      representativeCategoryKey: "home",
+      representativePopularity: 80,
+    },
+    {
+      groupKey: "no-video",
+      inStock: true,
+      inStockVideo: false,
+      stockTotal: 20,
+      representativeTitle: "Cordless Hand Vacuum Cleaner",
+      representativeCategoryKey: "appliances",
+      representativePopularity: 999,
+    },
+    {
+      groupKey: "out-of-stock",
+      inStock: false,
+      inStockVideo: true,
+      stockTotal: 0,
+      representativeTitle: "Digital Tire Inflator",
+      representativeCategoryKey: "automotive",
+      representativePopularity: 999,
+    },
+  ], 10);
+
+  assert.equal(selected.length, 2);
+  assert.equal(selected.some((group) => group.groupKey === "lamp"), true);
+  assert.equal(
+    selected.filter((group) => group.groupKey.startsWith("blender")).length,
+    1,
+  );
+  assert.equal(selected.some((group) => group.groupKey === "no-video"), false);
+  assert.equal(selected.some((group) => group.groupKey === "out-of-stock"), false);
+});
+
+test("homepage showcase gives practical categories a deterministic quality boost", () => {
+  const selected = selectShowcaseCatalogGroups([
+    {
+      groupKey: "fashion",
+      inStock: true,
+      inStockVideo: true,
+      stockTotal: 5,
+      representativeTitle: "Embroidered Evening Shoulder Bag",
+      representativeCategoryKey: "fashion",
+      representativePopularity: 10,
+    },
+    {
+      groupKey: "appliance",
+      inStock: true,
+      inStockVideo: true,
+      stockTotal: 5,
+      representativeTitle: "Cordless Window Cleaning Vacuum",
+      representativeCategoryKey: "appliances",
+      representativePopularity: 10,
+    },
+  ], 2);
+
+  assert.equal(selected[0].groupKey, "appliance");
 });
 
 test("catalog grouping keeps every variant of one supplier parent on one card", () => {
