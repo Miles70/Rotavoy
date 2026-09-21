@@ -1,5 +1,5 @@
 .logo {
-  gap: 12px;
+  gap: 0;
   isolation: isolate;
   transition:
     transform var(--transition-fast),
@@ -11,62 +11,9 @@
   filter: saturate(1.03);
 }
 
-.logoMark {
-  position: relative;
-  width: 40px;
-  height: 40px;
-  overflow: hidden;
-  display: grid;
-  place-items: center;
-  border: 0;
-  border-radius: 14px;
-  background: #000000;
-  color: #ffffff;
-  box-shadow:
-    0 10px 22px rgba(0, 0, 0, 0.2),
-    0 3px 8px rgba(0, 0, 0, 0.14);
-  transition:
-    transform var(--transition-fast),
-    box-shadow var(--transition-fast);
-}
-
-.logoMark::before {
-  content: "R";
-  position: relative;
-  z-index: 2;
-  color: #ffffff;
-  font-family:
-    ui-rounded,
-    "SF Pro Rounded",
-    "Arial Rounded MT Bold",
-    "Avenir Next",
-    "Trebuchet MS",
-    sans-serif;
-  font-size: 1.38rem;
-  font-weight: 950;
-  line-height: 1;
-  letter-spacing: -0.04em;
-}
-
-.logoMark::after {
-  content: none;
-}
-
-.logo:hover .logoMark {
-  transform: rotate(-2deg) scale(1.035);
-  box-shadow:
-    0 13px 27px rgba(0, 0, 0, 0.24),
-    0 5px 12px rgba(0, 0, 0, 0.16);
-}
-
-.logoGlyph,
-.logoSpark {
-  display: none;
-}
-
 .logoText {
   position: relative;
-  padding-bottom: 11px;
+  padding: 2px 15px 12px 0;
   display: inline-flex;
   align-items: baseline;
   line-height: 1;
@@ -77,9 +24,9 @@
     "Avenir Next",
     "Trebuchet MS",
     sans-serif;
-  font-size: 1.47rem;
+  font-size: 1.72rem;
   font-weight: 950;
-  letter-spacing: -0.073em;
+  letter-spacing: -0.078em;
   text-rendering: geometricPrecision;
 }
 
@@ -98,29 +45,66 @@
 }
 
 .logoTextCore,
-.logoTextAccent {
-  color: #11152b;
+.logoTextCompass {
+  color: #082b4f;
+}
+
+.logoTextCompass {
+  position: relative;
+  display: inline-block;
+}
+
+.logoTextCompass::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  width: 0;
+  height: 0;
+  border-top: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+  border-left: 6px solid #ff6b57;
+  transform: translate(-42%, -50%) rotate(-28deg);
+  filter: drop-shadow(0 1px 1px rgba(151, 42, 29, 0.16));
 }
 
 .logoTextAccent {
-  margin-left: 1px;
-  background: none;
-  -webkit-text-fill-color: currentColor;
-  text-shadow: none;
+  position: relative;
+  z-index: 1;
+  margin-left: 2px;
+  color: #0eb8ad;
+  font-style: italic;
+  letter-spacing: -0.095em;
+  transform: skewX(-3deg);
+}
+
+.logoTextAccent::after {
+  content: "";
+  position: absolute;
+  right: -9px;
+  bottom: -6px;
+  width: 21px;
+  height: 11px;
+  border-bottom: 3px solid #0eb8ad;
+  border-radius: 0 0 70% 45%;
+  transform: rotate(-8deg);
+}
+
+.logoRouteDot {
+  position: absolute;
+  right: 0;
+  bottom: 9px;
+  width: 7px;
+  height: 7px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  background: #ff6b57;
+  box-shadow: 0 2px 7px rgba(255, 107, 87, 0.35);
 }
 
 @media (max-width: 620px) {
-  .logo {
-    gap: 8px;
-  }
-
-  .logoMark {
-    width: 38px;
-    height: 38px;
-    border-radius: 13px;
-  }
-
-  .logoMark::before {
-    font-size: 1.3rem;
+  .logoText {
+    padding-right: 13px;
+    font-size: 1.48rem;
   }
 }
