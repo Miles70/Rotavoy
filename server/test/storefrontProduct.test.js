@@ -146,7 +146,7 @@ test("homepage showcase keeps only stocked video products and removes near-dupli
   assert.equal(selected.some((group) => group.groupKey === "out-of-stock"), false);
 });
 
-test("homepage showcase gives practical categories a deterministic quality boost", () => {
+test("homepage showcase follows CJ demand instead of subjective category bonuses", () => {
   const selected = selectShowcaseCatalogGroups([
     {
       groupKey: "fashion",
@@ -155,7 +155,7 @@ test("homepage showcase gives practical categories a deterministic quality boost
       stockTotal: 5,
       representativeTitle: "Embroidered Evening Shoulder Bag",
       representativeCategoryKey: "fashion",
-      representativePopularity: 10,
+      representativePopularity: 250,
     },
     {
       groupKey: "appliance",
@@ -168,7 +168,43 @@ test("homepage showcase gives practical categories a deterministic quality boost
     },
   ], 2);
 
-  assert.equal(selected[0].groupKey, "appliance");
+  assert.equal(selected[0].groupKey, "fashion");
+});
+
+test("homepage showcase blocks separate CJ parents with the same product type", () => {
+  const selected = selectShowcaseCatalogGroups([
+    {
+      groupKey: "vacuum-a",
+      inStock: true,
+      inStockVideo: true,
+      stockTotal: 15,
+      representativeTitle: "Cordless Powerful Handheld Car Vacuum Cleaner",
+      representativeCategoryKey: "appliances",
+      representativePopularity: 300,
+    },
+    {
+      groupKey: "vacuum-b",
+      inStock: true,
+      inStockVideo: true,
+      stockTotal: 20,
+      representativeTitle: "Rechargeable Compact Home Vacuum Cleaner",
+      representativeCategoryKey: "appliances",
+      representativePopularity: 290,
+    },
+    {
+      groupKey: "lamp",
+      inStock: true,
+      inStockVideo: true,
+      stockTotal: 20,
+      representativeTitle: "Rechargeable LED Reading Desk Lamp",
+      representativeCategoryKey: "home",
+      representativePopularity: 280,
+    },
+  ], 10);
+
+  assert.equal(selected.some((group) => group.groupKey === "vacuum-a"), true);
+  assert.equal(selected.some((group) => group.groupKey === "vacuum-b"), false);
+  assert.equal(selected.some((group) => group.groupKey === "lamp"), true);
 });
 
 test("catalog grouping keeps every variant of one supplier parent on one card", () => {
