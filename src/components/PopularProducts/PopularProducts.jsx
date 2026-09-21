@@ -7,7 +7,7 @@ import "./PopularProducts.css";
 
 const HOME_PRODUCT_LIMIT = 100;
 const HOME_PRODUCT_CACHE_TTL_MS = 2 * 60 * 1000;
-const HOME_PRODUCT_CACHE_KEY_PREFIX = "rotavoy:home-products:v3:";
+const HOME_PRODUCT_CACHE_KEY_PREFIX = "rotavoy:home-products:v4:";
 const homeProductCache = new Map();
 
 function getSessionCacheKey(language) {
