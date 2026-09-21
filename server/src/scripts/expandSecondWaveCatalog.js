@@ -555,7 +555,13 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function isApiPointsExhausted(error) {
+  return /insufficient api points/i.test(String(error?.message || error || ""));
+}
+
 function isRetryableCjError(error) {
+  if (isApiPointsExhausted(error)) return false;
+
   const statusCode = Number(error?.statusCode || 0);
   if ([429, 502, 503, 504].includes(statusCode)) return true;
 
@@ -568,6 +574,8 @@ async function syncCjCatalogWithRetry(groupLabel, passNumber) {
     try {
       return await syncCjCatalog();
     } catch (error) {
+      if (isApiPointsExhausted(error)) throw error;
+
       const retryable = isRetryableCjError(error);
       const retriesUsed = attempt - 1;
 
@@ -642,6 +650,9 @@ try {
     console.log(`Catalog already reached the configured ceiling of ${maxActiveCatalog}. Nothing to add.`);
   }
 
+  let apiPointsExhausted = false;
+
+  groupLoop:
   for (const group of GROUPS) {
     const beforeCount = await getActiveCjParentCount();
     const remaining = Math.max(maxActiveCatalog - beforeCount, 0);
@@ -668,6 +679,14 @@ try {
       try {
         result = await syncCjCatalogWithRetry(group.label, pass);
       } catch (error) {
+        if (isApiPointsExhausted(error)) {
+          apiPointsExhausted = true;
+          console.log(
+            `CJ API points are exhausted. Stopping Wave 2 cleanly at ${group.label}; run the same command later to continue with products not already imported.`,
+          );
+          break;
+        }
+
         if (isRetryableCjError(error)) {
           console.log(
             `[skip] ${group.label}: pass ${pass} still failed after ${syncRetryLimit} retries (${String(error?.message || error)}). Continuing with the next pass instead of stopping Wave 2.`,
@@ -699,6 +718,8 @@ try {
       after: afterCount,
       targetReached: afterCount >= targetCount,
     });
+
+    if (apiPointsExhausted) break groupLoop;
   }
 
   const endingCatalogCount = await getActiveCjParentCount();
@@ -707,6 +728,9 @@ try {
   console.log("\nRotavoy overnight Wave 2 catalog expansion complete.");
   console.table(summary);
   console.log(`Active CJ catalog: ${startingCatalogCount} -> ${endingCatalogCount} (+${totalAdded}).`);
+  if (apiPointsExhausted) {
+    console.log("Wave 2 paused because CJ API points reached zero. Existing imports are safe; rerun the same command after points replenish.");
+  }
 
   const incomplete = summary.filter((row) => !row.targetReached);
   if (incomplete.length > 0) {
