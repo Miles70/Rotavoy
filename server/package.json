@@ -18,6 +18,7 @@
     "cj:harvest-audit": "node src/scripts/auditCjCandidates.js",
     "cj:harvest-import": "node src/scripts/importCjCandidates.js",
     "cj:grow-catalog": "node src/scripts/growCjCatalog.js",
+    "cj:retry-held": "node src/scripts/retryHeldCjCandidates.js && node src/scripts/growCjCatalog.js && node src/scripts/reportCjCandidates.js",
     "content:translate": "node src/scripts/backfillProductTranslations.js",
     "content:enrich": "node src/scripts/enrichProductContent.js",
     "content:audit-languages": "node src/scripts/auditProductLanguages.js",
