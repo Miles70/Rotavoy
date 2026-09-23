@@ -77,6 +77,7 @@ function buildResults(rateResponse) {
         ...hotelsById.get(hotelRate.hotelId),
         hotelId: hotelRate.hotelId,
         offer: cheapest,
+        offers,
       };
     })
     .filter(Boolean)
@@ -167,14 +168,37 @@ function Travel() {
     setPrebookError("");
     setPrebookState("loading");
 
-    try {
-      const response = await prebookHotel(hotel.offer.offerId);
-      setPrebook(response);
-      setPrebookState("success");
-    } catch (error) {
-      setPrebookState("error");
-      setPrebookError(error.message);
+    const offers = hotel.offers?.length ? hotel.offers : [hotel.offer];
+    let lastAvailabilityError = null;
+
+    for (const offer of offers) {
+      try {
+        const response = await prebookHotel(offer.offerId);
+        setSelectedHotel({ ...hotel, offer });
+        setPrebook(response);
+        setPrebookState("success");
+        return;
+      } catch (error) {
+        const isAvailabilityError = /no availability|not available/i.test(
+          error.message,
+        );
+
+        if (!isAvailabilityError) {
+          setPrebookState("error");
+          setPrebookError(error.message);
+          return;
+        }
+
+        lastAvailabilityError = error;
+      }
     }
+
+    setPrebookState("error");
+    setPrebookError(
+      lastAvailabilityError
+        ? "Bu oteldeki uygun odalar az önce tükendi. Başka bir otel deneyebilirsin."
+        : "Bu teklif şu anda kullanılamıyor.",
+    );
   }
 
   return (
