@@ -110,6 +110,57 @@ function getMargin() {
   return Number.isFinite(margin) && margin >= 0 && margin <= 100 ? margin : 15;
 }
 
+function roundMoney(value) {
+  return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+}
+
+function sanitizeProviderResponse(value) {
+  if (Array.isArray(value)) {
+    return value.map(sanitizeProviderResponse);
+  }
+
+  if (!value || typeof value !== "object") {
+    return value;
+  }
+
+  return Object.fromEntries(
+    Object.entries(value)
+      .filter(
+        ([key]) =>
+          !["secretKey", "transactionId", "paymentIntent", "clientSecret"].includes(key),
+      )
+      .map(([key, nestedValue]) => [key, sanitizeProviderResponse(nestedValue)]),
+  );
+}
+
+function normalizePrebookResult(result) {
+  const sanitized = sanitizeProviderResponse(result);
+  const data = sanitized?.data;
+
+  if (!data || typeof data !== "object") {
+    return sanitized;
+  }
+
+  const basePrice = Number(data.price);
+  if (!Number.isFinite(basePrice) || basePrice < 0) {
+    return sanitized;
+  }
+
+  const marginPercent = getMargin();
+  const sellingPrice = roundMoney(basePrice * (1 + marginPercent / 100));
+
+  return {
+    ...sanitized,
+    data: {
+      ...data,
+      providerSuggestedSellingPrice: data.suggestedSellingPrice ?? null,
+      suggestedSellingPrice: sellingPrice,
+      sellingPriceToUser: sellingPrice,
+      marginPercent,
+    },
+  };
+}
+
 function normalizePerson(value, fieldName, includeOccupancy = false) {
   const person = {
     firstName: requiredText(value?.firstName, `${fieldName}.firstName`, 100),
@@ -217,11 +268,11 @@ hotelsRouter.post("/prebook", bookingLimiter, async (request, response, next) =>
   try {
     const result = await prebookNuiteeRate({
       offerId: requiredText(request.body?.offerId, "offerId", 5000),
-      usePaymentSdk: request.body?.usePaymentSdk !== false,
+      usePaymentSdk: false,
     });
 
     response.set("Cache-Control", "no-store");
-    response.json(result);
+    response.json(normalizePrebookResult(result));
   } catch (error) {
     next(error);
   }
