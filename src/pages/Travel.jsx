@@ -105,7 +105,7 @@ function Travel() {
 
   const minimumCheckout = useMemo(() => {
     if (!checkin) return addDays(1);
-    const date = new Date(`${checkin}T00:00:00`);
+    const date = new Date(`${checkin}T00:00:00.000Z`);
     date.setDate(date.getDate() + 1);
     return date.toISOString().slice(0, 10);
   }, [checkin]);
