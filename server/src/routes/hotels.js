@@ -133,6 +133,48 @@ function sanitizeProviderResponse(value) {
   );
 }
 
+function normalizeRatesResult(result) {
+  if (!Array.isArray(result?.data)) {
+    return result;
+  }
+
+  const marginPercent = getMargin();
+
+  return {
+    ...result,
+    data: result.data.map((hotel) => ({
+      ...hotel,
+      roomTypes: Array.isArray(hotel?.roomTypes)
+        ? hotel.roomTypes.map((room) => {
+            const basePrice = Number(room?.offerRetailRate?.amount);
+            if (!Number.isFinite(basePrice) || basePrice < 0) {
+              return room;
+            }
+
+            const sellingPrice = roundMoney(
+              basePrice * (1 + marginPercent / 100),
+            );
+
+            return {
+              ...room,
+              providerSuggestedSellingPrice:
+                room.suggestedSellingPrice ?? null,
+              suggestedSellingPrice: {
+                ...(room.suggestedSellingPrice || {}),
+                amount: sellingPrice,
+                currency:
+                  room?.offerRetailRate?.currency ||
+                  room?.suggestedSellingPrice?.currency ||
+                  "",
+              },
+              marginPercent,
+            };
+          })
+        : hotel?.roomTypes,
+    })),
+  };
+}
+
 function normalizePrebookResult(result) {
   const sanitized = sanitizeProviderResponse(result);
   const data = sanitized?.data;
@@ -258,7 +300,7 @@ hotelsRouter.post("/rates", searchLimiter, async (request, response, next) => {
     });
 
     response.set("Cache-Control", "no-store");
-    response.json(result);
+    response.json(normalizeRatesResult(result));
   } catch (error) {
     next(error);
   }
