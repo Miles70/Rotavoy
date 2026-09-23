@@ -11,7 +11,7 @@ async function hotelRequest(path, options = {}) {
 
   const payload = await response.json().catch(() => ({}));
 
-  if (!response.ok) {
+  if (!response.ok || payload?.error) {
     throw new Error(
       payload?.message ||
         payload?.error?.message ||
