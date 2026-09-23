@@ -43,7 +43,15 @@ function mapStatus(status) {
   return 502;
 }
 
-async function requestNuitee(baseUrl, path, { method = "GET", query, body } = {}) {
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function requestNuitee(
+  baseUrl,
+  path,
+  { method = "GET", query, body, retries = 0 } = {},
+) {
   const settings = getSettings();
 
   if (!settings.apiKey) {
@@ -93,6 +101,21 @@ async function requestNuitee(baseUrl, path, { method = "GET", query, body } = {}
 
     return payload;
   } catch (error) {
+    const retryable =
+      error?.name === "AbortError" ||
+      !error?.statusCode ||
+      error.statusCode >= 500;
+
+    if (retryable && retries > 0) {
+      await wait(450);
+      return requestNuitee(baseUrl, path, {
+        method,
+        query,
+        body,
+        retries: retries - 1,
+      });
+    }
+
     if (error?.statusCode) throw error;
 
     if (error?.name === "AbortError") {
@@ -121,13 +144,17 @@ export function getNuiteeStatus() {
 }
 
 export function listNuiteeHotels(query) {
-  return requestNuitee(getSettings().dataBaseUrl, "/data/hotels", { query });
+  return requestNuitee(getSettings().dataBaseUrl, "/data/hotels", {
+    query,
+    retries: 1,
+  });
 }
 
 export function searchNuiteeRates(body) {
   return requestNuitee(getSettings().dataBaseUrl, "/hotels/rates", {
     method: "POST",
     body,
+    retries: 1,
   });
 }
 
