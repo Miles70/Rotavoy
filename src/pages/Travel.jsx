@@ -403,11 +403,11 @@ function Travel() {
                       prebookState === "loading" ? (
                         <>
                           <LoaderCircle className="travelSpin" size={17} />
-                          Doğrulanıyor
+                          Rezervasyon hazırlanıyor
                         </>
                       ) : (
                         <>
-                          Fiyatı doğrula <ArrowRight size={17} />
+                          Rezervasyon yap <ArrowRight size={17} />
                         </>
                       )}
                     </button>
@@ -417,7 +417,7 @@ function Travel() {
                         {prebookState === "loading" && (
                           <p className="travelPrebookStatus">
                             <LoaderCircle className="travelSpin" size={18} />
-                            Son fiyat ve oda koşulları doğrulanıyor…
+                            Son fiyat ve oda koşulları kontrol ediliyor…
                           </p>
                         )}
 
@@ -432,14 +432,14 @@ function Travel() {
                           <div className="travelPrebookSuccess">
                             <CheckCircle2 size={22} />
                             <div>
-                              <strong>Fiyat doğrulandı</strong>
+                              <strong>Rezervasyona hazır</strong>
                               <span>
                                 {money(
                                   prebook.data.sellingPriceToUser,
                                   prebook.data.currency,
                                 )}
                                 {" · "}
-                                {prebook.data.marginPercent}% Rotavoy marjı dahil
+                                Toplam konaklama fiyatı
                               </span>
                             </div>
                             <button
@@ -447,7 +447,7 @@ function Travel() {
                               disabled
                               title="Sandbox rezervasyonu kapalı"
                             >
-                              Rezervasyon yakında
+                              Rezervasyona devam et
                             </button>
                           </div>
                         )}
