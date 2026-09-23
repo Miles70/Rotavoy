@@ -336,8 +336,8 @@ function Travel() {
               )}
 
               <p className="travelPrototypeNote">
-                Otel arama ve fiyat doğrulama Nuitee sandbox üzerinden çalışır.
-                Gerçek rezervasyon henüz kapalıdır.
+                Fiyatlar seçilen tarih ve misafir bilgilerine göre anlık olarak
+                kontrol edilir.
               </p>
             </form>
           </div>
@@ -445,7 +445,7 @@ function Travel() {
                             <button
                               type="button"
                               disabled
-                              title="Sandbox rezervasyonu kapalı"
+                              title="Online rezervasyon adımı hazırlanıyor"
                             >
                               Rezervasyona devam et
                             </button>
