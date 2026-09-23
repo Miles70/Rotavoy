@@ -391,54 +391,73 @@ function Travel() {
                         )}
                       </strong>
                     </div>
-                    <button type="button" onClick={() => handlePrebook(hotel)}>
-                      Fiyatı doğrula <ArrowRight size={17} />
+                    <button
+                      type="button"
+                      onClick={() => handlePrebook(hotel)}
+                      disabled={
+                        selectedHotel?.hotelId === hotel.hotelId &&
+                        prebookState === "loading"
+                      }
+                    >
+                      {selectedHotel?.hotelId === hotel.hotelId &&
+                      prebookState === "loading" ? (
+                        <>
+                          <LoaderCircle className="travelSpin" size={17} />
+                          Doğrulanıyor
+                        </>
+                      ) : (
+                        <>
+                          Fiyatı doğrula <ArrowRight size={17} />
+                        </>
+                      )}
                     </button>
+
+                    {selectedHotel?.hotelId === hotel.hotelId && (
+                      <div className="travelCardPrebook" aria-live="polite">
+                        {prebookState === "loading" && (
+                          <p className="travelPrebookStatus">
+                            <LoaderCircle className="travelSpin" size={18} />
+                            Son fiyat ve oda koşulları doğrulanıyor…
+                          </p>
+                        )}
+
+                        {prebookState === "error" && (
+                          <p className="travelPrebookStatus travelPrebookStatus--error">
+                            <AlertCircle size={18} />
+                            {prebookError}
+                          </p>
+                        )}
+
+                        {prebookState === "success" && prebook?.data && (
+                          <div className="travelPrebookSuccess">
+                            <CheckCircle2 size={22} />
+                            <div>
+                              <strong>Fiyat doğrulandı</strong>
+                              <span>
+                                {money(
+                                  prebook.data.sellingPriceToUser,
+                                  prebook.data.currency,
+                                )}
+                                {" · "}
+                                {prebook.data.marginPercent}% Rotavoy marjı dahil
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              disabled
+                              title="Sandbox rezervasyonu kapalı"
+                            >
+                              Rezervasyon yakında
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </article>
               ))}
             </div>
 
-            {selectedHotel && (
-              <aside className="travelPrebookPanel" aria-live="polite">
-                <div>
-                  <span>SEÇİLEN OTEL</span>
-                  <h3>{selectedHotel.name}</h3>
-                  <p>{checkin} → {checkout} · {adults} yetişkin</p>
-                </div>
-
-                {prebookState === "loading" && (
-                  <p className="travelPrebookStatus">
-                    <LoaderCircle className="travelSpin" size={19} />
-                    Son fiyat ve oda koşulları doğrulanıyor…
-                  </p>
-                )}
-
-                {prebookState === "error" && (
-                  <p className="travelPrebookStatus travelPrebookStatus--error">
-                    <AlertCircle size={18} />
-                    {prebookError}
-                  </p>
-                )}
-
-                {prebookState === "success" && prebook?.data && (
-                  <div className="travelPrebookSuccess">
-                    <CheckCircle2 size={23} />
-                    <div>
-                      <strong>Fiyat doğrulandı</strong>
-                      <span>
-                        {money(prebook.data.sellingPriceToUser, prebook.data.currency)}
-                        {" · "}
-                        {prebook.data.marginPercent}% Rotavoy marjı dahil
-                      </span>
-                    </div>
-                    <button type="button" disabled title="Sandbox rezervasyonu kapalı">
-                      Rezervasyon yakında
-                    </button>
-                  </div>
-                )}
-              </aside>
-            )}
           </div>
         </section>
       )}
