@@ -127,7 +127,22 @@ function sanitizeProviderResponse(value) {
     Object.entries(value)
       .filter(
         ([key]) =>
-          !["secretKey", "transactionId", "paymentIntent", "clientSecret"].includes(key),
+          ![
+            "secretKey",
+            "transactionId",
+            "paymentIntent",
+            "clientSecret",
+            "offerRetailRate",
+            "offerInitialPrice",
+            "providerSuggestedSellingPrice",
+            "commission",
+            "providerCommission",
+            "price",
+            "priceDifferencePercent",
+            "marginPercent",
+            "supplier",
+            "supplierId",
+          ].includes(key),
       )
       .map(([key, nestedValue]) => [key, sanitizeProviderResponse(nestedValue)]),
   );
@@ -140,7 +155,7 @@ function normalizeRatesResult(result) {
 
   const marginPercent = getMargin();
 
-  return {
+  const normalized = {
     ...result,
     data: result.data.map((hotel) => ({
       ...hotel,
@@ -157,8 +172,6 @@ function normalizeRatesResult(result) {
 
             return {
               ...room,
-              providerSuggestedSellingPrice:
-                room.suggestedSellingPrice ?? null,
               suggestedSellingPrice: {
                 ...(room.suggestedSellingPrice || {}),
                 amount: sellingPrice,
@@ -167,38 +180,37 @@ function normalizeRatesResult(result) {
                   room?.suggestedSellingPrice?.currency ||
                   "",
               },
-              marginPercent,
             };
           })
         : hotel?.roomTypes,
     })),
   };
+
+  return sanitizeProviderResponse(normalized);
 }
 
 function normalizePrebookResult(result) {
+  const basePrice = Number(result?.data?.price);
   const sanitized = sanitizeProviderResponse(result);
   const data = sanitized?.data;
 
-  if (!data || typeof data !== "object") {
+  if (
+    !data ||
+    typeof data !== "object" ||
+    !Number.isFinite(basePrice) ||
+    basePrice < 0
+  ) {
     return sanitized;
   }
 
-  const basePrice = Number(data.price);
-  if (!Number.isFinite(basePrice) || basePrice < 0) {
-    return sanitized;
-  }
-
-  const marginPercent = getMargin();
-  const sellingPrice = roundMoney(basePrice * (1 + marginPercent / 100));
+  const sellingPrice = roundMoney(basePrice * (1 + getMargin() / 100));
 
   return {
     ...sanitized,
     data: {
       ...data,
-      providerSuggestedSellingPrice: data.suggestedSellingPrice ?? null,
       suggestedSellingPrice: sellingPrice,
       sellingPriceToUser: sellingPrice,
-      marginPercent,
     },
   };
 }
