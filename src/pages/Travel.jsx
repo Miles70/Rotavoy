@@ -36,11 +36,9 @@ const services = [
   { key: "activities", icon: MapPinned },
 ];
 
-const routeCards = [
-  { key: "antalya", icon: Hotel },
-  { key: "istanbul", icon: Plane },
-  { key: "freedom", icon: CarFront },
-];
+const SHOWCASE_LIMIT = 20;
+const SHOWCASE_SCAN_BATCH = 100;
+const SHOWCASE_MAX_BATCHES = 2;
 
 function addDays(days) {
   const date = new Date();
@@ -89,6 +87,11 @@ function buildResults(rateResponse) {
     );
 }
 
+function isFiveStarHotel(hotel) {
+  const stars = Number.parseFloat(String(hotel?.stars ?? "").replace(/[^\d.]/g, ""));
+  return Number.isFinite(stars) && stars >= 5;
+}
+
 function Travel() {
   const [homeSearchParams] = useSearchParams();
   const autoSearchStarted = useRef(false);
@@ -107,6 +110,9 @@ function Travel() {
     Math.min(Math.max(Number(homeSearchParams.get("adults")) || 2, 1), 5),
   );
   const [results, setResults] = useState([]);
+  const [showcaseHotels, setShowcaseHotels] = useState([]);
+  const [showcaseState, setShowcaseState] = useState("idle");
+  const [showcaseError, setShowcaseError] = useState("");
   const [catalogOffset, setCatalogOffset] = useState(0);
   const [hasMoreHotels, setHasMoreHotels] = useState(false);
   const [loadMoreState, setLoadMoreState] = useState("idle");
@@ -166,6 +172,76 @@ function Travel() {
     autoSearchStarted.current = true;
     runSearch();
   }, []);
+
+  useEffect(() => {
+    loadFiveStarShowcase();
+  }, []);
+
+  async function loadFiveStarShowcase() {
+    const showcaseCity = cityName.trim() || "Antalya";
+    setShowcaseState("loading");
+    setShowcaseError("");
+    setShowcaseHotels([]);
+
+    try {
+      let offset = 0;
+      let total = Number.POSITIVE_INFINITY;
+      const collected = [];
+      const knownIds = new Set();
+
+      for (
+        let batch = 0;
+        batch < SHOWCASE_MAX_BATCHES &&
+        collected.length < SHOWCASE_LIMIT &&
+        offset < total;
+        batch += 1
+      ) {
+        const catalog = await listHotels({
+          countryCode: "TR",
+          cityName: showcaseCity,
+          limit: SHOWCASE_SCAN_BATCH,
+          offset,
+        });
+
+        const hotelIds = (catalog?.hotelIds || []).slice(0, SHOWCASE_SCAN_BATCH);
+        total = Number(catalog?.total || offset + hotelIds.length);
+
+        if (!hotelIds.length) break;
+
+        const rateResponse = await searchHotelRates({
+          hotelIds,
+          checkin,
+          checkout,
+          adults,
+        });
+
+        for (const hotel of buildResults(rateResponse)) {
+          if (!isFiveStarHotel(hotel) || knownIds.has(hotel.hotelId)) continue;
+
+          knownIds.add(hotel.hotelId);
+          collected.push({
+            ...hotel,
+            showcaseCheckin: checkin,
+            showcaseCheckout: checkout,
+            showcaseAdults: adults,
+            showcaseCity,
+          });
+
+          if (collected.length >= SHOWCASE_LIMIT) break;
+        }
+
+        offset += hotelIds.length;
+      }
+
+      setShowcaseHotels(collected.slice(0, SHOWCASE_LIMIT));
+      setShowcaseState("success");
+    } catch (error) {
+      setShowcaseState("error");
+      setShowcaseError(
+        customerHotelError(error, "travelPage.runtime.serviceUnavailable"),
+      );
+    }
+  }
 
   async function runSearch() {
 
@@ -230,9 +306,9 @@ function Travel() {
 
   function hotelDetailsUrl(hotel) {
     const query = new URLSearchParams({
-      checkin,
-      checkout,
-      adults: String(adults),
+      checkin: hotel.showcaseCheckin || checkin,
+      checkout: hotel.showcaseCheckout || checkout,
+      adults: String(hotel.showcaseAdults || adults),
     });
     return `/travel/hotels/${encodeURIComponent(hotel.hotelId)}?${query.toString()}`;
   }
@@ -665,31 +741,109 @@ function Travel() {
         </section>
       )}
 
-      <section className="travelRoutesSection">
+      <section className="travelRoutesSection" aria-live="polite">
         <div className="travelContainer">
           <div className="travelSectionHeading">
             <div>
-              <span>{t("travelPage.routesEyebrow")}</span>
-              <h2>{t("travelPage.routesTitle")}</h2>
+              <span>{t("travelPage.runtime.liveAvailability")} · 5★</span>
+              <h2>5★ {t("travelPage.runtime.hotels")}</h2>
             </div>
-            <p>{t("travelPage.routesText")}</p>
+            <p>
+              {showcaseState === "loading"
+                ? t("travelPage.runtime.searching")
+                : `${showcaseHotels.length} ${t("travelPage.runtime.resultsSuffix")}`}
+            </p>
           </div>
 
-          <div className="travelRouteGrid">
-            {routeCards.map(({ key, icon: Icon }) => (
-              <article className="travelRouteCard" key={key}>
-                <div className="travelRouteIcon">
-                  <Icon size={24} />
-                </div>
-                <span>{t(`travelPage.cards.${key}.badge`)}</span>
-                <h3>{t(`travelPage.cards.${key}.title`)}</h3>
-                <p>{t(`travelPage.cards.${key}.text`)}</p>
-                <button type="button">
-                  {t("travelPage.exploreRoute")} <ArrowRight size={17} />
-                </button>
-              </article>
-            ))}
-          </div>
+          {showcaseState === "loading" && (
+            <div className="travelShowcaseStatus">
+              <LoaderCircle className="travelSpin" size={24} />
+              <span>{t("travelPage.runtime.searching")}</span>
+            </div>
+          )}
+
+          {showcaseState === "error" && (
+            <p className="travelSearchMessage travelSearchMessage--error travelShowcaseMessage">
+              <AlertCircle size={16} />
+              {showcaseError}
+            </p>
+          )}
+
+          {showcaseState === "success" && showcaseHotels.length === 0 && (
+            <div className="travelShowcaseStatus">
+              <Hotel size={28} />
+              <span>{t("travelPage.runtime.noAvailability")}</span>
+            </div>
+          )}
+
+          {showcaseHotels.length > 0 && (
+            <div className="travelHotelGrid travelShowcaseGrid">
+              {showcaseHotels.map((hotel) => (
+                <article className="travelHotelCard" key={hotel.hotelId}>
+                  <Link
+                    className="travelHotelMedia"
+                    to={hotelDetailsUrl(hotel)}
+                    state={{ hotel }}
+                    aria-label={`${hotel.name || t("travelPage.runtime.hotelFallback")} ${t("travelPage.runtime.detailsAria")}`}
+                  >
+                    {hotel.main_photo ? (
+                      <img src={hotel.main_photo} alt="" loading="lazy" />
+                    ) : (
+                      <Hotel size={42} aria-hidden="true" />
+                    )}
+                    <span>5 {t("travelPage.runtime.stars")}</span>
+                  </Link>
+
+                  <div className="travelHotelBody">
+                    <div className="travelHotelRating">
+                      <Star size={15} fill="currentColor" />
+                      <strong>{hotel.rating || "5.0"}</strong>
+                      {hotel.review_count ? (
+                        <span>{hotel.review_count} {t("travelPage.runtime.reviews")}</span>
+                      ) : null}
+                    </div>
+
+                    <h3>
+                      <Link to={hotelDetailsUrl(hotel)} state={{ hotel }}>
+                        {hotel.name || t("travelPage.runtime.hotelFallback")}
+                      </Link>
+                    </h3>
+
+                    <p>
+                      <MapPin size={15} />
+                      {hotel.address || hotel.city_name || hotel.showcaseCity}
+                    </p>
+
+                    <div className="travelRoomLine">
+                      <BedDouble size={17} />
+                      <span>
+                        {hotel.offer?.rates?.[0]?.name ||
+                          t("travelPage.runtime.roomFallback")}
+                      </span>
+                    </div>
+
+                    <div className="travelHotelPrice">
+                      <span>{t("travelPage.runtime.totalSalePrice")}</span>
+                      <strong>
+                        {money(
+                          hotel.offer.suggestedSellingPrice.amount,
+                          hotel.offer.suggestedSellingPrice.currency,
+                        )}
+                      </strong>
+                    </div>
+
+                    <Link
+                      className="travelHotelDetailsLink"
+                      to={hotelDetailsUrl(hotel)}
+                      state={{ hotel }}
+                    >
+                      {t("travelPage.runtime.viewDetails")} <ArrowRight size={16} />
+                    </Link>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </main>
