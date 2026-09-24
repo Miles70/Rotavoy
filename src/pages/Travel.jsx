@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   AlertCircle,
   ArrowRight,
@@ -160,6 +161,15 @@ function Travel() {
       setSearchState("error");
       setSearchError(error.message);
     }
+  }
+
+  function hotelDetailsUrl(hotel) {
+    const query = new URLSearchParams({
+      checkin,
+      checkout,
+      adults: String(adults),
+    });
+    return `/travel/hotels/${encodeURIComponent(hotel.hotelId)}?${query.toString()}`;
   }
 
   async function handlePrebook(hotel) {
@@ -382,14 +392,18 @@ function Travel() {
             <div className="travelHotelGrid">
               {results.map((hotel) => (
                 <article className="travelHotelCard" key={hotel.hotelId}>
-                  <div className="travelHotelMedia">
+                  <Link
+                    className="travelHotelMedia"
+                    to={hotelDetailsUrl(hotel)}
+                    aria-label={`${hotel.name || "Otel"} ayrıntılarını gör`}
+                  >
                     {hotel.main_photo ? (
                       <img src={hotel.main_photo} alt="" loading="lazy" />
                     ) : (
                       <Hotel size={42} aria-hidden="true" />
                     )}
                     <span>{hotel.stars || 0} yıldız</span>
-                  </div>
+                  </Link>
 
                   <div className="travelHotelBody">
                     <div className="travelHotelRating">
@@ -397,7 +411,11 @@ function Travel() {
                       <strong>{hotel.rating || "Yeni"}</strong>
                       {hotel.review_count ? <span>{hotel.review_count} değerlendirme</span> : null}
                     </div>
-                    <h3>{hotel.name || "Otel"}</h3>
+                    <h3>
+                      <Link to={hotelDetailsUrl(hotel)}>
+                        {hotel.name || "Otel"}
+                      </Link>
+                    </h3>
                     <p>
                       <MapPin size={15} />
                       {hotel.address || hotel.city_name || cityName}
@@ -415,6 +433,9 @@ function Travel() {
                         )}
                       </strong>
                     </div>
+                    <Link className="travelHotelDetailsLink" to={hotelDetailsUrl(hotel)}>
+                      Oteli ve fotoğrafları incele <ArrowRight size={16} />
+                    </Link>
                     <button
                       type="button"
                       onClick={() => handlePrebook(hotel)}
