@@ -345,9 +345,17 @@ function HotelDetails() {
 
   const images = useMemo(() => {
     const collected = collectImages(hotel);
-    if (fallbackHotel?.main_photo && !collected.includes(fallbackHotel.main_photo)) {
-      collected.unshift(fallbackHotel.main_photo);
+
+    // Prefer the hotel's real gallery. Provider main_photo is often a smaller
+    // duplicate of one of those images, so only use it when no gallery exists.
+    if (
+      collected.length === 0 &&
+      fallbackHotel?.main_photo &&
+      !collected.includes(fallbackHotel.main_photo)
+    ) {
+      collected.push(fallbackHotel.main_photo);
     }
+
     return collected;
   }, [hotel, fallbackHotel]);
 
