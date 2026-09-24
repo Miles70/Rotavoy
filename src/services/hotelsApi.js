@@ -22,11 +22,12 @@ async function hotelRequest(path, options = {}) {
   return payload;
 }
 
-export function listHotels({ countryCode = "TR", cityName, limit = 20 }) {
+export function listHotels({ countryCode = "TR", cityName, limit = 20, offset = 0 }) {
   const query = new URLSearchParams({
     countryCode,
     cityName,
     limit: String(limit),
+    offset: String(offset),
   });
 
   return hotelRequest(`?${query.toString()}`, {
@@ -38,6 +39,14 @@ export function getHotelDetails(hotelId) {
   return hotelRequest(`/${encodeURIComponent(hotelId)}`, {
     method: "GET",
   });
+}
+
+export function getHotelTranslation(hotelId, language) {
+  const query = new URLSearchParams({ language });
+  return hotelRequest(
+    `/translations/${encodeURIComponent(hotelId)}?${query.toString()}`,
+    { method: "GET" },
+  );
 }
 
 export function searchHotelRates({
