@@ -16,6 +16,7 @@ import regionalSharedTranslations from "./regionalSharedTranslations";
 import itSharedTranslations from "./itSharedTranslations";
 import hotelDetailTranslations from "./hotelDetailTranslations";
 import travelRuntimeTranslations from "./travelRuntimeTranslations";
+import homeTravelTranslations from "./homeTravelTranslations";
 
 function withSharedTranslations(baseTranslations, language) {
   const regional =
@@ -37,6 +38,7 @@ function withSharedTranslations(baseTranslations, language) {
     account,
     localPage: local.localPage,
     hotelDetail: hotelDetailTranslations[language] || hotelDetailTranslations.en,
+    homeTravel: homeTravelTranslations[language] || homeTravelTranslations.en,
     travelPage: {
       ...baseTranslations.travelPage,
       runtime: travelRuntimeTranslations[language] || travelRuntimeTranslations.en,
