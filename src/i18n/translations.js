@@ -14,6 +14,7 @@ import accountTranslations from "./accountTranslations";
 import localTranslations from "./localTranslations";
 import regionalSharedTranslations from "./regionalSharedTranslations";
 import itSharedTranslations from "./itSharedTranslations";
+import hotelDetailTranslations from "./hotelDetailTranslations";
 
 function withSharedTranslations(baseTranslations, language) {
   const regional =
@@ -34,6 +35,7 @@ function withSharedTranslations(baseTranslations, language) {
     auth,
     account,
     localPage: local.localPage,
+    hotelDetail: hotelDetailTranslations[language] || hotelDetailTranslations.en,
     checkoutPage: {
       ...baseTranslations.checkoutPage,
       ...payment.checkoutPage,
