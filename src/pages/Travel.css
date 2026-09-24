@@ -667,12 +667,14 @@
 .travelHotelMedia img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
+  background: #e8f7f5;
   transition: transform 420ms ease;
 }
 
 .travelHotelCard:hover .travelHotelMedia img {
-  transform: scale(1.035);
+  transform: none;
 }
 
 .travelHotelMedia > span {
