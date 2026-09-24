@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   AlertCircle,
   ArrowRight,
@@ -90,11 +90,21 @@ function buildResults(rateResponse) {
 }
 
 function Travel() {
+  const [homeSearchParams] = useSearchParams();
+  const autoSearchStarted = useRef(false);
   const [activeService, setActiveService] = useState("hotels");
-  const [cityName, setCityName] = useState("Antalya");
-  const [checkin, setCheckin] = useState(() => addDays(30));
-  const [checkout, setCheckout] = useState(() => addDays(32));
-  const [adults, setAdults] = useState(2);
+  const [cityName, setCityName] = useState(
+    () => homeSearchParams.get("cityName") || "Antalya",
+  );
+  const [checkin, setCheckin] = useState(
+    () => homeSearchParams.get("checkin") || addDays(30),
+  );
+  const [checkout, setCheckout] = useState(
+    () => homeSearchParams.get("checkout") || addDays(32),
+  );
+  const [adults, setAdults] = useState(() =>
+    Math.min(Math.max(Number(homeSearchParams.get("adults")) || 2, 1), 5),
+  );
   const [results, setResults] = useState([]);
   const [catalogOffset, setCatalogOffset] = useState(0);
   const [hasMoreHotels, setHasMoreHotels] = useState(false);
@@ -130,8 +140,19 @@ function Travel() {
     return date.toISOString().slice(0, 10);
   }, [checkin]);
 
-  async function handleSearch(event) {
-    event.preventDefault();
+  useEffect(() => {
+    if (
+      homeSearchParams.get("auto") !== "1" ||
+      autoSearchStarted.current
+    ) {
+      return;
+    }
+
+    autoSearchStarted.current = true;
+    runSearch();
+  }, []);
+
+  async function runSearch() {
 
     if (activeService !== "hotels") {
       setSearchError(t("travelPage.runtime.comingSoon"));
@@ -185,6 +206,11 @@ function Travel() {
       setSearchState("error");
       setSearchError(customerHotelError(error));
     }
+  }
+
+  function handleSearch(event) {
+    event.preventDefault();
+    runSearch();
   }
 
   function hotelDetailsUrl(hotel) {
