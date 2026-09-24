@@ -277,9 +277,11 @@ function HotelDetails() {
       if (ratesResult.status === "fulfilled") {
         setOffers(buildOffers(ratePayload));
       } else {
+        const upstreamMessage = String(ratesResult.reason?.message || "");
         setRatesError(
-          ratesResult.reason?.message ||
-            t("hotelDetail.ratesUnavailable"),
+          /no availability|not available/i.test(upstreamMessage)
+            ? t("hotelDetail.noRooms")
+            : t("hotelDetail.ratesUnavailable"),
         );
       }
     }
