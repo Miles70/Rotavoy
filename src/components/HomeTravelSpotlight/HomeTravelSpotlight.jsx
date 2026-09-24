@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowRight,
@@ -23,10 +23,25 @@ function addDays(days) {
 function HomeTravelSpotlight() {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const videoRef = useRef(null);
   const [cityName, setCityName] = useState("Antalya");
   const [checkin, setCheckin] = useState(() => addDays(30));
   const [checkout, setCheckout] = useState(() => addDays(32));
   const [adults, setAdults] = useState(2);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return undefined;
+
+    const startPlayback = () => {
+      const playback = video.play();
+      if (playback?.catch) playback.catch(() => {});
+    };
+
+    startPlayback();
+    document.addEventListener("visibilitychange", startPlayback);
+    return () => document.removeEventListener("visibilitychange", startPlayback);
+  }, []);
 
   const minimumCheckout = useMemo(() => {
     const date = new Date(`${checkin || addDays(1)}T00:00:00.000Z`);
@@ -51,12 +66,14 @@ function HomeTravelSpotlight() {
   return (
     <section className="homeTravelSpotlight" aria-labelledby="home-travel-title">
       <video
+        ref={videoRef}
         className="homeTravelVideo"
         autoPlay
         muted
         loop
         playsInline
-        preload="metadata"
+        preload="auto"
+        onCanPlay={(event) => event.currentTarget.play().catch(() => {})}
         poster="/images/rotavoy-travel-caribbean-poster.webp"
         aria-hidden="true"
         tabIndex={-1}
