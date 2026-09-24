@@ -22,6 +22,7 @@ import {
 
 import { useLanguage } from "../i18n/LanguageContext";
 import {
+  getHotelDetails,
   listHotels,
   prebookHotel,
   searchHotelRates,
@@ -93,11 +94,63 @@ function isFiveStarHotel(hotel) {
   return Number.isFinite(stars) && stars >= 5;
 }
 
+function unwrapHotel(payload) {
+  return payload?.data?.hotel || payload?.data || payload?.hotel || payload || {};
+}
+
+function collectShowcaseImages(value, result = [], seen = new Set()) {
+  if (!value || result.length >= 24) return result;
+
+  if (typeof value === "string") {
+    const looksLikeImage =
+      /^https?:\/\//i.test(value) &&
+      (/\.(jpe?g|png|webp)(\?|$)/i.test(value) ||
+        /image|photo|picture|cdn/i.test(value));
+
+    if (looksLikeImage && !seen.has(value)) {
+      seen.add(value);
+      result.push(value);
+    }
+    return result;
+  }
+
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectShowcaseImages(item, result, seen));
+    return result;
+  }
+
+  if (typeof value === "object") {
+    const preferred = ["urlHd", "url", "image", "src", "link"];
+
+    preferred.forEach((key) =>
+      collectShowcaseImages(value[key], result, seen),
+    );
+
+    Object.entries(value)
+      .filter(([key]) => {
+        const normalized = key.toLowerCase();
+        if (["main_photo", "mainphoto", "mainimage", "thumbnail"].includes(normalized)) {
+          return false;
+        }
+        return (
+          !preferred.includes(key) &&
+          /image|photo|picture|gallery/i.test(key)
+        );
+      })
+      .forEach(([, nested]) =>
+        collectShowcaseImages(nested, result, seen),
+      );
+  }
+
+  return result;
+}
+
 function Travel() {
   const [homeSearchParams] = useSearchParams();
   const autoSearchStarted = useRef(false);
   const travelVideoRef = useRef(null);
   const showcaseRefreshingRef = useRef(false);
+  const showcasePhotoCacheRef = useRef(new Map());
   const [activeService, setActiveService] = useState("hotels");
   const [cityName, setCityName] = useState(
     () => homeSearchParams.get("cityName") || "Antalya",
@@ -197,6 +250,52 @@ function Travel() {
     };
   }, []);
 
+  async function enrichShowcasePhotos(hotels) {
+    const enriched = [];
+
+    for (let index = 0; index < hotels.length; index += 4) {
+      const chunk = hotels.slice(index, index + 4);
+
+      const resolvedChunk = await Promise.all(
+        chunk.map(async (hotel) => {
+          if (showcasePhotoCacheRef.current.has(hotel.hotelId)) {
+            return {
+              ...hotel,
+              showcasePhoto: showcasePhotoCacheRef.current.get(hotel.hotelId),
+            };
+          }
+
+          let showcasePhoto = hotel.main_photo || "";
+
+          try {
+            const detailPayload = await getHotelDetails(hotel.hotelId);
+            const detailHotel = unwrapHotel(detailPayload);
+            const galleryImages = collectShowcaseImages(detailHotel).filter(
+              (image) => image !== hotel.main_photo,
+            );
+
+            if (galleryImages.length) {
+              showcasePhoto = galleryImages[0];
+            }
+          } catch {
+            // Keep provider main photo as a fallback if detail images are unavailable.
+          }
+
+          showcasePhotoCacheRef.current.set(hotel.hotelId, showcasePhoto);
+
+          return {
+            ...hotel,
+            showcasePhoto,
+          };
+        }),
+      );
+
+      enriched.push(...resolvedChunk);
+    }
+
+    return enriched;
+  }
+
   async function loadFiveStarShowcase({ silent = false } = {}) {
     if (showcaseRefreshingRef.current) return;
 
@@ -260,7 +359,10 @@ function Travel() {
         offset += hotelIds.length;
       }
 
-      setShowcaseHotels(collected.slice(0, SHOWCASE_LIMIT));
+      const visibleHotels = collected.slice(0, SHOWCASE_LIMIT);
+      const enrichedHotels = await enrichShowcasePhotos(visibleHotels);
+
+      setShowcaseHotels(enrichedHotels);
       setShowcaseState("success");
     } catch (error) {
       if (!silent) {
@@ -817,8 +919,12 @@ function Travel() {
                     state={{ hotel }}
                     aria-label={`${hotel.name || t("travelPage.runtime.hotelFallback")} ${t("travelPage.runtime.detailsAria")}`}
                   >
-                    {hotel.main_photo ? (
-                      <img src={hotel.main_photo} alt="" loading="lazy" />
+                    {hotel.showcasePhoto || hotel.main_photo ? (
+                      <img
+                        src={hotel.showcasePhoto || hotel.main_photo}
+                        alt=""
+                        loading="lazy"
+                      />
                     ) : (
                       <Hotel size={42} aria-hidden="true" />
                     )}
