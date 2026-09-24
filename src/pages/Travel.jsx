@@ -395,6 +395,7 @@ function Travel() {
                   <Link
                     className="travelHotelMedia"
                     to={hotelDetailsUrl(hotel)}
+                    state={{ hotel }}
                     aria-label={`${hotel.name || "Otel"} ayrıntılarını gör`}
                   >
                     {hotel.main_photo ? (
@@ -412,7 +413,7 @@ function Travel() {
                       {hotel.review_count ? <span>{hotel.review_count} değerlendirme</span> : null}
                     </div>
                     <h3>
-                      <Link to={hotelDetailsUrl(hotel)}>
+                      <Link to={hotelDetailsUrl(hotel)} state={{ hotel }}>
                         {hotel.name || "Otel"}
                       </Link>
                     </h3>
@@ -433,7 +434,11 @@ function Travel() {
                         )}
                       </strong>
                     </div>
-                    <Link className="travelHotelDetailsLink" to={hotelDetailsUrl(hotel)}>
+                    <Link
+                      className="travelHotelDetailsLink"
+                      to={hotelDetailsUrl(hotel)}
+                      state={{ hotel }}
+                    >
                       Oteli ve fotoğrafları incele <ArrowRight size={16} />
                     </Link>
                     <button
