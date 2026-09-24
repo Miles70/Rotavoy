@@ -221,6 +221,28 @@
   transition: color var(--transition-fast);
 }
 
+.navLinks a.travelNavLink {
+  min-height: 38px;
+  padding: 0 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(7, 139, 150, 0.2);
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(7, 139, 150, 0.09), rgba(240, 128, 104, 0.08));
+  color: #087985;
+  box-shadow: 0 8px 20px rgba(7, 118, 128, 0.08);
+}
+
+.navLinks a.travelNavLink:hover,
+.navLinks a.travelNavLink.active {
+  border-color: rgba(7, 139, 150, 0.38);
+  background: linear-gradient(135deg, #08737d, #0ba2a7);
+  color: #ffffff;
+  box-shadow: 0 11px 25px rgba(7, 118, 128, 0.22);
+  transform: translateY(-1px);
+}
+
 .navLinks a::after {
   content: "";
   position: absolute;
@@ -242,6 +264,10 @@
 
 .navLinks a.active::after {
   transform: scaleX(1);
+}
+
+.navLinks a.travelNavLink::after {
+  display: none;
 }
 
 .headerActions {
