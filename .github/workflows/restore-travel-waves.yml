@@ -20,6 +20,12 @@ jobs:
           ref: nuitee-sandbox-integration
           fetch-depth: 0
 
+      - name: Install ffmpeg
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
       - name: Prepare high quality Travel hero assets
         shell: bash
         run: |
