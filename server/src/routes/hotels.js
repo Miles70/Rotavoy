@@ -8,6 +8,7 @@ import {
   prebookNuiteeRate,
   searchNuiteeRates,
 } from "../services/nuiteeApi.js";
+import { getLocalizedHotelDescription } from "../services/hotelTranslation.js";
 
 export const hotelsRouter = Router();
 
@@ -17,6 +18,14 @@ const searchLimiter = rateLimit({
   standardHeaders: "draft-8",
   legacyHeaders: false,
   message: { message: "Too many hotel searches. Please try again later." },
+});
+
+const translationLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  limit: 12,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: { message: "Too many hotel translation requests. Please try again later." },
 });
 
 const bookingLimiter = rateLimit({
@@ -266,6 +275,30 @@ hotelsRouter.get("/", searchLimiter, async (request, response, next) => {
     next(error);
   }
 });
+
+hotelsRouter.get(
+  "/translations/:hotelId",
+  translationLimiter,
+  async (request, response, next) => {
+    try {
+      const hotelId = requiredText(request.params.hotelId, "hotelId", 100);
+      if (!/^[A-Za-z0-9_-]+$/.test(hotelId)) {
+        throw requestError("hotelId contains invalid characters.");
+      }
+
+      const language = optionalText(request.query.language || "en", 5).toLowerCase();
+      if (!["en", "tr", "ru", "ar", "zh", "es", "pt", "fr", "de", "it"].includes(language)) {
+        throw requestError("language is not supported.");
+      }
+
+      const result = await getLocalizedHotelDescription(hotelId, language);
+      response.set("Cache-Control", "private, max-age=3600");
+      response.json(result);
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
 hotelsRouter.get("/:hotelId", searchLimiter, async (request, response, next) => {
   try {
