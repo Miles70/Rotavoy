@@ -278,6 +278,10 @@
   flex: 0 0 auto;
 }
 
+.mobileTravelButton {
+  display: none;
+}
+
 .walletConnectButton {
   min-height: 42px;
   padding: 0 17px;
@@ -384,6 +388,28 @@
     display: none;
   }
 
+  .mobileTravelButton {
+    min-height: 40px;
+    padding: 0 11px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid rgba(7, 139, 150, 0.24);
+    border-radius: 999px;
+    background: rgba(7, 139, 150, 0.08);
+    color: #087985;
+    font-size: 12px;
+    font-weight: 850;
+    white-space: nowrap;
+  }
+
+  .mobileTravelButton.active {
+    border-color: rgba(7, 139, 150, 0.4);
+    background: linear-gradient(135deg, #08737d, #0ba2a7);
+    color: #ffffff;
+  }
+
   .siteHeader {
     min-height: 68px;
   }
@@ -417,6 +443,15 @@
 
   .headerActions {
     gap: 5px;
+  }
+
+  .mobileTravelButton {
+    width: 40px;
+    padding: 0;
+  }
+
+  .mobileTravelButton span {
+    display: none;
   }
 
   .walletConnectButton {
