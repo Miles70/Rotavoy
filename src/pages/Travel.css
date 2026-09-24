@@ -668,7 +668,7 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
-  object-position: center;
+  object-position: center bottom;
   background: #e8f7f5;
   transition: transform 420ms ease;
 }
