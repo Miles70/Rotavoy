@@ -116,12 +116,12 @@ function Travel() {
     event.preventDefault();
 
     if (activeService !== "hotels") {
-      setSearchError("Bu servis yakında açılacak. Otel araması şu anda aktif.");
+      setSearchError(t("travelPage.runtime.comingSoon"));
       return;
     }
 
     if (!cityName.trim() || !checkin || !checkout || checkout <= checkin) {
-      setSearchError("Şehir ve geçerli giriş-çıkış tarihlerini kontrol et.");
+      setSearchError(t("travelPage.runtime.invalidSearch"));
       return;
     }
 
@@ -140,7 +140,7 @@ function Travel() {
       const hotelIds = (catalog?.hotelIds || []).slice(0, 20);
 
       if (!hotelIds.length) {
-        throw new Error("Bu şehir için otel bulunamadı.");
+        throw new Error(t("travelPage.runtime.cityNotFound"));
       }
 
       const rateResponse = await searchHotelRates({
@@ -152,7 +152,7 @@ function Travel() {
       const availableHotels = buildResults(rateResponse);
 
       if (!availableHotels.length) {
-        throw new Error("Bu tarihlerde müsait oda bulunamadı.");
+        throw new Error(t("travelPage.runtime.noAvailability"));
       }
 
       setResults(availableHotels);
@@ -206,8 +206,8 @@ function Travel() {
     setPrebookState("error");
     setPrebookError(
       lastAvailabilityError
-        ? "Bu oteldeki uygun odalar az önce tükendi. Başka bir otel deneyebilirsin."
-        : "Bu teklif şu anda kullanılamıyor.",
+        ? t("travelPage.runtime.soldOut")
+        : t("travelPage.runtime.offerUnavailable"),
     );
   }
 
@@ -357,7 +357,7 @@ function Travel() {
                     <Search size={19} />
                   )}
                   {searchState === "loading"
-                    ? "Oteller aranıyor"
+                    ? t("travelPage.runtime.searching")
                     : t(`${activeServiceKey}.button`)}
                 </button>
               </div>
@@ -370,8 +370,7 @@ function Travel() {
               )}
 
               <p className="travelPrototypeNote">
-                Fiyatlar seçilen tarih ve misafir bilgilerine göre anlık olarak
-                kontrol edilir.
+                {t("travelPage.runtime.liveNote")}
               </p>
             </form>
           </div>
@@ -383,10 +382,10 @@ function Travel() {
           <div className="travelContainer">
             <div className="travelResultsHeading">
               <div>
-                <span>CANLI MÜSAİTLİK</span>
-                <h2>{cityName} otelleri</h2>
+                <span>{t("travelPage.runtime.liveAvailability")}</span>
+                <h2>{cityName} {t("travelPage.runtime.hotels")}</h2>
               </div>
-              <p>{results.length} müsait otel bulundu. Fiyatlar toplam konaklama içindir.</p>
+              <p>{results.length} {t("travelPage.runtime.resultsSuffix")}</p>
             </div>
 
             <div className="travelHotelGrid">
@@ -396,25 +395,25 @@ function Travel() {
                     className="travelHotelMedia"
                     to={hotelDetailsUrl(hotel)}
                     state={{ hotel }}
-                    aria-label={`${hotel.name || "Otel"} ayrıntılarını gör`}
+                    aria-label={`${hotel.name || t("travelPage.runtime.hotelFallback")} ${t("travelPage.runtime.detailsAria")}`}
                   >
                     {hotel.main_photo ? (
                       <img src={hotel.main_photo} alt="" loading="lazy" />
                     ) : (
                       <Hotel size={42} aria-hidden="true" />
                     )}
-                    <span>{hotel.stars || 0} yıldız</span>
+                    {hotel.stars ? <span>{hotel.stars} {t("travelPage.runtime.stars")}</span> : null}
                   </Link>
 
                   <div className="travelHotelBody">
                     <div className="travelHotelRating">
                       <Star size={15} fill="currentColor" />
-                      <strong>{hotel.rating || "Yeni"}</strong>
-                      {hotel.review_count ? <span>{hotel.review_count} değerlendirme</span> : null}
+                      <strong>{hotel.rating || t("travelPage.runtime.newRating")}</strong>
+                      {hotel.review_count ? <span>{hotel.review_count} {t("travelPage.runtime.reviews")}</span> : null}
                     </div>
                     <h3>
                       <Link to={hotelDetailsUrl(hotel)} state={{ hotel }}>
-                        {hotel.name || "Otel"}
+                        {hotel.name || t("travelPage.runtime.hotelFallback")}
                       </Link>
                     </h3>
                     <p>
@@ -423,10 +422,10 @@ function Travel() {
                     </p>
                     <div className="travelRoomLine">
                       <BedDouble size={17} />
-                      <span>{hotel.offer?.rates?.[0]?.name || "Müsait oda"}</span>
+                      <span>{hotel.offer?.rates?.[0]?.name || t("travelPage.runtime.roomFallback")}</span>
                     </div>
                     <div className="travelHotelPrice">
-                      <span>Toplam satış fiyatı</span>
+                      <span>{t("travelPage.runtime.totalSalePrice")}</span>
                       <strong>
                         {money(
                           hotel.offer.suggestedSellingPrice.amount,
@@ -439,7 +438,7 @@ function Travel() {
                       to={hotelDetailsUrl(hotel)}
                       state={{ hotel }}
                     >
-                      Oteli ve fotoğrafları incele <ArrowRight size={16} />
+                      {t("travelPage.runtime.viewDetails")} <ArrowRight size={16} />
                     </Link>
                     <button
                       type="button"
@@ -453,11 +452,11 @@ function Travel() {
                       prebookState === "loading" ? (
                         <>
                           <LoaderCircle className="travelSpin" size={17} />
-                          Rezervasyon hazırlanıyor
+                          {t("travelPage.runtime.preparingBooking")}
                         </>
                       ) : (
                         <>
-                          Rezervasyon yap <ArrowRight size={17} />
+                          {t("travelPage.runtime.book")} <ArrowRight size={17} />
                         </>
                       )}
                     </button>
@@ -467,7 +466,7 @@ function Travel() {
                         {prebookState === "loading" && (
                           <p className="travelPrebookStatus">
                             <LoaderCircle className="travelSpin" size={18} />
-                            Son fiyat ve oda koşulları kontrol ediliyor…
+                            {t("travelPage.runtime.checking")}
                           </p>
                         )}
 
@@ -482,22 +481,22 @@ function Travel() {
                           <div className="travelPrebookSuccess">
                             <CheckCircle2 size={22} />
                             <div>
-                              <strong>Rezervasyona hazır</strong>
+                              <strong>{t("travelPage.runtime.bookingReady")}</strong>
                               <span>
                                 {money(
                                   prebook.data.sellingPriceToUser,
                                   prebook.data.currency,
                                 )}
                                 {" · "}
-                                Toplam konaklama fiyatı
+                                {t("travelPage.runtime.totalStayPrice")}
                               </span>
                             </div>
                             <button
                               type="button"
                               disabled
-                              title="Online rezervasyon adımı hazırlanıyor"
+                              title={t("travelPage.runtime.continueTitle")}
                             >
-                              Rezervasyona devam et
+                              {t("travelPage.runtime.continueBooking")}
                             </button>
                           </div>
                         )}
