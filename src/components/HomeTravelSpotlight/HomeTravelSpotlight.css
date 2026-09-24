@@ -14,7 +14,7 @@
   z-index: -3;
   inset: -4%;
   background:
-    url("/images/rotavoy-travel-caribbean-poster.webp") center 52% / cover no-repeat;
+    url("/images/rotavoy-travel-waves-poster.webp") center 52% / cover no-repeat;
   transform: scale(1.04);
   animation: homeTravelCinematic 18s ease-in-out infinite alternate;
   will-change: transform;

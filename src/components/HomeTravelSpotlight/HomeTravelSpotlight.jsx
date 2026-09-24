@@ -74,11 +74,11 @@ function HomeTravelSpotlight() {
         playsInline
         preload="auto"
         onCanPlay={(event) => event.currentTarget.play().catch(() => {})}
-        poster="/images/rotavoy-travel-caribbean-poster.webp"
+        poster="/images/rotavoy-travel-waves-poster.webp"
         aria-hidden="true"
         tabIndex={-1}
       >
-        <source src="/images/rotavoy-travel-caribbean.mp4" type="video/mp4" />
+        <source src="/images/rotavoy-travel-waves-hd.mp4" type="video/mp4" />
       </video>
 
       <div className="homeTravelBackdrop" aria-hidden="true">
