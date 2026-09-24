@@ -39,6 +39,7 @@ const services = [
 const SHOWCASE_LIMIT = 20;
 const SHOWCASE_SCAN_BATCH = 100;
 const SHOWCASE_MAX_BATCHES = 2;
+const SHOWCASE_REFRESH_MS = 2 * 60 * 1000;
 
 function addDays(days) {
   const date = new Date();
@@ -96,6 +97,7 @@ function Travel() {
   const [homeSearchParams] = useSearchParams();
   const autoSearchStarted = useRef(false);
   const travelVideoRef = useRef(null);
+  const showcaseRefreshingRef = useRef(false);
   const [activeService, setActiveService] = useState("hotels");
   const [cityName, setCityName] = useState(
     () => homeSearchParams.get("cityName") || "Antalya",
@@ -175,13 +177,38 @@ function Travel() {
 
   useEffect(() => {
     loadFiveStarShowcase();
+
+    const refreshShowcase = () => {
+      if (document.visibilityState === "visible") {
+        loadFiveStarShowcase({ silent: true });
+      }
+    };
+
+    const refreshTimer = window.setInterval(
+      refreshShowcase,
+      SHOWCASE_REFRESH_MS,
+    );
+
+    document.addEventListener("visibilitychange", refreshShowcase);
+
+    return () => {
+      window.clearInterval(refreshTimer);
+      document.removeEventListener("visibilitychange", refreshShowcase);
+    };
   }, []);
 
-  async function loadFiveStarShowcase() {
+  async function loadFiveStarShowcase({ silent = false } = {}) {
+    if (showcaseRefreshingRef.current) return;
+
+    showcaseRefreshingRef.current = true;
     const showcaseCity = cityName.trim() || "Antalya";
-    setShowcaseState("loading");
+
+    if (!silent) {
+      setShowcaseState("loading");
+      setShowcaseHotels([]);
+    }
+
     setShowcaseError("");
-    setShowcaseHotels([]);
 
     try {
       let offset = 0;
@@ -236,10 +263,14 @@ function Travel() {
       setShowcaseHotels(collected.slice(0, SHOWCASE_LIMIT));
       setShowcaseState("success");
     } catch (error) {
-      setShowcaseState("error");
-      setShowcaseError(
-        customerHotelError(error, "travelPage.runtime.serviceUnavailable"),
-      );
+      if (!silent) {
+        setShowcaseState("error");
+        setShowcaseError(
+          customerHotelError(error, "travelPage.runtime.serviceUnavailable"),
+        );
+      }
+    } finally {
+      showcaseRefreshingRef.current = false;
     }
   }
 
