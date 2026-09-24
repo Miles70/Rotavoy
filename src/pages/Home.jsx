@@ -1,6 +1,5 @@
 import Hero from "../components/Hero/Hero";
 import FeaturedCategories from "../components/FeaturedCategories/FeaturedCategories";
-import HomeTravelSpotlight from "../components/HomeTravelSpotlight/HomeTravelSpotlight";
 import Deals from "../components/Deals/Deals";
 import PopularProducts from "../components/PopularProducts/PopularProducts";
 import Newsletter from "../components/Newsletter/Newsletter";
@@ -31,7 +30,6 @@ function Home() {
         jsonLd={structuredData}
       />
       <Hero />
-      <HomeTravelSpotlight />
       <FeaturedCategories />
       <Deals />
       <PopularProducts />
