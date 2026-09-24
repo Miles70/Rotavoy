@@ -92,6 +92,7 @@ function buildResults(rateResponse) {
 function Travel() {
   const [homeSearchParams] = useSearchParams();
   const autoSearchStarted = useRef(false);
+  const travelVideoRef = useRef(null);
   const [activeService, setActiveService] = useState("hotels");
   const [cityName, setCityName] = useState(
     () => homeSearchParams.get("cityName") || "Antalya",
@@ -139,6 +140,20 @@ function Travel() {
     date.setDate(date.getDate() + 1);
     return date.toISOString().slice(0, 10);
   }, [checkin]);
+
+  useEffect(() => {
+    const video = travelVideoRef.current;
+    if (!video) return undefined;
+
+    const startPlayback = () => {
+      const playback = video.play();
+      if (playback?.catch) playback.catch(() => {});
+    };
+
+    startPlayback();
+    document.addEventListener("visibilitychange", startPlayback);
+    return () => document.removeEventListener("visibilitychange", startPlayback);
+  }, []);
 
   useEffect(() => {
     if (
@@ -310,6 +325,22 @@ function Travel() {
   return (
     <main className="travelPage">
       <section className="travelHero">
+        <video
+          ref={travelVideoRef}
+          className="travelHeroVideo"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          onCanPlay={(event) => event.currentTarget.play().catch(() => {})}
+          poster="/images/rotavoy-travel-waves-poster.webp"
+          aria-hidden="true"
+          tabIndex={-1}
+        >
+          <source src="/images/rotavoy-travel-waves-hd.mp4" type="video/mp4" />
+        </video>
+
         <div className="travelHeroGlow travelHeroGlow--one" />
         <div className="travelHeroGlow travelHeroGlow--two" />
 
