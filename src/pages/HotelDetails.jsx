@@ -29,6 +29,7 @@ import {
 
 import {
   getHotelDetails,
+  getHotelTranslation,
   prebookHotel,
   searchHotelRates,
 } from "../services/hotelsApi";
@@ -219,6 +220,7 @@ function HotelDetails() {
   const [bookingState, setBookingState] = useState("idle");
   const [bookingError, setBookingError] = useState("");
   const [prebook, setPrebook] = useState(null);
+  const [localizedDescription, setLocalizedDescription] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -288,6 +290,31 @@ function HotelDetails() {
     };
   }, [hotelId, checkin, checkout, adults, fallbackHotel, t]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function localizeDescription() {
+      if (language === "en") {
+        setLocalizedDescription("");
+        return;
+      }
+
+      try {
+        const result = await getHotelTranslation(hotelId, language);
+        if (!cancelled) {
+          setLocalizedDescription(String(result?.description || "").trim());
+        }
+      } catch {
+        if (!cancelled) setLocalizedDescription("");
+      }
+    }
+
+    localizeDescription();
+    return () => {
+      cancelled = true;
+    };
+  }, [hotelId, language]);
+
   const images = useMemo(() => {
     const collected = collectImages(hotel);
     if (fallbackHotel?.main_photo && !collected.includes(fallbackHotel.main_photo)) {
@@ -325,10 +352,12 @@ function HotelDetails() {
     hotel?.review_score,
     hotel?.rating,
   );
-  const description = cleanHotelDescription(
-    hotel?.description || hotel?.hotelDescription,
-    t("hotelDetail.descriptionFallback"),
-  );
+  const description =
+    localizedDescription ||
+    cleanHotelDescription(
+      hotel?.description || hotel?.hotelDescription,
+      t("hotelDetail.descriptionFallback"),
+    );
 
   async function handlePrebook(offer) {
     setBookingState("loading");
