@@ -231,8 +231,11 @@ function HotelDetails() {
       setRatesError("");
 
       const detailsPromise = getHotelDetails(hotelId);
+      const hasSearchOffers = Boolean(
+        fallbackHotel?.offers?.length || fallbackHotel?.offer,
+      );
       const ratesPromise =
-        checkin && checkout
+        checkin && checkout && !hasSearchOffers
           ? searchHotelRates({
               hotelIds: [hotelId],
               checkin,
@@ -274,9 +277,9 @@ function HotelDetails() {
         );
       }
 
-      if (ratesResult.status === "fulfilled") {
+      if (ratesResult.status === "fulfilled" && ratePayload) {
         setOffers(buildOffers(ratePayload));
-      } else {
+      } else if (ratesResult.status === "rejected") {
         const upstreamMessage = String(ratesResult.reason?.message || "");
         setRatesError(
           /no availability|not available/i.test(upstreamMessage)
