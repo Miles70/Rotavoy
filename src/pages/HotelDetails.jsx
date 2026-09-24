@@ -356,15 +356,8 @@ function HotelDetails() {
       collected.push(fallbackHotel.main_photo);
     }
 
-    // Nuitee exposes the first Rixos Downtown Antalya gallery image as a
-    // separate low-resolution duplicate of the following image. Hide only
-    // that bad gallery entry and keep the sharper duplicate.
-    if (hotelId === "lp2e912" && collected.length > 1) {
-      return collected.slice(1);
-    }
-
     return collected;
-  }, [hotel, fallbackHotel, hotelId]);
+  }, [hotel, fallbackHotel]);
 
   const facilities = useMemo(
     () =>
