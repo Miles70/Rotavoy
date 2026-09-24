@@ -112,8 +112,19 @@ function collectImages(value, result = [], seen = new Set()) {
     ];
     const fallbackPreferred = ["url", "image", "src", "link", "thumbnail"];
 
-    hdPreferred.forEach((key) => collectImages(value[key], result, seen));
-    fallbackPreferred.forEach((key) => collectImages(value[key], result, seen));
+    const hdValues = hdPreferred
+      .map((key) => value[key])
+      .filter((candidate) => typeof candidate === "string" && candidate.trim());
+
+    if (hdValues.length) {
+      // When the provider sends the same photo in HD and regular/thumbnail
+      // variants, keep only the HD source so blurry duplicates do not appear.
+      hdValues.forEach((candidate) => collectImages(candidate, result, seen));
+    } else {
+      fallbackPreferred.forEach((key) =>
+        collectImages(value[key], result, seen),
+      );
+    }
 
     const preferred = [...hdPreferred, ...fallbackPreferred];
     Object.entries(value)
