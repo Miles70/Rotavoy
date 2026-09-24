@@ -101,7 +101,9 @@
 .hotelGalleryMain > img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
+  background: #e8f7f5;
 }
 
 .hotelGalleryEmpty {
@@ -165,7 +167,9 @@
 .hotelGalleryThumbs img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
+  background: #e8f7f5;
 }
 
 .hotelDetailColumns {
