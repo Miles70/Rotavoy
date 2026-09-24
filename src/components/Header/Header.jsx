@@ -4,6 +4,7 @@ import {
   ArrowRight,
   ChevronDown,
   Heart,
+  Hotel,
   LogOut,
   MapPin,
   Package,
@@ -179,8 +180,11 @@ function Header() {
 
             <NavLink
               to="/travel"
-              className={({ isActive }) => (isActive ? "active" : "")}
+              className={({ isActive }) =>
+                `travelNavLink${isActive ? " active" : ""}`
+              }
             >
+              <Hotel size={15} />
               {t("nav.travel")}
             </NavLink>
 
