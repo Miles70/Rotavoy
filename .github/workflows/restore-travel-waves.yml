@@ -1,0 +1,107 @@
+name: Restore Travel hero waves
+
+on:
+  push:
+    branches:
+      - nuitee-sandbox-integration
+    paths:
+      - .github/workflows/restore-travel-waves.yml
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: nuitee-sandbox-integration
+          fetch-depth: 0
+
+      - name: Prepare high quality Travel hero assets
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          SOURCE_URL="https://videos.pexels.com/video-files/6877512/6877512-uhd_3840_2160_30fps.mp4"
+          SOURCE_FILE="/tmp/rotavoy-travel-source.mp4"
+          VIDEO_OUT="public/images/rotavoy-travel-waves-hd.mp4"
+          POSTER_OUT="public/images/rotavoy-travel-waves-poster.webp"
+
+          curl -L --fail --retry 3 --retry-delay 3 "$SOURCE_URL" -o "$SOURCE_FILE"
+
+          ffmpeg -y \
+            -i "$SOURCE_FILE" \
+            -t 8 \
+            -vf "scale=1920:1080:flags=lanczos" \
+            -an \
+            -c:v libx264 \
+            -preset medium \
+            -crf 25 \
+            -pix_fmt yuv420p \
+            -movflags +faststart \
+            "$VIDEO_OUT"
+
+          ffmpeg -y \
+            -ss 2 \
+            -i "$SOURCE_FILE" \
+            -frames:v 1 \
+            -vf "scale=1920:1080:flags=lanczos" \
+            -c:v libwebp \
+            -quality 82 \
+            "$POSTER_OUT"
+
+          python - <<'PY'
+          from pathlib import Path
+
+          replacements = {
+              "src/components/HomeTravelSpotlight/HomeTravelSpotlight.jsx": {
+                  "/images/rotavoy-travel-caribbean-poster.webp": "/images/rotavoy-travel-waves-poster.webp",
+                  "/images/rotavoy-travel-caribbean.mp4": "/images/rotavoy-travel-waves-hd.mp4",
+              },
+              "src/components/HomeTravelSpotlight/HomeTravelSpotlight.css": {
+                  "/images/rotavoy-travel-caribbean-poster.webp": "/images/rotavoy-travel-waves-poster.webp",
+              },
+          }
+
+          for filename, changes in replacements.items():
+              path = Path(filename)
+              text = path.read_text(encoding="utf-8")
+              for old, new in changes.items():
+                  if old not in text:
+                      raise SystemExit(f"Expected path not found in {filename}: {old}")
+                  text = text.replace(old, new)
+              path.write_text(text, encoding="utf-8")
+          PY
+
+          rm -f \
+            public/images/rotavoy-travel-caribbean.mp4 \
+            public/images/rotavoy-travel-caribbean-poster.webp
+
+          test -s "$VIDEO_OUT"
+          test -s "$POSTER_OUT"
+          ffprobe -v error -select_streams v:0 \
+            -show_entries stream=width,height,codec_name \
+            -of default=noprint_wrappers=1 "$VIDEO_OUT"
+
+      - name: Commit restored agent work
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          rm -f .github/workflows/restore-travel-waves.yml
+
+          git config user.name "Miles70"
+          git config user.email "Selimyalcinner@gmail.com"
+
+          git add -A
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          git commit -m "Upgrade Travel hero waves video"
+          git push origin HEAD:nuitee-sandbox-integration
