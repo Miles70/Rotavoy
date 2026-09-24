@@ -398,17 +398,11 @@
   position: relative;
   overflow: hidden;
   padding: 88px 0 104px;
-  background: linear-gradient(180deg, #ffffff 0%, #eefafa 42%, #dff5f3 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #d9f4f1 34%, #9edfd8 100%);
 }
 
 .travelRoutesSection::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 18% 18%, rgba(39, 190, 190, 0.12), transparent 30%),
-    radial-gradient(circle at 82% 72%, rgba(76, 210, 201, 0.1), transparent 34%);
-  pointer-events: none;
+  content: none;
 }
 
 .travelSectionHeading {
