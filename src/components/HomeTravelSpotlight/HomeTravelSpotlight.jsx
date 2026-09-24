@@ -50,6 +50,20 @@ function HomeTravelSpotlight() {
 
   return (
     <section className="homeTravelSpotlight" aria-labelledby="home-travel-title">
+      <video
+        className="homeTravelVideo"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        poster="/images/rotavoy-travel-caribbean-poster.webp"
+        aria-hidden="true"
+        tabIndex={-1}
+      >
+        <source src="/images/rotavoy-travel-caribbean.mp4" type="video/mp4" />
+      </video>
+
       <div className="homeTravelBackdrop" aria-hidden="true">
         <span />
         <span />
