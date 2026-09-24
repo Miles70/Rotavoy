@@ -1082,3 +1082,37 @@
   width: 100%;
   margin: 8px 0 0;
 }
+
+
+.travelLoadMoreButton {
+  min-width: 240px;
+  min-height: 48px;
+  margin: 30px auto 0;
+  padding: 0 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border: 1px solid rgba(7, 139, 150, 0.22);
+  border-radius: 14px;
+  background: #ffffff;
+  color: #087985;
+  font-size: 0.8rem;
+  font-weight: 900;
+  box-shadow: 0 12px 28px rgba(18, 75, 83, 0.08);
+}
+
+.travelLoadMoreButton:hover {
+  border-color: rgba(7, 139, 150, 0.45);
+  transform: translateY(-1px);
+}
+
+.travelLoadMoreButton:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.travelLoadMoreError {
+  width: fit-content;
+  margin: 24px auto 0;
+}
