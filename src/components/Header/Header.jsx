@@ -192,6 +192,18 @@ function Header() {
           </nav>
 
           <div className="headerActions">
+            <NavLink
+              to="/travel"
+              className={({ isActive }) =>
+                `mobileTravelButton${isActive ? " active" : ""}`
+              }
+              aria-label={t("nav.travel")}
+              title={t("nav.travel")}
+            >
+              <Hotel size={18} />
+              <span>{t("nav.travel")}</span>
+            </NavLink>
+
             <div className="customerAccountControl" ref={accountControlRef}>
               <button
                 type="button"
