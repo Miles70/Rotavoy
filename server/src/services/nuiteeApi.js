@@ -150,6 +150,13 @@ export function listNuiteeHotels(query) {
   });
 }
 
+export function getNuiteeHotel(hotelId) {
+  return requestNuitee(getSettings().dataBaseUrl, "/data/hotel", {
+    query: { hotelId },
+    retries: 1,
+  });
+}
+
 export function searchNuiteeRates(body) {
   return requestNuitee(getSettings().dataBaseUrl, "/hotels/rates", {
     method: "POST",
