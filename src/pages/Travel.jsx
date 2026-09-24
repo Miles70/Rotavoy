@@ -96,6 +96,10 @@ function Travel() {
   const [checkout, setCheckout] = useState(() => addDays(32));
   const [adults, setAdults] = useState(2);
   const [results, setResults] = useState([]);
+  const [catalogOffset, setCatalogOffset] = useState(0);
+  const [hasMoreHotels, setHasMoreHotels] = useState(false);
+  const [loadMoreState, setLoadMoreState] = useState("idle");
+  const [loadMoreError, setLoadMoreError] = useState("");
   const [searchState, setSearchState] = useState("idle");
   const [searchError, setSearchError] = useState("");
   const [prebookState, setPrebookState] = useState("idle");
@@ -128,6 +132,9 @@ function Travel() {
     setSearchState("loading");
     setSearchError("");
     setResults([]);
+    setCatalogOffset(0);
+    setHasMoreHotels(false);
+    setLoadMoreError("");
     setPrebook(null);
     setSelectedHotel(null);
 
@@ -136,6 +143,7 @@ function Travel() {
         countryCode: "TR",
         cityName: cityName.trim(),
         limit: 20,
+        offset: 0,
       });
       const hotelIds = (catalog?.hotelIds || []).slice(0, 20);
 
@@ -156,6 +164,8 @@ function Travel() {
       }
 
       setResults(availableHotels);
+      setCatalogOffset(hotelIds.length);
+      setHasMoreHotels(hotelIds.length < Number(catalog?.total || 0));
       setSearchState("success");
     } catch (error) {
       setSearchState("error");
@@ -170,6 +180,52 @@ function Travel() {
       adults: String(adults),
     });
     return `/travel/hotels/${encodeURIComponent(hotel.hotelId)}?${query.toString()}`;
+  }
+
+  async function handleLoadMore() {
+    if (loadMoreState === "loading" || !hasMoreHotels) return;
+
+    setLoadMoreState("loading");
+    setLoadMoreError("");
+
+    try {
+      const catalog = await listHotels({
+        countryCode: "TR",
+        cityName: cityName.trim(),
+        limit: 20,
+        offset: catalogOffset,
+      });
+      const hotelIds = (catalog?.hotelIds || []).slice(0, 20);
+      const nextOffset = catalogOffset + hotelIds.length;
+
+      if (!hotelIds.length) {
+        setHasMoreHotels(false);
+        setLoadMoreState("success");
+        return;
+      }
+
+      const rateResponse = await searchHotelRates({
+        hotelIds,
+        checkin,
+        checkout,
+        adults,
+      });
+      const nextHotels = buildResults(rateResponse);
+
+      setResults((current) => {
+        const knownIds = new Set(current.map((hotel) => hotel.hotelId));
+        return [
+          ...current,
+          ...nextHotels.filter((hotel) => !knownIds.has(hotel.hotelId)),
+        ];
+      });
+      setCatalogOffset(nextOffset);
+      setHasMoreHotels(nextOffset < Number(catalog?.total || 0));
+      setLoadMoreState("success");
+    } catch (error) {
+      setLoadMoreState("error");
+      setLoadMoreError(error.message);
+    }
   }
 
   async function handlePrebook(hotel) {
@@ -506,6 +562,33 @@ function Travel() {
                 </article>
               ))}
             </div>
+
+            {loadMoreError && (
+              <p className="travelSearchMessage travelSearchMessage--error travelLoadMoreError">
+                <AlertCircle size={16} />
+                {loadMoreError}
+              </p>
+            )}
+
+            {hasMoreHotels && (
+              <button
+                className="travelLoadMoreButton"
+                type="button"
+                onClick={handleLoadMore}
+                disabled={loadMoreState === "loading"}
+              >
+                {loadMoreState === "loading" ? (
+                  <>
+                    <LoaderCircle className="travelSpin" size={18} />
+                    {t("travelPage.runtime.loadingMore")}
+                  </>
+                ) : (
+                  <>
+                    {t("travelPage.runtime.loadMore")} <ArrowRight size={17} />
+                  </>
+                )}
+              </button>
+            )}
 
           </div>
         </section>
