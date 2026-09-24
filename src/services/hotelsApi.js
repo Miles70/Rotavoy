@@ -34,6 +34,12 @@ export function listHotels({ countryCode = "TR", cityName, limit = 20 }) {
   });
 }
 
+export function getHotelDetails(hotelId) {
+  return hotelRequest(`/${encodeURIComponent(hotelId)}`, {
+    method: "GET",
+  });
+}
+
 export function searchHotelRates({
   hotelIds,
   checkin,
