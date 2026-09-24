@@ -398,9 +398,7 @@
   position: relative;
   overflow: hidden;
   padding: 88px 0 104px;
-  background:
-    radial-gradient(circle at 80% 14%, rgba(255, 236, 161, 0.98) 0 62px, rgba(255, 236, 161, 0.28) 63px, transparent 118px),
-    linear-gradient(180deg, #8bd4ed 0%, #c8eff7 37%, #5bc7ca 38%, #1594a2 56%, #087485 68%, #ead5a9 69%, #f7ebce 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #eefafa 42%, #dff5f3 100%);
 }
 
 .travelRoutesSection::before {
@@ -408,11 +406,8 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse at 20% 54%, rgba(255, 255, 255, 0.48) 0 3%, transparent 3.6%),
-    radial-gradient(ellipse at 42% 57%, rgba(255, 255, 255, 0.34) 0 2.2%, transparent 2.8%),
-    radial-gradient(ellipse at 70% 52%, rgba(255, 255, 255, 0.4) 0 2.6%, transparent 3.2%),
-    repeating-radial-gradient(ellipse at 50% 62%, rgba(255, 255, 255, 0.22) 0 1px, transparent 2px 16px);
-  opacity: 0.74;
+    radial-gradient(circle at 18% 18%, rgba(39, 190, 190, 0.12), transparent 30%),
+    radial-gradient(circle at 82% 72%, rgba(76, 210, 201, 0.1), transparent 34%);
   pointer-events: none;
 }
 
