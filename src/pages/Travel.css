@@ -793,6 +793,7 @@
   overflow: hidden;
   background: linear-gradient(145deg, #d8f4f1, #b9e1df);
   color: #087b86;
+  text-decoration: none;
 }
 
 .travelHotelMedia img {
@@ -892,6 +893,30 @@
   color: #0b646e;
   font-size: 1.28rem;
   letter-spacing: -0.035em;
+}
+
+.travelHotelBody h3 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.travelHotelBody h3 a:hover {
+  color: #087985;
+}
+
+.travelHotelDetailsLink {
+  min-height: 42px;
+  margin-top: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid rgba(7, 139, 150, 0.22);
+  border-radius: 13px;
+  color: #087985;
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-decoration: none;
 }
 
 .travelHotelBody > button {
