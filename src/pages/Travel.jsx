@@ -109,6 +109,20 @@ function Travel() {
   const { t } = useLanguage();
   const activeServiceKey = `travelPage.services.${activeService}`;
 
+  function customerHotelError(error, fallbackKey = "travelPage.runtime.noAvailability") {
+    const message = String(error?.message || "");
+    if (/no availability|not available/i.test(message)) {
+      return t("travelPage.runtime.noAvailability");
+    }
+    if (/timed out|timeout/i.test(message)) {
+      return t("travelPage.runtime.serviceTimeout");
+    }
+    if (/could not be reached|fetch failed|network/i.test(message)) {
+      return t("travelPage.runtime.serviceUnavailable");
+    }
+    return message || t(fallbackKey);
+  }
+
   const minimumCheckout = useMemo(() => {
     if (!checkin) return addDays(1);
     const date = new Date(`${checkin}T00:00:00.000Z`);
@@ -169,7 +183,7 @@ function Travel() {
       setSearchState("success");
     } catch (error) {
       setSearchState("error");
-      setSearchError(error.message);
+      setSearchError(customerHotelError(error));
     }
   }
 
@@ -224,7 +238,7 @@ function Travel() {
       setLoadMoreState("success");
     } catch (error) {
       setLoadMoreState("error");
-      setLoadMoreError(error.message);
+      setLoadMoreError(customerHotelError(error, "travelPage.runtime.loadMoreFailed"));
     }
   }
 
