@@ -2,6 +2,7 @@ import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import {
   bookNuiteeSandbox,
+  getNuiteeHotel,
   getNuiteeStatus,
   listNuiteeHotels,
   prebookNuiteeRate,
@@ -261,6 +262,22 @@ hotelsRouter.get("/", searchLimiter, async (request, response, next) => {
 
     response.set("Cache-Control", "public, max-age=900");
     response.json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+hotelsRouter.get("/:hotelId", searchLimiter, async (request, response, next) => {
+  try {
+    const hotelId = requiredText(request.params.hotelId, "hotelId", 100);
+
+    if (!/^[A-Za-z0-9_-]+$/.test(hotelId)) {
+      throw requestError("hotelId contains invalid characters.");
+    }
+
+    const result = await getNuiteeHotel(hotelId);
+    response.set("Cache-Control", "public, max-age=3600");
+    response.json(sanitizeProviderResponse(result));
   } catch (error) {
     next(error);
   }
