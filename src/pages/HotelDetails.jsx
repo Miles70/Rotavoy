@@ -32,38 +32,39 @@ import {
   prebookHotel,
   searchHotelRates,
 } from "../services/hotelsApi";
+import { useLanguage } from "../i18n/LanguageContext";
 import "./HotelDetails.css";
 
-const facilityTranslations = new Map([
-  ["wifi available", "Wi‑Fi"],
-  ["free wifi", "Ücretsiz Wi‑Fi"],
-  ["parking", "Otopark"],
-  ["free parking", "Ücretsiz otopark"],
-  ["heating", "Isıtma"],
-  ["family rooms", "Aile odaları"],
-  ["garden", "Bahçe"],
-  ["lift / elevator", "Asansör"],
-  ["elevator", "Asansör"],
-  ["luggage storage", "Bagaj muhafazası"],
-  ["express check-in/check-out", "Hızlı giriş ve çıkış"],
-  ["safety deposit box", "Emanet kasası"],
-  ["bar", "Bar"],
-  ["car hire", "Araç kiralama"],
-  ["non-smoking throughout", "Sigara içilmeyen alan"],
-  ["outdoor pool", "Açık yüzme havuzu"],
-  ["outdoor pool - seasonal", "Sezonluk açık havuz"],
-  ["daily housekeeping", "Günlük temizlik"],
-  ["pool bar", "Havuz barı"],
-  ["sun loungers or beach chairs", "Şezlong"],
-  ["wine/champagne", "Şarap ve şampanya"],
-  ["restaurant", "Restoran"],
-  ["air conditioning", "Klima"],
-  ["airport shuttle", "Havalimanı transferi"],
-  ["fitness centre", "Fitness merkezi"],
-  ["fitness center", "Fitness merkezi"],
-  ["24-hour front desk", "24 saat resepsiyon"],
-  ["room service", "Oda servisi"],
-  ["languages spoken", "Yabancı dil desteği"],
+const facilityKeys = new Map([
+  ["wifi available", "wifi"],
+  ["free wifi", "freeWifi"],
+  ["parking", "parking"],
+  ["free parking", "freeParking"],
+  ["heating", "heating"],
+  ["family rooms", "familyRooms"],
+  ["garden", "garden"],
+  ["lift / elevator", "elevator"],
+  ["elevator", "elevator"],
+  ["luggage storage", "luggageStorage"],
+  ["express check-in/check-out", "expressCheckin"],
+  ["safety deposit box", "safetyBox"],
+  ["bar", "bar"],
+  ["car hire", "carHire"],
+  ["non-smoking throughout", "nonSmoking"],
+  ["outdoor pool", "outdoorPool"],
+  ["outdoor pool - seasonal", "seasonalPool"],
+  ["daily housekeeping", "housekeeping"],
+  ["pool bar", "poolBar"],
+  ["sun loungers or beach chairs", "loungers"],
+  ["wine/champagne", "wine"],
+  ["restaurant", "restaurant"],
+  ["air conditioning", "airConditioning"],
+  ["airport shuttle", "airportShuttle"],
+  ["fitness centre", "fitness"],
+  ["fitness center", "fitness"],
+  ["24-hour front desk", "frontDesk"],
+  ["room service", "roomService"],
+  ["languages spoken", "languages"],
 ]);
 
 function money(amount, currency = "EUR") {
@@ -113,7 +114,7 @@ function collectImages(value, result = [], seen = new Set()) {
   return result;
 }
 
-function textList(value) {
+function textList(value, t) {
   if (!value) return [];
   const source = Array.isArray(value) ? value : Object.values(value);
 
@@ -126,16 +127,19 @@ function textList(value) {
     .filter(Boolean)
     .map((item) => String(item).trim())
     .filter(Boolean)
-    .map((item) => facilityTranslations.get(item.toLowerCase()) || item);
+    .map((item) => {
+      const key = facilityKeys.get(item.toLowerCase());
+      return key ? t(`hotelDetail.facilities.${key}`) : item;
+    });
 
   return [...new Map(translated.map((item) => [item.toLocaleLowerCase("tr"), item])).values()]
     .slice(0, 24);
 }
 
-function cleanHotelDescription(value) {
+function cleanHotelDescription(value, fallback) {
   const source = String(value || "").trim();
   if (!source) {
-    return "Bu otelin ayrıntıları ve müsait oda seçenekleri aşağıda yer alıyor.";
+    return fallback;
   }
 
   if (typeof DOMParser !== "undefined") {
@@ -202,6 +206,7 @@ function HotelDetails() {
     10,
   );
   const fallbackHotel = location.state?.hotel || null;
+  const { t, language } = useLanguage();
 
   const [hotel, setHotel] = useState(fallbackHotel);
   const [offers, setOffers] = useState(
@@ -262,8 +267,8 @@ function HotelDetails() {
         setState("error");
         setError(
           detailsResult.status === "rejected"
-            ? detailsResult.reason?.message || "Otel bilgileri alınamadı."
-            : "Otel bilgileri bulunamadı.",
+            ? detailsResult.reason?.message || t("hotelDetail.detailsUnavailable")
+            : t("hotelDetail.hotelNotFound"),
         );
       }
 
@@ -272,7 +277,7 @@ function HotelDetails() {
       } else {
         setRatesError(
           ratesResult.reason?.message ||
-            "Müsait odalar şu anda kontrol edilemedi.",
+            t("hotelDetail.ratesUnavailable"),
         );
       }
     }
@@ -281,7 +286,7 @@ function HotelDetails() {
     return () => {
       cancelled = true;
     };
-  }, [hotelId, checkin, checkout, adults, fallbackHotel]);
+  }, [hotelId, checkin, checkout, adults, fallbackHotel, t]);
 
   const images = useMemo(() => {
     const collected = collectImages(hotel);
@@ -295,11 +300,12 @@ function HotelDetails() {
     () =>
       textList(
         hotel?.facilities || hotel?.amenities || hotel?.hotelFacilities,
+        t,
       ),
-    [hotel],
+    [hotel, t],
   );
 
-  const name = hotel?.name || hotel?.hotelName || "Otel";
+  const name = hotel?.name || hotel?.hotelName || t("hotelDetail.hotelFallback");
   const address =
     hotel?.address ||
     hotel?.hotelAddress ||
@@ -321,6 +327,7 @@ function HotelDetails() {
   );
   const description = cleanHotelDescription(
     hotel?.description || hotel?.hotelDescription,
+    t("hotelDetail.descriptionFallback"),
   );
 
   async function handlePrebook(offer) {
@@ -336,7 +343,7 @@ function HotelDetails() {
       setBookingState("error");
       setBookingError(
         /no availability|not available/i.test(bookingFailure.message)
-          ? "Bu oda az önce tükendi. Lütfen diğer oda seçeneğini dene."
+          ? t("hotelDetail.roomSoldOut")
           : bookingFailure.message,
       );
     }
@@ -346,7 +353,7 @@ function HotelDetails() {
     return (
       <main className="hotelDetailState">
         <LoaderCircle className="travelSpin" size={30} />
-        <p>Otel ayrıntıları hazırlanıyor…</p>
+        <p>{t("hotelDetail.loading")}</p>
       </main>
     );
   }
@@ -355,9 +362,9 @@ function HotelDetails() {
     return (
       <main className="hotelDetailState hotelDetailState--error">
         <AlertCircle size={30} />
-        <h1>Otel ayrıntıları açılamadı</h1>
+        <h1>{t("hotelDetail.loadErrorTitle")}</h1>
         <p>{error}</p>
-        <Link to="/travel">Otel aramasına dön</Link>
+        <Link to="/travel">{t("hotelDetail.backToSearch")}</Link>
       </main>
     );
   }
@@ -366,7 +373,7 @@ function HotelDetails() {
     <main className="hotelDetailPage">
       <div className="hotelDetailContainer">
         <Link className="hotelDetailBack" to="/travel">
-          <ArrowLeft size={18} /> Arama sonuçlarına dön
+          <ArrowLeft size={18} /> {t("hotelDetail.back")}
         </Link>
 
         <section className="hotelDetailHeader">
@@ -374,12 +381,12 @@ function HotelDetails() {
             <div className="hotelDetailRatings">
               {stars > 0 && (
                 <span className="hotelDetailStars">
-                  <Star size={16} fill="currentColor" /> {stars} yıldız
+                  <Star size={16} fill="currentColor" /> {stars} {t("hotelDetail.stars")}
                 </span>
               )}
               {guestRating > 0 && (
                 <span className="hotelDetailGuestRating">
-                  Misafir puanı {guestRating.toLocaleString("tr-TR")}/10
+                  {t("hotelDetail.guestRating")} {guestRating.toLocaleString(language === "pt" ? "pt-BR" : language)}/10
                 </span>
               )}
             </div>
@@ -393,7 +400,7 @@ function HotelDetails() {
           {checkin && checkout && (
             <div className="hotelDetailStay">
               <strong>{checkin} → {checkout}</strong>
-              <span><UsersRound size={15} /> {adults} yetişkin</span>
+              <span><UsersRound size={15} /> {adults} {t(adults === 1 ? "hotelDetail.adult" : "hotelDetail.adults")}</span>
             </div>
           )}
         </section>
@@ -403,12 +410,12 @@ function HotelDetails() {
             {images.length ? (
               <img
                 src={images[activeImage]}
-                alt={`${name} fotoğrafı ${activeImage + 1}`}
+                alt={`${name} ${t("hotelDetail.photoAlt")} ${activeImage + 1}`}
               />
             ) : (
               <div className="hotelGalleryEmpty">
                 <Hotel size={64} aria-hidden="true" />
-                <span>Bu otel için fotoğraf bulunamadı</span>
+                <span>{t("hotelDetail.noPhotos")}</span>
               </div>
             )}
             {images.length > 1 && (
@@ -421,7 +428,7 @@ function HotelDetails() {
                       (activeImage - 1 + images.length) % images.length,
                     )
                   }
-                  aria-label="Önceki fotoğraf"
+                  aria-label={t("hotelDetail.previousPhoto")}
                 >
                   <ChevronLeft />
                 </button>
@@ -431,7 +438,7 @@ function HotelDetails() {
                   onClick={() =>
                     setActiveImage((activeImage + 1) % images.length)
                   }
-                  aria-label="Sonraki fotoğraf"
+                  aria-label={t("hotelDetail.nextPhoto")}
                 >
                   <ChevronRight />
                 </button>
@@ -449,7 +456,7 @@ function HotelDetails() {
                   key={image}
                   className={index === activeImage ? "active" : ""}
                   onClick={() => setActiveImage(index)}
-                  aria-label={`Fotoğraf ${index + 1}`}
+                  aria-label={`${t("hotelDetail.photo")} ${index + 1}`}
                 >
                   <img src={image} alt="" loading="lazy" />
                 </button>
@@ -461,12 +468,12 @@ function HotelDetails() {
         <div className="hotelDetailColumns">
           <div className="hotelDetailMain">
             <section className="hotelDetailCard">
-              <h2>Otel hakkında</h2>
+              <h2>{t("hotelDetail.about")}</h2>
               <p className="hotelDescription">{description}</p>
             </section>
 
             <section className="hotelDetailCard">
-              <h2>Olanaklar</h2>
+              <h2>{t("hotelDetail.facilitiesTitle")}</h2>
               {facilities.length ? (
                 <div className="hotelFacilities">
                   {facilities.map((facility) => {
@@ -480,7 +487,7 @@ function HotelDetails() {
                 </div>
               ) : (
                 <p className="hotelMuted">
-                  Olanak bilgileri henüz listelenmemiş.
+                  {t("hotelDetail.noFacilities")}
                 </p>
               )}
             </section>
@@ -488,12 +495,12 @@ function HotelDetails() {
 
           <aside className="hotelDetailBooking">
             <div className="hotelDetailCard">
-              <span className="hotelDetailEyebrow">MÜSAİT ODALAR</span>
-              <h2>Konaklamanı seç</h2>
+              <span className="hotelDetailEyebrow">{t("hotelDetail.availableRooms")}</span>
+              <h2>{t("hotelDetail.chooseStay")}</h2>
 
               {!checkin || !checkout ? (
                 <p className="hotelMuted">
-                  Fiyatları görmek için arama sayfasından tarih seç.
+                  {t("hotelDetail.selectDates")}
                 </p>
               ) : ratesError ? (
                 <p className="hotelBookingMessage hotelBookingMessage--error">
@@ -506,10 +513,10 @@ function HotelDetails() {
                       <div>
                         <BedDouble size={19} />
                         <strong>
-                          {offer?.rates?.[0]?.name || "Müsait oda"}
+                          {offer?.rates?.[0]?.name || t("hotelDetail.roomFallback")}
                         </strong>
                       </div>
-                      <span>Toplam konaklama fiyatı</span>
+                      <span>{t("hotelDetail.totalPrice")}</span>
                       <b>
                         {money(
                           offer.suggestedSellingPrice.amount,
@@ -524,10 +531,10 @@ function HotelDetails() {
                         {bookingState === "loading" ? (
                           <>
                             <LoaderCircle className="travelSpin" size={17} />
-                            Hazırlanıyor
+                            {t("hotelDetail.preparing")}
                           </>
                         ) : (
-                          "Rezervasyon yap"
+                          t("hotelDetail.book")
                         )}
                       </button>
                     </article>
@@ -535,7 +542,7 @@ function HotelDetails() {
                 </div>
               ) : (
                 <p className="hotelMuted">
-                  Bu tarihler için müsait oda bulunamadı.
+                  {t("hotelDetail.noRooms")}
                 </p>
               )}
 
@@ -548,21 +555,20 @@ function HotelDetails() {
                 <div className="hotelBookingMessage hotelBookingMessage--success">
                   <CheckCircle2 size={21} />
                   <div>
-                    <strong>Rezervasyona hazır</strong>
+                    <strong>{t("hotelDetail.bookingReady")}</strong>
                     <span>
                       {money(
                         prebook.data.sellingPriceToUser,
                         prebook.data.currency,
                       )}
-                      {" · "}Toplam konaklama fiyatı
+                      {" · "}{t("hotelDetail.totalPrice")}
                     </span>
                   </div>
                 </div>
               )}
 
               <p className="hotelSecureNote">
-                <ShieldCheck size={16} /> Son fiyat rezervasyon öncesinde
-                yeniden doğrulanır.
+                <ShieldCheck size={16} /> {t("hotelDetail.priceRecheck")}
               </p>
             </div>
           </aside>
