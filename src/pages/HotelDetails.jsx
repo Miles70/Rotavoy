@@ -102,8 +102,20 @@ function collectImages(value, result = [], seen = new Set()) {
   }
 
   if (typeof value === "object") {
-    const preferred = ["urlHd", "url", "image", "src", "link", "thumbnail"];
-    preferred.forEach((key) => collectImages(value[key], result, seen));
+    const hdPreferred = [
+      "urlHd",
+      "urlHD",
+      "hdUrl",
+      "highResUrl",
+      "originalUrl",
+      "original",
+    ];
+    const fallbackPreferred = ["url", "image", "src", "link", "thumbnail"];
+
+    hdPreferred.forEach((key) => collectImages(value[key], result, seen));
+    fallbackPreferred.forEach((key) => collectImages(value[key], result, seen));
+
+    const preferred = [...hdPreferred, ...fallbackPreferred];
     Object.entries(value)
       .filter(
         ([key]) =>
