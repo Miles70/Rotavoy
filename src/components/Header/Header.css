@@ -227,23 +227,24 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border: 1px solid rgba(7, 139, 150, 0.2);
+  border: 1px solid rgba(0, 129, 145, 0.5);
   border-radius: 999px;
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  background: linear-gradient(120deg, rgba(23, 189, 193, 0.14), rgba(255, 184, 110, 0.2), rgba(255, 121, 123, 0.16), rgba(23, 189, 193, 0.14));
-  background-size: 280% 280%;
-  color: #087985;
-  box-shadow: 0 8px 20px rgba(7, 118, 128, 0.08);
+  background: linear-gradient(112deg, #007c8b 0%, #12b8b2 28%, #ffd16c 52%, #ff886f 74%, #007c8b 100%);
+  background-size: 320% 320%;
+  color: #ffffff;
+  text-shadow: 0 1px 8px rgba(0, 50, 60, .32);
+  box-shadow: 0 9px 22px rgba(0, 131, 144, .24), 0 0 0 3px rgba(255, 201, 105, .12);
   animation: travelNavTide 6s ease-in-out infinite, travelNavFloat 3.4s ease-in-out infinite;
 }
 
 .navLinks a.travelNavLink:hover,
 .navLinks a.travelNavLink.active {
   border-color: rgba(7, 139, 150, 0.38);
-  background: linear-gradient(120deg, #087d89, #10aeb0, #ff9a70, #087d89);
-  background-size: 280% 280%;
+  background: linear-gradient(112deg, #006f80 0%, #10bfb7 28%, #ffcb64 52%, #ff765f 74%, #006f80 100%);
+  background-size: 320% 320%;
   color: #ffffff;
   box-shadow: 0 11px 25px rgba(7, 118, 128, 0.22);
   transform: translateY(-1px);
