@@ -14,6 +14,8 @@ const paymentTranslations = {
       creatingOrder: "Creating order...",
       placeCryptoOrder: "Create Crypto Order",
       serverError: "The order could not be created. Please try again.",
+      shippingMethod: "Shipping Method",
+      shippingLive: "Shipping price and route are checked live before the order is created.",
     },
     orderSuccessPage: {
       tag: "Payment confirmed",
@@ -81,6 +83,8 @@ const paymentTranslations = {
       creatingOrder: "Sipariş oluşturuluyor...",
       placeCryptoOrder: "Kripto Siparişi Oluştur",
       serverError: "Sipariş oluşturulamadı. Lütfen tekrar dene.",
+      shippingMethod: "Kargo Yöntemi",
+      shippingLive: "Kargo ücreti ve teslimat rotası sipariş oluşturulmadan önce canlı olarak kontrol edilir.",
     },
     orderSuccessPage: {
       tag: "Ödeme onaylandı",
