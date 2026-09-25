@@ -232,32 +232,28 @@
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  background: linear-gradient(112deg, #007b8d 0%, #00c8bc 24%, #ffe06a 45%, #ff806c 64%, #00b9bd 82%, #007b8d 100%);
-  background-size: 420% 100%;
+  background: linear-gradient(270deg, #ff796c, #ffd166, #12c7bb, #168ed0, #ff796c);
+  background-size: 600% 600%;
   color: #ffffff;
   text-shadow: 0 1px 8px rgba(0, 50, 60, .32);
   box-shadow: 0 9px 22px rgba(0, 131, 144, .24), 0 0 0 3px rgba(255, 201, 105, .12);
-  animation: travelNavTide 2.8s linear infinite, travelNavFloat 2.8s ease-in-out infinite;
+  animation: travelNavGradientShift 6s ease infinite;
 }
 
 .navLinks a.travelNavLink:hover,
 .navLinks a.travelNavLink.active {
   border-color: rgba(7, 139, 150, 0.38);
-  background: linear-gradient(112deg, #007b8d 0%, #00c8bc 24%, #ffe06a 45%, #ff806c 64%, #00b9bd 82%, #007b8d 100%);
-  background-size: 420% 100%;
+  background: linear-gradient(270deg, #ff796c, #ffd166, #12c7bb, #168ed0, #ff796c);
+  background-size: 600% 600%;
   color: #ffffff;
   box-shadow: 0 11px 25px rgba(7, 118, 128, 0.22);
   transform: translateY(-1px);
 }
 
-@keyframes travelNavTide {
+@keyframes travelNavGradientShift {
   0% { background-position: 0% 50%; }
-  100% { background-position: 100% 50%; }
-}
-
-@keyframes travelNavFloat {
-  0%, 100% { box-shadow: 0 8px 20px rgba(7, 118, 128, 0.08); }
-  50% { box-shadow: 0 11px 25px rgba(255, 143, 108, 0.2), 0 0 0 3px rgba(82, 211, 206, 0.08); }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -288,26 +284,7 @@
 }
 
 .navLinks a.travelNavLink::after {
-  content: "";
-  position: absolute;
-  top: -60%;
-  bottom: -60%;
-  left: -52%;
-  width: 36%;
-  display: block;
-  border-radius: 999px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08) 16%, rgba(255, 255, 255, 0.82) 50%, rgba(255, 255, 255, 0.12) 84%, transparent);
-  filter: blur(1px);
-  transform: skewX(-22deg) translateX(-150%);
-  animation: travelNavGlint 2.2s ease-in-out infinite;
-  pointer-events: none;
-}
-
-@keyframes travelNavGlint {
-  0%, 12% { opacity: 0; transform: skewX(-22deg) translateX(-150%); }
-  28% { opacity: 0.78; }
-  58% { opacity: 0.58; }
-  78%, 100% { opacity: 0; transform: skewX(-22deg) translateX(520%); }
+  display: none;
 }
 
 .headerActions {

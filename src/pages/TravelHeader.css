@@ -77,9 +77,9 @@ body:has(.travelPage) .headerWrapper .navLinks a.travelNavLink:hover,
 body:has(.travelPage) .headerWrapper .navLinks a.travelNavLink.active,
 body:has(.travelPage) .headerWrapper .navLinks a.travelNavLink.active:visited {
   border-color: rgba(7, 139, 150, 0.42);
-  background: linear-gradient(112deg, #007b8d 0%, #00c8bc 24%, #ffe06a 45%, #ff806c 64%, #00b9bd 82%, #007b8d 100%);
-  background-size: 420% 100%;
-  animation: travelNavTide 2.8s linear infinite, travelNavFloat 2.8s ease-in-out infinite;
+  background: linear-gradient(270deg, #ff796c, #ffd166, #12c7bb, #168ed0, #ff796c);
+  background-size: 600% 600%;
+  animation: travelNavGradientShift 6s ease infinite;
   color: #ffffff;
   text-shadow: 0 1px 10px rgba(0, 41, 47, 0.28);
 }
