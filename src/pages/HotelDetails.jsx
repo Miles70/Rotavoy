@@ -202,6 +202,41 @@ function buildOffers(rateResponse) {
     );
 }
 
+function offerText(value) {
+  if (typeof value === "string" || typeof value === "number") return String(value).trim();
+  if (!value || typeof value !== "object") return "";
+  return String(value.name || value.description || value.text || value.type || "").trim();
+}
+
+function firstOfferText(sources, keys) {
+  for (const source of sources) {
+    for (const key of keys) {
+      const value = offerText(source?.[key]);
+      if (value) return value;
+    }
+  }
+  return "";
+}
+
+function offerDetails(offer) {
+  const rate = offer?.rates?.[0] || {};
+  const sources = [offer, rate];
+  const rows = [];
+  const meal = firstOfferText(sources, ["mealPlan", "mealType", "board", "boardType", "meal"]);
+  const cancellation = firstOfferText(sources, ["cancellationPolicy", "cancellationConditions", "cancellation"]);
+  const rateName = firstOfferText(sources, ["rateName", "rateType", "name"]);
+  const refundable = sources.map((source) => source?.refundable ?? source?.isRefundable).find((value) => typeof value === "boolean");
+  const benefits = sources.flatMap((source) => Array.isArray(source?.benefits) ? source.benefits : Array.isArray(source?.inclusions) ? source.inclusions : [])
+    .map(offerText).filter(Boolean).slice(0, 3);
+
+  if (meal) rows.push({ label: "Yemek planı", value: meal, icon: Utensils });
+  if (refundable !== undefined) rows.push({ label: "İptal", value: refundable ? "İade edilebilir" : "İade edilemez", icon: ShieldCheck });
+  else if (cancellation) rows.push({ label: "İptal", value: cancellation, icon: ShieldCheck });
+  if (rateName && rateName !== offer?.rates?.[0]?.name) rows.push({ label: "Fiyat tipi", value: rateName, icon: CheckCircle2 });
+  benefits.forEach((value) => rows.push({ label: "Dahil", value, icon: CheckCircle2 }));
+  return rows;
+}
+
 function facilityIcon(name) {
   const normalized = name.toLocaleLowerCase("tr");
   if (/wifi|internet/.test(normalized)) return Wifi;
@@ -266,6 +301,7 @@ function HotelDetails() {
               checkin,
               checkout,
               adults,
+              maxRatesPerHotel: 10,
             })
           : Promise.resolve(null);
 
@@ -577,7 +613,9 @@ function HotelDetails() {
                 </p>
               ) : offers.length ? (
                 <div className="hotelOffers">
-                  {offers.map((offer) => (
+                  {offers.map((offer) => {
+                    const details = offerDetails(offer);
+                    return (
                     <article
                       key={offer.offerId}
                       className={`hotelOffer ${selectedOffer?.offerId === offer.offerId ? "hotelOffer--selected" : ""}`}
@@ -595,6 +633,16 @@ function HotelDetails() {
                           offer.suggestedSellingPrice.currency,
                         )}
                       </b>
+                      {details.length > 0 && (
+                        <dl className="hotelOfferDetails">
+                          {details.map(({ label, value, icon: Icon }, index) => (
+                            <div key={`${label}-${value}-${index}`}>
+                              <dt><Icon size={15} /> {label}</dt>
+                              <dd>{value}</dd>
+                            </div>
+                          ))}
+                        </dl>
+                      )}
                       <button
                         type="button"
                         onClick={() => setSelectedOffer(offer)}
@@ -603,7 +651,8 @@ function HotelDetails() {
                         {selectedOffer?.offerId === offer.offerId ? "Seçildi" : "Bu odayı seç"}
                       </button>
                     </article>
-                  ))}
+                    );
+                  })}
                   <button
                     type="button"
                     className="hotelBookSelected"

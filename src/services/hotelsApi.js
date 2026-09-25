@@ -56,6 +56,7 @@ export function searchHotelRates({
   adults,
   currency = "USD",
   guestNationality = "TR",
+  maxRatesPerHotel = 3,
 }) {
   return hotelRequest("/rates", {
     method: "POST",
@@ -66,7 +67,7 @@ export function searchHotelRates({
       currency,
       guestNationality,
       occupancies: [{ adults }],
-      maxRatesPerHotel: 3,
+      maxRatesPerHotel,
       limit: hotelIds.length,
       timeout: 12,
     }),
