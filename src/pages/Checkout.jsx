@@ -147,14 +147,8 @@ function Checkout() {
           setLivePricingItems([]);
           setLiveSubtotal(null);
           setShippingQuoted(false);
-          const quoteMessage = String(quoteError.message || "");
           setShippingError(
-            quoteMessage === "No delivery method is available for this address."
-              ? text(
-                  "checkoutPage.shippingUnavailable",
-                  "Rotavoy için bu adrese uygun teslimat yöntemi bulunamadı. Ülke kodunu (TR gibi) ve posta kodunu kontrol et.",
-                )
-              : quoteMessage || text("checkoutPage.shippingUnavailable", "Teslimat şu anda hesaplanamadı."),
+            quoteError.message || "Shipping could not be calculated.",
           );
         })
         .finally(() => {
