@@ -256,10 +256,6 @@
   100% { background-position: 0% 50%; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .navLinks a.travelNavLink { animation: none; }
-}
-
 .navLinks a::after {
   content: "";
   position: absolute;
