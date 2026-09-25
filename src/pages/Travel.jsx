@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   AlertCircle,
   ArrowRight,
@@ -95,6 +95,7 @@ function isFiveStarHotel(hotel) {
 
 function Travel() {
   const [homeSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const autoSearchStarted = useRef(false);
   const travelVideoRef = useRef(null);
   const showcaseRefreshingRef = useRef(false);
@@ -402,9 +403,16 @@ function Travel() {
     for (const offer of offers) {
       try {
         const response = await prebookHotel(offer.offerId);
-        setSelectedHotel({ ...hotel, offer });
-        setPrebook(response);
-        setPrebookState("success");
+        navigate("/travel/checkout", {
+          state: {
+            hotel: { ...hotel, offer },
+            offer,
+            prebook: response.data,
+            checkin,
+            checkout,
+            adults,
+          },
+        });
         return;
       } catch (error) {
         const isAvailabilityError = /no availability|not available/i.test(

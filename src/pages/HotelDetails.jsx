@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation, useParams, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   AlertCircle,
   ArrowLeft,
@@ -222,6 +222,7 @@ function facilityIcon(name) {
 function HotelDetails() {
   const { hotelId } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const checkin = searchParams.get("checkin") || "";
   const checkout = searchParams.get("checkout") || "";
@@ -404,8 +405,9 @@ function HotelDetails() {
 
     try {
       const response = await prebookHotel(offer.offerId);
-      setPrebook(response);
-      setBookingState("success");
+      navigate("/travel/checkout", {
+        state: { hotel, offer, prebook: response.data, checkin, checkout, adults },
+      });
     } catch (bookingFailure) {
       setBookingState("error");
       setBookingError(
