@@ -14,6 +14,7 @@ const paymentTranslations = {
       creatingOrder: "Creating order...",
       placeCryptoOrder: "Create Crypto Order",
       serverError: "The order could not be created. Please try again.",
+      shippingUnavailable: "Rotavoy could not find a delivery method for this address. Check the country code (for example, TR) and postal code.",
     },
     orderSuccessPage: {
       tag: "Payment confirmed",
@@ -81,6 +82,7 @@ const paymentTranslations = {
       creatingOrder: "Sipariş oluşturuluyor...",
       placeCryptoOrder: "Kripto Siparişi Oluştur",
       serverError: "Sipariş oluşturulamadı. Lütfen tekrar dene.",
+      shippingUnavailable: "Rotavoy için bu adrese uygun teslimat yöntemi bulunamadı. Ülke kodunu (TR gibi) ve posta kodunu kontrol et.",
     },
     orderSuccessPage: {
       tag: "Ödeme onaylandı",
