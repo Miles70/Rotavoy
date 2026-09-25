@@ -112,6 +112,8 @@ const regionalSharedTranslations = {
         creatingOrder: "Creando pedido...",
         placeCryptoOrder: "Crear pedido con criptomonedas",
         serverError: "No se pudo crear el pedido. Inténtalo de nuevo.",
+        shippingMethod: "Método de envío",
+        shippingLive: "El precio y la ruta de envío se verifican en tiempo real antes de crear el pedido.",
       },
       orderSuccessPage: {
         tag: "Pago confirmado",
@@ -309,6 +311,8 @@ const regionalSharedTranslations = {
         creatingOrder: "Criando pedido...",
         placeCryptoOrder: "Criar pedido com criptomoedas",
         serverError: "Não foi possível criar o pedido. Tente novamente.",
+        shippingMethod: "Método de envio",
+        shippingLive: "O preço e a rota de entrega são verificados em tempo real antes da criação do pedido.",
       },
       orderSuccessPage: {
         tag: "Pagamento confirmado",
@@ -506,6 +510,8 @@ const regionalSharedTranslations = {
         creatingOrder: "Création de la commande...",
         placeCryptoOrder: "Créer une commande crypto",
         serverError: "La commande n’a pas pu être créée. Réessayez.",
+        shippingMethod: "Mode de livraison",
+        shippingLive: "Le prix et l’itinéraire de livraison sont vérifiés en direct avant la création de la commande.",
       },
       orderSuccessPage: {
         tag: "Paiement confirmé",
@@ -703,6 +709,8 @@ const regionalSharedTranslations = {
         creatingOrder: "Bestellung wird erstellt...",
         placeCryptoOrder: "Krypto-Bestellung erstellen",
         serverError: "Die Bestellung konnte nicht erstellt werden. Bitte versuche es erneut.",
+        shippingMethod: "Versandart",
+        shippingLive: "Versandpreis und Lieferweg werden vor dem Erstellen der Bestellung live geprüft.",
       },
       orderSuccessPage: {
         tag: "Zahlung bestätigt",
