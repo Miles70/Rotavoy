@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import {
+  Check,
+  Copy,
   ExternalLink,
   LoaderCircle,
   ShieldCheck,
@@ -144,13 +146,16 @@ function getPaymentErrorMessage(error, transactionWasSubmitted, text) {
   );
 }
 
-function CryptoPayment({ order, onOrderUpdated }) {
+function CryptoPayment({ order, onOrderUpdated, verifyPaymentRequest }) {
   const { t } = useLanguage();
   const [paymentStage, setPaymentStage] = useState("idle");
   const [paymentError, setPaymentError] = useState("");
   const [transactionHash, setTransactionHash] = useState(
     order?.payment?.transactionHash || ""
   );
+  const [manualOpen, setManualOpen] = useState(false);
+  const [manualHash, setManualHash] = useState("");
+  const [copied, setCopied] = useState(false);
 
   const { open } = useAppKit();
   const { address, isConnected } = useAppKitAccount();
@@ -204,7 +209,8 @@ function CryptoPayment({ order, onOrderUpdated }) {
     setPaymentStage("verifying");
     setPaymentError("");
 
-    const verifiedOrder = await verifyOrderPayment(order.id, {
+    const request = verifyPaymentRequest || verifyOrderPayment;
+    const verifiedOrder = await request(order.id, {
       email: order.customer?.email,
       transactionHash: hash,
       payerAddress,
@@ -327,6 +333,29 @@ function CryptoPayment({ order, onOrderUpdated }) {
       setPaymentError(
         getPaymentErrorMessage(error, Boolean(submittedHash), text)
       );
+    }
+  };
+
+  const copyRecipient = async () => {
+    if (!recipientAddress) return;
+    try {
+      await navigator.clipboard.writeText(recipientAddress);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setPaymentError("Cüzdan adresi kopyalanamadı. Adresi seçip kendin kopyalayabilirsin.");
+    }
+  };
+
+  const verifyManualPayment = async (event) => {
+    event.preventDefault();
+    if (!manualHash.trim() || isPaymentBusy || isPaid) return;
+    try {
+      await verifyPayment(manualHash.trim());
+      setManualOpen(false);
+    } catch (error) {
+      setPaymentStage("error");
+      setPaymentError(getPaymentErrorMessage(error, false, text));
     }
   };
 
@@ -475,6 +504,45 @@ function CryptoPayment({ order, onOrderUpdated }) {
         )}
         {getPaymentButtonText()}
       </button>
+
+      <button
+        type="button"
+        className="cryptoPaymentManualToggle"
+        onClick={() => setManualOpen((open) => !open)}
+        disabled={isPaymentBusy || !paymentConfigured}
+      >
+        {manualOpen ? "Manuel ödeme alanını kapat" : "Cüzdan bağlamadan manuel gönder"}
+      </button>
+
+      {manualOpen && (
+        <form className="cryptoPaymentManual" onSubmit={verifyManualPayment}>
+          <strong>Manuel USDT gönderimi</strong>
+          <p>BNB Smart Chain ağında tam olarak <b>{paymentAmount} {paymentToken}</b> gönder. Ağ seçimi yanlış olursa sistem transferi bulamaz.</p>
+          <label>
+            Alıcı cüzdan adresi
+            <span className="cryptoPaymentAddress">
+              <code>{recipientAddress}</code>
+              <button type="button" onClick={copyRecipient}>
+                {copied ? <Check size={16} /> : <Copy size={16} />} {copied ? "Kopyalandı" : "Kopyala"}
+              </button>
+            </span>
+          </label>
+          <label>
+            İşlem hash'i (TxID)
+            <input
+              required
+              value={manualHash}
+              onChange={(event) => setManualHash(event.target.value)}
+              placeholder="0x…"
+              autoComplete="off"
+            />
+          </label>
+          <button type="submit" className="cryptoPaymentManualVerify" disabled={isPaymentBusy}>
+            {isPaymentBusy ? <LoaderCircle className="cryptoPaymentSpinner" size={17} /> : <ShieldCheck size={17} />}
+            Gönderimi doğrula ve devam et
+          </button>
+        </form>
+      )}
 
       <small className="cryptoPaymentGasNote">
         {text(

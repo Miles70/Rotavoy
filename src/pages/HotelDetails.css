@@ -325,6 +325,19 @@
   color: #58736d;
 }
 
+.hotelCheckoutLink {
+  margin-top: 9px;
+  display: inline-flex;
+  width: max-content;
+  align-items: center;
+  border-radius: 9px;
+  padding: 9px 12px;
+  background: #087985;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 850;
+}
+
 .hotelSecureNote {
   margin: 17px 0 0;
   display: flex;

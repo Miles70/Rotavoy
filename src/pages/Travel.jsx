@@ -38,7 +38,7 @@ const services = [
 
 const SHOWCASE_LIMIT = 20;
 const SHOWCASE_SCAN_BATCH = 100;
-const SHOWCASE_MAX_BATCHES = 2;
+const SHOWCASE_MAX_BATCHES = 5;
 const SHOWCASE_REFRESH_MS = 2 * 60 * 1000;
 
 function addDays(days) {
@@ -725,13 +725,20 @@ function Travel() {
                                 {t("travelPage.runtime.totalStayPrice")}
                               </span>
                             </div>
-                            <button
-                              type="button"
-                              disabled
+                            <Link
+                              to="/travel/checkout"
+                              state={{
+                                hotel: selectedHotel,
+                                offer: selectedHotel.offer,
+                                prebook: prebook.data,
+                                checkin,
+                                checkout,
+                                adults,
+                              }}
                               title={t("travelPage.runtime.continueTitle")}
                             >
                               {t("travelPage.runtime.continueBooking")}
-                            </button>
+                            </Link>
                           </div>
                         )}
                       </div>

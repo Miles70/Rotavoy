@@ -243,6 +243,7 @@ function HotelDetails() {
   const [bookingState, setBookingState] = useState("idle");
   const [bookingError, setBookingError] = useState("");
   const [prebook, setPrebook] = useState(null);
+  const [selectedOffer, setSelectedOffer] = useState(null);
   const [localizedDescription, setLocalizedDescription] = useState("");
 
   useEffect(() => {
@@ -399,6 +400,7 @@ function HotelDetails() {
     setBookingState("loading");
     setBookingError("");
     setPrebook(null);
+    setSelectedOffer(offer);
 
     try {
       const response = await prebookHotel(offer.offerId);
@@ -628,6 +630,20 @@ function HotelDetails() {
                       )}
                       {" · "}{t("hotelDetail.totalPrice")}
                     </span>
+                    <Link
+                      className="hotelCheckoutLink"
+                      to="/travel/checkout"
+                      state={{
+                        hotel,
+                        offer: selectedOffer,
+                        prebook: prebook.data,
+                        checkin,
+                        checkout,
+                        adults,
+                      }}
+                    >
+                      Rezervasyon bilgilerine devam et
+                    </Link>
                   </div>
                 </div>
               )}

@@ -25,6 +25,7 @@ const OrderSuccess = lazy(() => import("./pages/OrderSuccess"));
 const CustomerAccount = lazy(() => import("./pages/CustomerAccount"));
 const Travel = lazy(() => import("./pages/Travel"));
 const HotelDetails = lazy(() => import("./pages/HotelDetails"));
+const TravelCheckout = lazy(() => import("./pages/TravelCheckout"));
 const LocalHub = lazy(() => import("./pages/LocalHub"));
 const LocalService = lazy(() => import("./pages/LocalService"));
 const InformationPage = lazy(() => import("./pages/InformationPage"));
@@ -61,6 +62,7 @@ function App() {
             <Route path="/order-success" element={<OrderSuccess />} />
             <Route path="/travel" element={<Travel />} />
             <Route path="/travel/hotels/:hotelId" element={<HotelDetails />} />
+            <Route path="/travel/checkout" element={<TravelCheckout />} />
             <Route path="/local" element={<LocalHub />} />
             <Route path="/local/:serviceKey" element={<LocalService />} />
             <Route path="/account/*" element={<CustomerAccount />} />

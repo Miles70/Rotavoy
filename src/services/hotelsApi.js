@@ -54,7 +54,7 @@ export function searchHotelRates({
   checkin,
   checkout,
   adults,
-  currency = "EUR",
+  currency = "USD",
   guestNationality = "TR",
 }) {
   return hotelRequest("/rates", {
@@ -78,4 +78,25 @@ export function prebookHotel(offerId) {
     method: "POST",
     body: JSON.stringify({ offerId }),
   });
+}
+
+export function bookSandboxHotel({ prebookId, clientReference, holder, guests }) {
+  return hotelRequest("/book-sandbox", {
+    method: "POST",
+    body: JSON.stringify({ prebookId, clientReference, holder, guests }),
+  });
+}
+
+export function createTravelCheckout({ offerId, holder, guests }) {
+  return hotelRequest("/checkout", {
+    method: "POST",
+    body: JSON.stringify({ offerId, holder, guests }),
+  }).then((payload) => payload.booking);
+}
+
+export function verifyTravelPayment(clientReference, { transactionHash, payerAddress }) {
+  return hotelRequest(`/${encodeURIComponent(clientReference)}/verify-payment`, {
+    method: "POST",
+    body: JSON.stringify({ transactionHash, payerAddress }),
+  }).then((payload) => payload.booking);
 }

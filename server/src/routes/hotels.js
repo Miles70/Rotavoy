@@ -9,6 +9,10 @@ import {
   searchNuiteeRates,
 } from "../services/nuiteeApi.js";
 import { getLocalizedHotelDescription } from "../services/hotelTranslation.js";
+import { TravelBooking } from "../models/TravelBooking.js";
+import { getPublicCryptoPaymentConfig } from "../config/cryptoPayment.js";
+import { verifyTravelCryptoPayment } from "../services/travelPaymentVerification.js";
+import crypto from "node:crypto";
 
 export const hotelsRouter = Router();
 
@@ -252,6 +256,24 @@ function normalizePerson(value, fieldName, includeOccupancy = false) {
   return person;
 }
 
+function travelBookingPayload(booking) {
+  return {
+    id: booking.clientReference,
+    clientReference: booking.clientReference,
+    status: booking.status,
+    paymentStatus: booking.paymentStatus,
+    payment: booking.payment || {},
+    total: booking.total,
+    currency: booking.currency,
+    customer: { fullName: `${booking.holder?.firstName || ""} ${booking.holder?.lastName || ""}`.trim(), email: booking.holder?.email || "" },
+    reservation: sanitizeProviderResponse(booking.providerBooking || {}),
+  };
+}
+
+function travelReference() {
+  return `TRV-${new Date().toISOString().slice(0, 10).replaceAll("-", "")}-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
+}
+
 hotelsRouter.get("/status", (request, response) => {
   response.json(getNuiteeStatus());
 });
@@ -382,7 +404,7 @@ hotelsRouter.post("/prebook", bookingLimiter, async (request, response, next) =>
   }
 });
 
-hotelsRouter.post("/book-sandbox", bookingLimiter, async (request, response, next) => {
+hotelsRouter.post("/checkout", bookingLimiter, async (request, response, next) => {
   try {
     const guests = Array.isArray(request.body?.guests)
       ? request.body.guests.map((guest, index) =>
@@ -394,21 +416,55 @@ hotelsRouter.post("/book-sandbox", bookingLimiter, async (request, response, nex
       throw requestError("guests must contain between 1 and 20 entries.");
     }
 
-    const result = await bookNuiteeSandbox({
-      prebookId: requiredText(request.body?.prebookId, "prebookId", 500),
-      clientReference: requiredText(
-        request.body?.clientReference,
-        "clientReference",
-        100,
-      ),
-      holder: normalizePerson(request.body?.holder, "holder"),
-      guests,
-      customTags: { CHANNEL: "ROTAVOY_SANDBOX" },
+    const holder = normalizePerson(request.body?.holder, "holder");
+    const offerId = requiredText(request.body?.offerId, "offerId", 5000);
+    const prebook = await prebookNuiteeRate({ offerId, usePaymentSdk: false });
+    const prebookData = prebook?.data || {};
+    const prebookId = requiredText(prebookData?.prebookId || prebookData?.id, "prebookId", 500);
+    const total = Number(prebookData?.price);
+    const currency = String(prebookData?.currency || "USD").toUpperCase();
+    if (!Number.isFinite(total) || total <= 0) throw requestError("The hotel price could not be confirmed.");
+    if (currency !== "USD") throw requestError("Hotel checkout currently requires a USD rate.");
+    const payment = getPublicCryptoPaymentConfig();
+    if (!payment.configured) {
+      const error = new Error("Crypto payment is not configured on the server.");
+      error.statusCode = 503;
+      throw error;
+    }
+    const booking = await TravelBooking.create({
+      clientReference: travelReference(), offerId, prebookId, holder, guests,
+      total: Math.round((total + Number.EPSILON) * 100) / 100,
+      currency,
+      payment: { ...payment, expectedAmount: Number(total).toFixed(2), currency: payment.token },
+      paymentExpiresAt: new Date(Date.now() + 20 * 60 * 1000),
     });
-
     response.set("Cache-Control", "no-store");
-    response.status(201).json(result);
+    return response.status(201).json({ booking: travelBookingPayload(booking) });
   } catch (error) {
     next(error);
   }
+});
+
+hotelsRouter.post("/:clientReference/verify-payment", bookingLimiter, async (request, response, next) => {
+  try {
+    const clientReference = requiredText(request.params.clientReference, "clientReference", 100);
+    const booking = await TravelBooking.findOne({ clientReference });
+    if (!booking) return response.status(404).json({ message: "Travel booking not found." });
+    const paidBooking = await verifyTravelCryptoPayment({ booking, transactionHash: request.body?.transactionHash, payerAddress: request.body?.payerAddress });
+    if (paidBooking.status === "confirmed") return response.json({ booking: travelBookingPayload(paidBooking) });
+    try {
+      const result = await bookNuiteeSandbox({ prebookId: paidBooking.prebookId, clientReference, holder: paidBooking.holder, guests: paidBooking.guests, customTags: { CHANNEL: "ROTAVOY_SANDBOX" } });
+      paidBooking.status = "confirmed";
+      paidBooking.providerBooking = sanitizeProviderResponse(result);
+      paidBooking.failureReason = "";
+      await paidBooking.save();
+      response.set("Cache-Control", "no-store");
+      return response.json({ booking: travelBookingPayload(paidBooking) });
+    } catch (error) {
+      paidBooking.status = "failed";
+      paidBooking.failureReason = String(error.message || "Booking failed after payment.").slice(0, 500);
+      await paidBooking.save();
+      throw error;
+    }
+  } catch (error) { next(error); }
 });
