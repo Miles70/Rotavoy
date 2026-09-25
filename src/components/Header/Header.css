@@ -283,6 +283,17 @@
   display: none;
 }
 
+/* Travel is a destination cue: keep its colour current moving even when the
+   operating system requests reduced motion. The global accessibility fallback
+   otherwise collapses every animation to one 0.01ms frame. */
+@media (prefers-reduced-motion: reduce) {
+  .navLinks a.travelNavLink,
+  .navLinks a.travelNavLink:hover,
+  .navLinks a.travelNavLink.active {
+    animation: travelNavGradientShift 6s ease infinite !important;
+  }
+}
+
 .headerActions {
   display: flex;
   align-items: center;
