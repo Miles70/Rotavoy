@@ -14,6 +14,8 @@ const paymentTranslations = {
       creatingOrder: "Creating order...",
       placeCryptoOrder: "Create Crypto Order",
       serverError: "The order could not be created. Please try again.",
+      shippingMethod: "Shipping Method",
+      shippingLive: "Shipping price and route are checked live before the order is created.",
     },
     orderSuccessPage: {
       tag: "Payment confirmed",
@@ -81,6 +83,8 @@ const paymentTranslations = {
       creatingOrder: "Sipariş oluşturuluyor...",
       placeCryptoOrder: "Kripto Siparişi Oluştur",
       serverError: "Sipariş oluşturulamadı. Lütfen tekrar dene.",
+      shippingMethod: "Kargo Yöntemi",
+      shippingLive: "Kargo ücreti ve teslimat rotası sipariş oluşturulmadan önce canlı olarak kontrol edilir.",
     },
     orderSuccessPage: {
       tag: "Ödeme onaylandı",
@@ -148,6 +152,8 @@ const paymentTranslations = {
       creatingOrder: "Создание заказа...",
       placeCryptoOrder: "Создать криптозаказ",
       serverError: "Не удалось создать заказ. Попробуйте ещё раз.",
+      shippingMethod: "Способ доставки",
+      shippingLive: "Стоимость и маршрут доставки проверяются в реальном времени до создания заказа.",
     },
     orderSuccessPage: {
       tag: "Оплата подтверждена",
@@ -215,6 +221,8 @@ const paymentTranslations = {
       creatingOrder: "جارٍ إنشاء الطلب...",
       placeCryptoOrder: "إنشاء طلب بالدفع الرقمي",
       serverError: "تعذر إنشاء الطلب. يرجى المحاولة مرة أخرى.",
+      shippingMethod: "طريقة الشحن",
+      shippingLive: "يتم التحقق من تكلفة ومسار الشحن مباشرة قبل إنشاء الطلب.",
     },
     orderSuccessPage: {
       tag: "تم تأكيد الدفع",
@@ -282,6 +290,8 @@ const paymentTranslations = {
       creatingOrder: "正在创建订单...",
       placeCryptoOrder: "创建加密货币订单",
       serverError: "无法创建订单，请重试。",
+      shippingMethod: "配送方式",
+      shippingLive: "创建订单前会实时核对配送费用和路线。",
     },
     orderSuccessPage: {
       tag: "付款已确认",

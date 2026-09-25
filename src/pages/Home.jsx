@@ -24,8 +24,8 @@ function Home() {
   return (
     <>
       <Seo
-        title="Rotavoy | Global Marketplace"
-        description="Discover electronics, fashion, home, lifestyle and more on Rotavoy, a global marketplace built for modern shopping."
+        title="Rotavoy | Global Marketplace & Travel"
+        description="Shop global products and discover live hotel availability with Rotavoy Marketplace & Travel."
         path="/"
         jsonLd={structuredData}
       />

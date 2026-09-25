@@ -4,6 +4,7 @@ import {
   ArrowRight,
   ChevronDown,
   Heart,
+  Hotel,
   LogOut,
   MapPin,
   Package,
@@ -179,8 +180,11 @@ function Header() {
 
             <NavLink
               to="/travel"
-              className={({ isActive }) => (isActive ? "active" : "")}
+              className={({ isActive }) =>
+                `travelNavLink${isActive ? " active" : ""}`
+              }
             >
+              <Hotel size={15} />
               {t("nav.travel")}
             </NavLink>
 
@@ -188,6 +192,18 @@ function Header() {
           </nav>
 
           <div className="headerActions">
+            <NavLink
+              to="/travel"
+              className={({ isActive }) =>
+                `mobileTravelButton${isActive ? " active" : ""}`
+              }
+              aria-label={t("nav.travel")}
+              title={t("nav.travel")}
+            >
+              <Hotel size={18} />
+              <span>{t("nav.travel")}</span>
+            </NavLink>
+
             <div className="customerAccountControl" ref={accountControlRef}>
               <button
                 type="button"

@@ -163,6 +163,41 @@
   box-shadow: none;
 }
 
+.cryptoPaymentManualToggle {
+  width: 100%;
+  margin-top: 10px;
+  padding: 11px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 13px;
+  background: #fff;
+  color: var(--color-secondary);
+  font: 800 13px inherit;
+  cursor: pointer;
+}
+
+.cryptoPaymentManualToggle:disabled { cursor: not-allowed; opacity: .58; }
+
+.cryptoPaymentManual {
+  margin-top: 14px;
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(79, 99, 236, .2);
+  border-radius: 15px;
+  background: #f8faff;
+}
+
+.cryptoPaymentManual > strong { color: var(--color-text); font-size: 14px; }
+.cryptoPaymentManual p { margin: -4px 0 0; color: var(--color-text-secondary); font-size: 12px; line-height: 1.55; }
+.cryptoPaymentManual label { display: grid; gap: 7px; color: var(--color-text); font-size: 12px; font-weight: 800; }
+.cryptoPaymentManual input { width: 100%; box-sizing: border-box; border: 1px solid var(--color-border); border-radius: 10px; padding: 11px; color: var(--color-text); font: 13px monospace; }
+.cryptoPaymentAddress { display: flex; gap: 8px; align-items: center; border: 1px solid var(--color-border); border-radius: 10px; padding: 8px 9px; background: #fff; }
+.cryptoPaymentAddress code { flex: 1; min-width: 0; overflow-wrap: anywhere; color: var(--color-text); font-size: 11px; }
+.cryptoPaymentAddress button,.cryptoPaymentManualVerify { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 0; border-radius: 9px; cursor: pointer; font-weight: 850; }
+.cryptoPaymentAddress button { padding: 7px 9px; background: #e8eefc; color: var(--color-secondary); white-space: nowrap; }
+.cryptoPaymentManualVerify { min-height: 42px; background: var(--color-secondary); color: #fff; }
+.cryptoPaymentManualVerify:disabled { cursor: wait; opacity: .6; }
+
 .cryptoPaymentGasNote {
   display: block;
   margin-top: 10px;

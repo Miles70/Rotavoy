@@ -67,3 +67,24 @@ body:has(.travelPage) .headerWrapper .cartButton:hover {
 body:has(.travelPage) .headerWrapper .cartCount {
   background: #078b96;
 }
+
+body:has(.travelPage) .headerWrapper .navLinks a.travelNavLink,
+body:has(.travelPage) .headerWrapper .navLinks a.travelNavLink:visited {
+  color: #ffffff;
+}
+
+body:has(.travelPage) .headerWrapper .navLinks a.travelNavLink:hover,
+body:has(.travelPage) .headerWrapper .navLinks a.travelNavLink.active,
+body:has(.travelPage) .headerWrapper .navLinks a.travelNavLink.active:visited {
+  border-color: rgba(7, 139, 150, 0.42);
+  background: linear-gradient(270deg, #ff796c, #ffd166, #12c7bb, #168ed0, #ff796c);
+  background-size: 600% 600%;
+  animation: travelNavGradientShift 6s ease infinite;
+  color: #ffffff;
+  text-shadow: 0 1px 10px rgba(0, 41, 47, 0.28);
+}
+
+body:has(.travelPage) .headerWrapper .navLinks a.travelNavLink svg {
+  color: currentColor;
+  stroke: currentColor;
+}

@@ -331,7 +331,7 @@ async function calculateShipping(lines, destination, requestedLogisticName = "")
 
   if (cjLines.length !== lines.length) {
     const error = new Error(
-      "Mixed supplier carts are not supported yet. Please place CJ products in a separate order.",
+      "Mixed supplier carts are not supported yet. Please place Rotavoy products in a separate order.",
     );
     error.statusCode = 409;
     throw error;
@@ -349,7 +349,7 @@ async function calculateShipping(lines, destination, requestedLogisticName = "")
 
   const options = normalizeFreightOptions(freightRows);
   if (options.length === 0) {
-    const error = new Error("No CJ shipping method is available for this address.");
+    const error = new Error("No Rotavoy shipping method is available for this address.");
     error.statusCode = 409;
     throw error;
   }

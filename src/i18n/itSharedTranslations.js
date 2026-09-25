@@ -111,6 +111,8 @@ const itSharedTranslations = {
       creatingOrder: "Creazione ordine...",
       placeCryptoOrder: "Crea ordine con criptovaluta",
       serverError: "Impossibile creare l'ordine. Riprova.",
+      shippingMethod: "Metodo di spedizione",
+      shippingLive: "Il costo e il percorso di spedizione vengono verificati in tempo reale prima della creazione dell'ordine.",
     },
     orderSuccessPage: {
       tag: "Pagamento confermato",

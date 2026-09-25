@@ -221,6 +221,41 @@
   transition: color var(--transition-fast);
 }
 
+.navLinks a.travelNavLink {
+  min-height: 38px;
+  padding: 0 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(0, 129, 145, 0.5);
+  border-radius: 999px;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: linear-gradient(270deg, #ff796c, #ffd166, #12c7bb, #168ed0, #ff796c);
+  background-size: 600% 600%;
+  color: #ffffff;
+  text-shadow: 0 1px 8px rgba(0, 50, 60, .32);
+  box-shadow: 0 9px 22px rgba(0, 131, 144, .24), 0 0 0 3px rgba(255, 201, 105, .12);
+  animation: travelNavGradientShift 6s ease infinite;
+}
+
+.navLinks a.travelNavLink:hover,
+.navLinks a.travelNavLink.active {
+  border-color: rgba(7, 139, 150, 0.38);
+  background: linear-gradient(270deg, #ff796c, #ffd166, #12c7bb, #168ed0, #ff796c);
+  background-size: 600% 600%;
+  color: #ffffff;
+  box-shadow: 0 11px 25px rgba(7, 118, 128, 0.22);
+  transform: translateY(-1px);
+}
+
+@keyframes travelNavGradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 .navLinks a::after {
   content: "";
   position: absolute;
@@ -244,12 +279,31 @@
   transform: scaleX(1);
 }
 
+.navLinks a.travelNavLink::after {
+  display: none;
+}
+
+/* Travel is a destination cue: keep its colour current moving even when the
+   operating system requests reduced motion. The global accessibility fallback
+   otherwise collapses every animation to one 0.01ms frame. */
+@media (prefers-reduced-motion: reduce) {
+  .navLinks a.travelNavLink,
+  .navLinks a.travelNavLink:hover,
+  .navLinks a.travelNavLink.active {
+    animation: travelNavGradientShift 6s ease infinite !important;
+  }
+}
+
 .headerActions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
   flex: 0 0 auto;
+}
+
+.mobileTravelButton {
+  display: none;
 }
 
 .walletConnectButton {
@@ -358,6 +412,28 @@
     display: none;
   }
 
+  .mobileTravelButton {
+    min-height: 40px;
+    padding: 0 11px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid rgba(7, 139, 150, 0.24);
+    border-radius: 999px;
+    background: rgba(7, 139, 150, 0.08);
+    color: #087985;
+    font-size: 12px;
+    font-weight: 850;
+    white-space: nowrap;
+  }
+
+  .mobileTravelButton.active {
+    border-color: rgba(7, 139, 150, 0.4);
+    background: linear-gradient(135deg, #08737d, #0ba2a7);
+    color: #ffffff;
+  }
+
   .siteHeader {
     min-height: 68px;
   }
@@ -391,6 +467,15 @@
 
   .headerActions {
     gap: 5px;
+  }
+
+  .mobileTravelButton {
+    width: 40px;
+    padding: 0;
+  }
+
+  .mobileTravelButton span {
+    display: none;
   }
 
   .walletConnectButton {
