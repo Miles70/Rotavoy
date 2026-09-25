@@ -229,18 +229,38 @@
   gap: 6px;
   border: 1px solid rgba(7, 139, 150, 0.2);
   border-radius: 999px;
-  background: linear-gradient(135deg, rgba(7, 139, 150, 0.09), rgba(240, 128, 104, 0.08));
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: linear-gradient(120deg, rgba(23, 189, 193, 0.14), rgba(255, 184, 110, 0.2), rgba(255, 121, 123, 0.16), rgba(23, 189, 193, 0.14));
+  background-size: 280% 280%;
   color: #087985;
   box-shadow: 0 8px 20px rgba(7, 118, 128, 0.08);
+  animation: travelNavTide 6s ease-in-out infinite, travelNavFloat 3.4s ease-in-out infinite;
 }
 
 .navLinks a.travelNavLink:hover,
 .navLinks a.travelNavLink.active {
   border-color: rgba(7, 139, 150, 0.38);
-  background: linear-gradient(135deg, #08737d, #0ba2a7);
+  background: linear-gradient(120deg, #087d89, #10aeb0, #ff9a70, #087d89);
+  background-size: 280% 280%;
   color: #ffffff;
   box-shadow: 0 11px 25px rgba(7, 118, 128, 0.22);
   transform: translateY(-1px);
+}
+
+@keyframes travelNavTide {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes travelNavFloat {
+  0%, 100% { box-shadow: 0 8px 20px rgba(7, 118, 128, 0.08); }
+  50% { box-shadow: 0 11px 25px rgba(255, 143, 108, 0.2), 0 0 0 3px rgba(82, 211, 206, 0.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .navLinks a.travelNavLink { animation: none; }
 }
 
 .navLinks a::after {
