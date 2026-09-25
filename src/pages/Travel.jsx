@@ -41,8 +41,8 @@ const SHOWCASE_LIMIT = 20;
 // catalog window, then keep previously found live offers while new results
 // replenish the showcase. This prevents the 5★ shelf from jumping from 20
 // cards down to 11–14 during a background refresh.
-const SHOWCASE_SCAN_BATCH = 200;
-const SHOWCASE_MAX_BATCHES = 8;
+const SHOWCASE_SCAN_BATCH = 100;
+const SHOWCASE_MAX_BATCHES = 5;
 const SHOWCASE_REFRESH_MS = 2 * 60 * 1000;
 
 function addDays(days) {
