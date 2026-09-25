@@ -518,3 +518,42 @@ function CryptoPayment({ order, onOrderUpdated, verifyPaymentRequest, forceDispl
 
       {manualOpen && (
         <form className="cryptoPaymentManual" onSubmit={verifyManualPayment}>
+          <strong>Manuel USDT gönderimi</strong>
+          <p>BNB Smart Chain ağında tam olarak <b>{paymentAmount} {paymentToken}</b> gönder. Ağ seçimi yanlış olursa sistem transferi bulamaz.</p>
+          <label>
+            Alıcı cüzdan adresi
+            <span className="cryptoPaymentAddress">
+              <code>{recipientAddress}</code>
+              <button type="button" onClick={copyRecipient}>
+                {copied ? <Check size={16} /> : <Copy size={16} />} {copied ? "Kopyalandı" : "Kopyala"}
+              </button>
+            </span>
+          </label>
+          <label>
+            İşlem hash'i (TxID)
+            <input
+              required
+              value={manualHash}
+              onChange={(event) => setManualHash(event.target.value)}
+              placeholder="0x…"
+              autoComplete="off"
+            />
+          </label>
+          <button type="submit" className="cryptoPaymentManualVerify" disabled={isPaymentBusy}>
+            {isPaymentBusy ? <LoaderCircle className="cryptoPaymentSpinner" size={17} /> : <ShieldCheck size={17} />}
+            Gönderimi doğrula ve devam et
+          </button>
+        </form>
+      )}
+
+      <small className="cryptoPaymentGasNote">
+        {text(
+          "orderSuccessPage.gasNote",
+          "A small amount of BNB is required in the connected wallet for gas."
+        )}
+      </small>
+    </section>
+  );
+}
+
+export default CryptoPayment;
