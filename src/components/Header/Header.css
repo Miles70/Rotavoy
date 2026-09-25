@@ -232,27 +232,27 @@
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  background: linear-gradient(112deg, #007c8b 0%, #12b8b2 28%, #ffd16c 52%, #ff886f 74%, #007c8b 100%);
-  background-size: 320% 320%;
+  background: linear-gradient(112deg, #007b8d 0%, #00c8bc 24%, #ffe06a 45%, #ff806c 64%, #00b9bd 82%, #007b8d 100%);
+  background-size: 420% 100%;
   color: #ffffff;
   text-shadow: 0 1px 8px rgba(0, 50, 60, .32);
   box-shadow: 0 9px 22px rgba(0, 131, 144, .24), 0 0 0 3px rgba(255, 201, 105, .12);
-  animation: travelNavTide 6s ease-in-out infinite, travelNavFloat 3.4s ease-in-out infinite;
+  animation: travelNavTide 2.8s linear infinite, travelNavFloat 2.8s ease-in-out infinite;
 }
 
 .navLinks a.travelNavLink:hover,
 .navLinks a.travelNavLink.active {
   border-color: rgba(7, 139, 150, 0.38);
-  background: linear-gradient(112deg, #006f80 0%, #10bfb7 28%, #ffcb64 52%, #ff765f 74%, #006f80 100%);
-  background-size: 320% 320%;
+  background: linear-gradient(112deg, #007b8d 0%, #00c8bc 24%, #ffe06a 45%, #ff806c 64%, #00b9bd 82%, #007b8d 100%);
+  background-size: 420% 100%;
   color: #ffffff;
   box-shadow: 0 11px 25px rgba(7, 118, 128, 0.22);
   transform: translateY(-1px);
 }
 
 @keyframes travelNavTide {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
 }
 
 @keyframes travelNavFloat {
@@ -288,7 +288,26 @@
 }
 
 .navLinks a.travelNavLink::after {
-  display: none;
+  content: "";
+  position: absolute;
+  top: -60%;
+  bottom: -60%;
+  left: -52%;
+  width: 36%;
+  display: block;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08) 16%, rgba(255, 255, 255, 0.82) 50%, rgba(255, 255, 255, 0.12) 84%, transparent);
+  filter: blur(1px);
+  transform: skewX(-22deg) translateX(-150%);
+  animation: travelNavGlint 2.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes travelNavGlint {
+  0%, 12% { opacity: 0; transform: skewX(-22deg) translateX(-150%); }
+  28% { opacity: 0.78; }
+  58% { opacity: 0.58; }
+  78%, 100% { opacity: 0; transform: skewX(-22deg) translateX(520%); }
 }
 
 .headerActions {
