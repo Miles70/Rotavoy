@@ -194,8 +194,6 @@ const fr = {
     browseProducts: "Voir les produits",
     emptyError: "Votre panier est vide.",
     requiredError: "Veuillez remplir tous les champs obligatoires.",
-    invalidEmail: "Saisissez une adresse e-mail valide.",
-    invalidPhone: "Saisissez un numéro de téléphone valide.",
     generalCategory: "Général",
   },
   orderSuccessPage: {

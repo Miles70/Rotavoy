@@ -194,8 +194,6 @@ const pt = {
     browseProducts: "Ver produtos",
     emptyError: "Seu carrinho está vazio.",
     requiredError: "Preencha todos os campos obrigatórios.",
-    invalidEmail: "Insira um endereço de e-mail válido.",
-    invalidPhone: "Insira um número de telefone válido.",
     generalCategory: "Geral",
   },
   orderSuccessPage: {

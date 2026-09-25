@@ -194,8 +194,6 @@ const en = {
     browseProducts: "Browse Products",
     emptyError: "Your cart is empty.",
     requiredError: "Please fill in all required fields.",
-    invalidEmail: "Enter a valid email address.",
-    invalidPhone: "Enter a valid phone number.",
     generalCategory: "General",
   },
   orderSuccessPage: {

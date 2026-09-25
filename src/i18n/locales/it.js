@@ -194,8 +194,6 @@ const it = {
     browseProducts: "Sfoglia i prodotti",
     emptyError: "Il carrello è vuoto.",
     requiredError: "Compila tutti i campi obbligatori.",
-    invalidEmail: "Inserisci un indirizzo e-mail valido.",
-    invalidPhone: "Inserisci un numero di telefono valido.",
     generalCategory: "Generale",
   },
   orderSuccessPage: {

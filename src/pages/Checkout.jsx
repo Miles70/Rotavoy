@@ -215,22 +215,7 @@ function Checkout() {
       return;
     }
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
-      setError(text("checkoutPage.invalidEmail", "Lütfen geçerli bir e-posta adresi gir."));
-      return;
-    }
-
-    if (formData.phone.replace(/\D/g, "").length < 7) {
-      setError(text("checkoutPage.invalidPhone", "Lütfen geçerli bir telefon numarası gir."));
-      return;
-    }
-
-    if (shippingError) {
-      setError(shippingError);
-      return;
-    }
-
-    if (!shippingQuoted) {
+    if (!shippingQuoted || shippingError) {
       setError(
         text(
           "checkoutPage.shippingRequired",
@@ -569,7 +554,13 @@ function Checkout() {
           <button
             type="submit"
             className="checkoutSubmitButton"
-            disabled={isSubmitting}
+            disabled={
+              isSubmitting ||
+              isShippingLoading ||
+              Boolean(shippingError) ||
+              !validCountryCode ||
+              !shippingQuoted
+            }
           >
             {isSubmitting
               ? text("checkoutPage.creatingOrder", "Creating order...")
