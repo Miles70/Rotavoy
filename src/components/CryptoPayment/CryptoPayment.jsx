@@ -146,7 +146,7 @@ function getPaymentErrorMessage(error, transactionWasSubmitted, text) {
   );
 }
 
-function CryptoPayment({ order, onOrderUpdated, verifyPaymentRequest }) {
+function CryptoPayment({ order, onOrderUpdated, verifyPaymentRequest, forceDisplay = false }) {
   const { t } = useLanguage();
   const [paymentStage, setPaymentStage] = useState("idle");
   const [paymentError, setPaymentError] = useState("");
@@ -170,7 +170,9 @@ function CryptoPayment({ order, onOrderUpdated, verifyPaymentRequest }) {
     setTransactionHash(order?.payment?.transactionHash || "");
   }, [order?.payment?.transactionHash]);
 
-  if (!order || order.paymentMethod !== "crypto") return null;
+  // A travel checkout must never become a blank screen. Its payment payload
+  // is validated visibly below, while ordinary orders retain their guard.
+  if (!order || (!forceDisplay && order.paymentMethod !== "crypto")) return null;
 
   const text = (key, fallback) => {
     const value = t(key);
@@ -516,42 +518,3 @@ function CryptoPayment({ order, onOrderUpdated, verifyPaymentRequest }) {
 
       {manualOpen && (
         <form className="cryptoPaymentManual" onSubmit={verifyManualPayment}>
-          <strong>Manuel USDT gönderimi</strong>
-          <p>BNB Smart Chain ağında tam olarak <b>{paymentAmount} {paymentToken}</b> gönder. Ağ seçimi yanlış olursa sistem transferi bulamaz.</p>
-          <label>
-            Alıcı cüzdan adresi
-            <span className="cryptoPaymentAddress">
-              <code>{recipientAddress}</code>
-              <button type="button" onClick={copyRecipient}>
-                {copied ? <Check size={16} /> : <Copy size={16} />} {copied ? "Kopyalandı" : "Kopyala"}
-              </button>
-            </span>
-          </label>
-          <label>
-            İşlem hash'i (TxID)
-            <input
-              required
-              value={manualHash}
-              onChange={(event) => setManualHash(event.target.value)}
-              placeholder="0x…"
-              autoComplete="off"
-            />
-          </label>
-          <button type="submit" className="cryptoPaymentManualVerify" disabled={isPaymentBusy}>
-            {isPaymentBusy ? <LoaderCircle className="cryptoPaymentSpinner" size={17} /> : <ShieldCheck size={17} />}
-            Gönderimi doğrula ve devam et
-          </button>
-        </form>
-      )}
-
-      <small className="cryptoPaymentGasNote">
-        {text(
-          "orderSuccessPage.gasNote",
-          "A small amount of BNB is required in the connected wallet for gas."
-        )}
-      </small>
-    </section>
-  );
-}
-
-export default CryptoPayment;

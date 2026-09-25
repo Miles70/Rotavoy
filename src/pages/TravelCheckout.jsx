@@ -127,6 +127,7 @@ function TravelCheckout() {
                 order={booking}
                 onOrderUpdated={setBooking}
                 verifyPaymentRequest={verifyTravelPayment}
+                forceDisplay
               />
             ) : (
             <form onSubmit={submit} className="travelCheckoutForm">
