@@ -37,8 +37,12 @@ const services = [
 ];
 
 const SHOWCASE_LIMIT = 20;
-const SHOWCASE_SCAN_BATCH = 100;
-const SHOWCASE_MAX_BATCHES = 5;
+// Nuitee availability can vary from one request to the next. Scan a wider
+// catalog window, then keep previously found live offers while new results
+// replenish the showcase. This prevents the 5★ shelf from jumping from 20
+// cards down to 11–14 during a background refresh.
+const SHOWCASE_SCAN_BATCH = 200;
+const SHOWCASE_MAX_BATCHES = 8;
 const SHOWCASE_REFRESH_MS = 2 * 60 * 1000;
 
 function addDays(days) {
@@ -261,7 +265,23 @@ function Travel() {
         offset += hotelIds.length;
       }
 
-      setShowcaseHotels(collected.slice(0, SHOWCASE_LIMIT));
+      setShowcaseHotels((currentHotels) => {
+        const merged = [];
+        const mergedIds = new Set();
+
+        for (const hotel of [...collected, ...currentHotels]) {
+          if (!hotel?.hotelId || !hotel?.offer?.offerId || mergedIds.has(hotel.hotelId)) {
+            continue;
+          }
+
+          mergedIds.add(hotel.hotelId);
+          merged.push(hotel);
+
+          if (merged.length >= SHOWCASE_LIMIT) break;
+        }
+
+        return merged;
+      });
       setShowcaseState("success");
     } catch (error) {
       if (!silent) {
