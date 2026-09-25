@@ -578,7 +578,10 @@ function HotelDetails() {
               ) : offers.length ? (
                 <div className="hotelOffers">
                   {offers.map((offer) => (
-                    <article key={offer.offerId} className="hotelOffer">
+                    <article
+                      key={offer.offerId}
+                      className={`hotelOffer ${selectedOffer?.offerId === offer.offerId ? "hotelOffer--selected" : ""}`}
+                    >
                       <div>
                         <BedDouble size={19} />
                         <strong>
@@ -594,20 +597,25 @@ function HotelDetails() {
                       </b>
                       <button
                         type="button"
-                        onClick={() => handlePrebook(offer)}
-                        disabled={bookingState === "loading"}
+                        onClick={() => setSelectedOffer(offer)}
+                        aria-pressed={selectedOffer?.offerId === offer.offerId}
                       >
-                        {bookingState === "loading" ? (
-                          <>
-                            <LoaderCircle className="travelSpin" size={17} />
-                            {t("hotelDetail.preparing")}
-                          </>
-                        ) : (
-                          t("hotelDetail.book")
-                        )}
+                        {selectedOffer?.offerId === offer.offerId ? "Seçildi" : "Bu odayı seç"}
                       </button>
                     </article>
                   ))}
+                  <button
+                    type="button"
+                    className="hotelBookSelected"
+                    onClick={() => selectedOffer && handlePrebook(selectedOffer)}
+                    disabled={!selectedOffer || bookingState === "loading"}
+                  >
+                    {bookingState === "loading" ? (
+                      <><LoaderCircle className="travelSpin" size={17} /> {t("hotelDetail.preparing")}</>
+                    ) : (
+                      t("hotelDetail.book")
+                    )}
+                  </button>
                 </div>
               ) : (
                 <p className="hotelMuted">

@@ -295,6 +295,11 @@
   opacity: 0.7;
 }
 
+.hotelOffer--selected { border-color: #0b9ba0; box-shadow: 0 0 0 3px rgba(11, 155, 160, .12); }
+.hotelOffer--selected > button { background: #e4f6f5; color: #086f79; }
+.hotelBookSelected { width: 100%; min-height: 48px; border: 0; border-radius: 12px; background: linear-gradient(135deg, #086f79, #0b9ba0); color: #fff; font: 900 .95rem inherit; cursor: pointer; }
+.hotelBookSelected:disabled { opacity: .55; cursor: not-allowed; }
+
 .hotelBookingMessage {
   margin: 15px 0 0;
   padding: 13px;
