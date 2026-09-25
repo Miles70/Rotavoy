@@ -194,6 +194,8 @@ const ar = {
     browseProducts: "تصفح المنتجات",
     emptyError: "سلة التسوق فارغة.",
     requiredError: "يرجى ملء جميع الحقول المطلوبة.",
+    invalidEmail: "أدخل عنوان بريد إلكتروني صحيحًا.",
+    invalidPhone: "أدخل رقم هاتف صحيحًا.",
     generalCategory: "عام",
   },
   orderSuccessPage: {

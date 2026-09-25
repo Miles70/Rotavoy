@@ -194,6 +194,8 @@ const ru = {
     browseProducts: "Смотреть товары",
     emptyError: "Ваша корзина пуста.",
     requiredError: "Пожалуйста, заполните все обязательные поля.",
+    invalidEmail: "Введите корректный адрес электронной почты.",
+    invalidPhone: "Введите корректный номер телефона.",
     generalCategory: "Общее",
   },
   orderSuccessPage: {

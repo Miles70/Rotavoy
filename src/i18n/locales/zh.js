@@ -194,6 +194,8 @@ const zh = {
     browseProducts: "浏览商品",
     emptyError: "你的购物车是空的。",
     requiredError: "请填写所有必填字段。",
+    invalidEmail: "请输入有效的电子邮箱地址。",
+    invalidPhone: "请输入有效的电话号码。",
     generalCategory: "通用",
   },
   orderSuccessPage: {

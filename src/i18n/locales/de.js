@@ -194,6 +194,8 @@ const de = {
     browseProducts: "Produkte ansehen",
     emptyError: "Dein Warenkorb ist leer.",
     requiredError: "Bitte fülle alle Pflichtfelder aus.",
+    invalidEmail: "Gib eine gültige E-Mail-Adresse ein.",
+    invalidPhone: "Gib eine gültige Telefonnummer ein.",
     generalCategory: "Allgemein",
   },
   orderSuccessPage: {

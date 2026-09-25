@@ -194,6 +194,8 @@ const tr = {
     browseProducts: "Ürünlere Git",
     emptyError: "Sepetin boş.",
     requiredError: "Lütfen zorunlu alanların tamamını doldur.",
+    invalidEmail: "Lütfen geçerli bir e-posta adresi gir.",
+    invalidPhone: "Lütfen geçerli bir telefon numarası gir.",
     generalCategory: "Genel",
   },
   orderSuccessPage: {
