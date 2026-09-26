@@ -77,7 +77,7 @@
   background:
     radial-gradient(
       circle at 90% 20%,
-      rgba(240, 24, 96, 0.1),
+      rgba(10, 168, 255, 0.1),
       transparent 30%
     ),
     #ffffff;
@@ -167,7 +167,7 @@
 .categoryQuickLink:hover {
   border-color: var(--color-primary-border);
   color: var(--color-primary);
-  box-shadow: 0 10px 22px rgba(240, 24, 96, 0.08);
+  box-shadow: 0 10px 22px rgba(10, 168, 255, 0.08);
   transform: translateY(-2px);
 }
 
@@ -288,7 +288,7 @@
   background:
     radial-gradient(
       circle at 12% 30%,
-      rgba(240, 24, 96, 0.16),
+      rgba(10, 168, 255, 0.16),
       transparent 30%
     ),
     linear-gradient(135deg, #0a0c11, #181b24);
@@ -299,7 +299,7 @@
   background:
     radial-gradient(
       circle at 12% 30%,
-      rgba(240, 24, 96, 0.24),
+      rgba(10, 168, 255, 0.24),
       transparent 34%
     ),
     linear-gradient(135deg, #130b10, #24141c);
