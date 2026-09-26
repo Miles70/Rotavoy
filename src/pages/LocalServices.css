@@ -14,7 +14,7 @@
   align-items: center;
   min-height: 30px;
   padding: 0 12px;
-  border: 1px solid rgba(240, 24, 96, 0.16);
+  border: 1px solid rgba(10, 168, 255, 0.16);
   border-radius: 999px;
   background: var(--color-primary-soft);
   color: var(--color-primary);
@@ -55,7 +55,7 @@
   border: 1px solid var(--color-border);
   border-radius: 24px;
   background:
-    radial-gradient(circle at 90% 0%, rgba(240, 24, 96, 0.1), transparent 34%),
+    radial-gradient(circle at 90% 0%, rgba(10, 168, 255, 0.1), transparent 34%),
     #ffffff;
   color: var(--color-text);
   box-shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
@@ -67,7 +67,7 @@
 }
 
 .localServiceCard:hover {
-  border-color: rgba(240, 24, 96, 0.28);
+  border-color: rgba(10, 168, 255, 0.28);
   box-shadow: 0 24px 65px rgba(15, 23, 42, 0.14);
   transform: translateY(-5px);
 }
@@ -161,7 +161,7 @@
   border: 1px solid var(--color-border);
   border-radius: 30px;
   background:
-    radial-gradient(circle at 100% 0%, rgba(240, 24, 96, 0.12), transparent 34%),
+    radial-gradient(circle at 100% 0%, rgba(10, 168, 255, 0.12), transparent 34%),
     #ffffff;
   box-shadow: 0 24px 70px rgba(15, 23, 42, 0.1);
 }
