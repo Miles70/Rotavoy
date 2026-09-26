@@ -12,6 +12,7 @@ import { adminProductCreateRouter } from "./routes/adminProductCreate.js";
 import { adminProductListRouter } from "./routes/adminProductList.js";
 import { customerAccountRouter } from "./routes/customerAccount.js";
 import { customerAuthRouter } from "./routes/customerAuth.js";
+import { hotelsRouter } from "./routes/hotels.js";
 import { ordersRouter } from "./routes/orders.js";
 import { productListRouter } from "./routes/productList.js";
 import { productMediaRouter } from "./routes/productMedia.js";
@@ -79,6 +80,7 @@ export function createApp() {
   app.use("/api/products", productListRouter);
   app.use("/api/products", productsRouter);
   app.use("/api/orders", ordersRouter);
+  app.use("/api/hotels", hotelsRouter);
 
   app.use((request, response) => {
     response.status(404).json({ message: "API route not found." });
