@@ -25,7 +25,7 @@
 .searchBar:focus-within {
   border-color: var(--color-primary-border);
   box-shadow:
-    0 0 0 4px rgba(240, 24, 96, 0.07),
+    0 0 0 4px rgba(10, 168, 255, 0.07),
     var(--shadow-medium);
   transform: translateY(-1px);
 }
@@ -120,7 +120,7 @@
   height: 46px;
   display: grid;
   place-items: center;
-  border: 1px solid rgba(240, 24, 96, 0.08);
+  border: 1px solid rgba(10, 168, 255, 0.08);
   border-radius: 15px;
   background: var(--color-primary-soft);
   font-size: 23px;
