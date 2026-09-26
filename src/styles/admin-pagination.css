@@ -29,9 +29,9 @@
 }
 
 .admin-search-clear:hover {
-  border-color: rgba(240, 24, 96, 0.28);
+  border-color: rgba(10, 168, 255, 0.28);
   color: #ff729e;
-  background: rgba(240, 24, 96, 0.08);
+  background: rgba(10, 168, 255, 0.08);
 }
 
 .admin-search-result-note {
@@ -92,16 +92,16 @@
 
 .admin-pagination-nav button:hover:not(:disabled) {
   transform: translateY(-1px);
-  border-color: rgba(240, 24, 96, 0.28);
+  border-color: rgba(10, 168, 255, 0.28);
   color: #f5f6f9;
-  background: rgba(240, 24, 96, 0.08);
+  background: rgba(10, 168, 255, 0.08);
 }
 
 .admin-pagination-nav button.is-active {
-  border-color: rgba(240, 24, 96, 0.45);
+  border-color: rgba(10, 168, 255, 0.45);
   color: #ffffff;
-  background: linear-gradient(135deg, #f01860, #c61470);
-  box-shadow: 0 8px 20px rgba(240, 24, 96, 0.18);
+  background: linear-gradient(135deg, #0aa8ff, #ff8a1f);
+  box-shadow: 0 8px 20px rgba(10, 168, 255, 0.18);
 }
 
 .admin-pagination-nav button:disabled {
