@@ -236,6 +236,67 @@
   transform: scaleX(1);
 }
 
+.navLinks .travelNavLink {
+  margin: 17px -10px;
+  padding: 9px 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  border-radius: 999px;
+  background:
+    linear-gradient(
+      105deg,
+      #0538a8 0%,
+      #075cff 20%,
+      #0aa8ff 38%,
+      #19e4f2 54%,
+      #ffe15b 72%,
+      #ff9a1f 87%,
+      #ff6a00 100%
+    );
+  background-size: 240% 100%;
+  color: #ffffff;
+  text-shadow: 0 1px 8px rgba(4, 68, 164, 0.28);
+  box-shadow:
+    0 7px 20px rgba(7, 92, 255, 0.18),
+    0 5px 16px rgba(255, 154, 31, 0.12);
+  animation: travelNavPaletteFlow 5.2s ease-in-out infinite alternate;
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast),
+    filter var(--transition-fast);
+}
+
+.navLinks .travelNavLink:hover,
+.navLinks .travelNavLink.active {
+  color: #ffffff;
+  filter: saturate(1.08) brightness(1.02);
+  transform: translateY(-1px);
+  box-shadow:
+    0 10px 25px rgba(7, 92, 255, 0.24),
+    0 7px 19px rgba(255, 154, 31, 0.18);
+}
+
+.navLinks .travelNavLink::after {
+  display: none;
+}
+
+@keyframes travelNavPaletteFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .navLinks .travelNavLink {
+    animation: none;
+    background-position: 50% 50%;
+  }
+}
+
 .headerActions {
   display: flex;
   align-items: center;
