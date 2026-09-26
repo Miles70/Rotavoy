@@ -135,17 +135,7 @@ function Header() {
             aria-label={`${siteConfig.brandName} home`}
           >
             <span className="logoMark" aria-hidden="true">
-              <svg className="logoGlyph" viewBox="0 0 48 48">
-                <path
-                  className="logoLetter"
-                  d="M13 39V9h13c7.3 0 11.5 4 11.5 10.1 0 5.7-4.1 9.7-11 9.7H13m13.2 0L38 39"
-                />
-                <g className="logoWheel" transform="translate(26 19)">
-                  <circle r="5.4" />
-                  <circle className="logoWheelHub" r="1.35" />
-                  <path d="M0-8v16M-8 0H8M-5.65-5.65 5.65 5.65M5.65-5.65-5.65 5.65" />
-                </g>
-              </svg>
+              <img src="/rotavoy-logo.png" alt="" />
             </span>
 
             <span className="logoText" aria-hidden="true">
