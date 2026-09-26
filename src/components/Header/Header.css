@@ -305,6 +305,15 @@ body:has(.travelPage) .headerWrapper .navLinks .travelNavLink.active {
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .navLinks .travelNavLink {
+    animation-name: travelGradientShift !important;
+    animation-duration: 6s !important;
+    animation-timing-function: ease !important;
+    animation-iteration-count: infinite !important;
+  }
+}
+
 .headerActions {
   display: flex;
   align-items: center;
