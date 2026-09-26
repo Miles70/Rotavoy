@@ -18,7 +18,7 @@
 .categoryGroup[data-category="motherBabyToys"] .categoryShowcase,
 .categoryGroup[data-category="beautyCare"] .categoryShowcase {
   background:
-    radial-gradient(circle at 12% 30%, rgba(240, 24, 96, 0.24), transparent 34%),
+    radial-gradient(circle at 12% 30%, rgba(10, 168, 255, 0.24), transparent 34%),
     linear-gradient(135deg, #130b10, #24141c);
 }
 
