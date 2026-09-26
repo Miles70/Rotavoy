@@ -7,8 +7,8 @@
   --admin-border: rgba(255, 255, 255, 0.08);
   --admin-text: #f7f8fb;
   --admin-muted: #929bad;
-  --admin-primary: #f01860;
-  --admin-primary-soft: rgba(240, 24, 96, 0.14);
+  --admin-primary: #0aa8ff;
+  --admin-primary-soft: rgba(10, 168, 255, 0.14);
   --admin-success: #25c783;
   --admin-warning: #f5b83d;
   min-height: 100vh;
@@ -45,8 +45,8 @@
   pointer-events: none;
 }
 
-.admin-login-glow-one { top: -180px; left: -120px; background: #4f63ec; }
-.admin-login-glow-two { right: -130px; bottom: -200px; background: #f01860; }
+.admin-login-glow-one { top: -180px; left: -120px; background: #075cff; }
+.admin-login-glow-two { right: -130px; bottom: -200px; background: #0aa8ff; }
 
 .admin-login-card {
   position: relative;
@@ -67,9 +67,9 @@
   place-items: center;
   width: 48px;
   height: 48px;
-  border: 1px solid rgba(240, 24, 96, .28);
+  border: 1px solid rgba(10, 168, 255, .28);
   border-radius: 15px;
-  color: #ff4f87;
+  color: #ffb52e;
   background: var(--admin-primary-soft);
 }
 
@@ -131,8 +131,8 @@
 .admin-inline-select:focus,
 .admin-table-input:focus {
   outline: none;
-  border-color: rgba(240,24,96,.65);
-  box-shadow: 0 0 0 4px rgba(240,24,96,.10);
+  border-color: rgba(10,168,255,.65);
+  box-shadow: 0 0 0 4px rgba(10,168,255,.10);
 }
 
 .admin-primary-button,
@@ -152,8 +152,8 @@
 .admin-primary-button {
   border: 1px solid transparent;
   color: white;
-  background: linear-gradient(135deg, #f01860, #c61470);
-  box-shadow: 0 12px 30px rgba(240,24,96,.22);
+  background: linear-gradient(135deg, #0aa8ff, #ff8a1f);
+  box-shadow: 0 12px 30px rgba(10,168,255,.22);
   padding: 12px 17px;
 }
 
@@ -194,15 +194,15 @@
 }
 
 .admin-brand { display: flex; align-items: center; gap: 12px; padding: 4px 6px 24px; }
-.admin-brand-mark { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 13px; font-size: 20px; font-weight: 900; background: linear-gradient(135deg, #3867f4, #a33ae5 52%, #f01860); box-shadow: 0 10px 26px rgba(163,58,229,.22); }
+.admin-brand-mark { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 13px; font-size: 20px; font-weight: 900; background: linear-gradient(135deg, #075cff, #19e4f2 52%, #0aa8ff); box-shadow: 0 10px 26px rgba(25,228,242,.22); }
 .admin-brand strong { display: block; font-size: 16px; }
 .admin-brand span { display: block; margin-top: 3px; color: #747e91; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
 .admin-sidebar-close { display: none; margin-left: auto; }
 .admin-nav { display: grid; gap: 7px; }
 .admin-nav-link { display: flex; align-items: center; gap: 12px; padding: 12px 13px; border: 1px solid transparent; border-radius: 12px; color: #949dae; font-size: 14px; font-weight: 680; }
 .admin-nav-link:hover { color: #eef0f5; background: rgba(255,255,255,.035); }
-.admin-nav-link.is-active { border-color: rgba(240,24,96,.18); color: white; background: var(--admin-primary-soft); }
-.admin-nav-link.is-active svg { color: #ff4f87; }
+.admin-nav-link.is-active { border-color: rgba(10,168,255,.18); color: white; background: var(--admin-primary-soft); }
+.admin-nav-link.is-active svg { color: #ffb52e; }
 .admin-sidebar-footer { display: grid; gap: 12px; margin-top: auto; }
 .admin-store-link,
 .admin-logout-button { width: 100%; border: 1px solid var(--admin-border); color: #b9c0cc; background: rgba(255,255,255,.03); padding: 11px 12px; font-size: 13px; }
@@ -232,7 +232,7 @@
 
 .admin-stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 22px; }
 .admin-stat-card { position: relative; overflow: hidden; min-height: 184px; border: 1px solid var(--admin-border); border-radius: 18px; background: linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.018)); padding: 20px; }
-.admin-stat-card::after { position: absolute; right: -50px; bottom: -80px; width: 150px; height: 150px; border-radius: 50%; background: rgba(240,24,96,.09); filter: blur(28px); content: ""; }
+.admin-stat-card::after { position: absolute; right: -50px; bottom: -80px; width: 150px; height: 150px; border-radius: 50%; background: rgba(10,168,255,.09); filter: blur(28px); content: ""; }
 .admin-stat-card > span { display: block; margin-top: 22px; color: #8d96a8; font-size: 12px; font-weight: 700; }
 .admin-stat-card > strong { position: relative; z-index: 1; display: block; margin-top: 7px; font-size: clamp(24px, 3vw, 32px); letter-spacing: -.04em; }
 .admin-stat-card > small { display: block; margin-top: 5px; color: #687184; }
@@ -258,7 +258,7 @@
 .admin-status { display: inline-flex; border-radius: 999px; padding: 6px 9px; font-size: 10px; font-weight: 800; text-transform: capitalize; }
 .admin-status-pending { color: #ffd277; background: rgba(245,184,61,.11); }
 .admin-status-processing { color: #8fb0ff; background: rgba(79,99,236,.13); }
-.admin-status-shipped { color: #c19cff; background: rgba(163,58,229,.13); }
+.admin-status-shipped { color: #c19cff; background: rgba(25,228,242,.13); }
 .admin-status-completed { color: #73e1ac; background: rgba(37,199,131,.11); }
 .admin-status-cancelled { color: #ff8d9b; background: rgba(255,67,88,.11); }
 .admin-empty-state { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 160px; color: #727b8c; }
@@ -283,8 +283,8 @@
 .admin-product-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .admin-product-cell span { display: block; max-width: 190px; margin-top: 4px; overflow: hidden; color: #697286; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
 .admin-category-pill { display: inline-flex; border-radius: 999px; color: #a7b9ff; background: rgba(79,99,236,.11); padding: 6px 9px; font-size: 10px; }
-.admin-products-table tr.is-dirty { background: rgba(240,24,96,.025); }
-.admin-save-button { border: 1px solid rgba(240,24,96,.22); color: #ff7da5; background: rgba(240,24,96,.09); padding: 8px 10px; font-size: 11px; }
+.admin-products-table tr.is-dirty { background: rgba(10,168,255,.025); }
+.admin-save-button { border: 1px solid rgba(10,168,255,.22); color: #ff7da5; background: rgba(10,168,255,.09); padding: 8px 10px; font-size: 11px; }
 .admin-switch { position: relative; display: inline-flex; }
 .admin-switch input { position: absolute; opacity: 0; pointer-events: none; }
 .admin-switch span { position: relative; width: 40px; height: 23px; border-radius: 999px; background: #2a3140; transition: background 180ms ease; }
@@ -307,7 +307,7 @@
 .admin-code-line { display: inline-block; margin: 0 8px 10px 0 !important; border: 1px solid var(--admin-border); border-radius: 8px; color: #ff7fa7 !important; background: rgba(0,0,0,.22); padding: 7px 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; }
 .admin-loading-screen { display: grid; place-items: center; align-content: center; gap: 13px; }
 .admin-loading-screen p { color: #8b94a5; }
-.admin-spinner { width: 36px; height: 36px; border: 3px solid rgba(255,255,255,.10); border-top-color: #f01860; border-radius: 50%; animation: admin-spin .8s linear infinite; }
+.admin-spinner { width: 36px; height: 36px; border: 3px solid rgba(255,255,255,.10); border-top-color: #0aa8ff; border-radius: 50%; animation: admin-spin .8s linear infinite; }
 .is-spinning { animation: admin-spin .8s linear infinite; }
 .admin-backdrop { display: none; }
 
