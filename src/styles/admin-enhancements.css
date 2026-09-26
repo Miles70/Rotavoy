@@ -57,8 +57,8 @@
   left: 5px;
   min-height: 5px;
   border-radius: 8px;
-  background: linear-gradient(180deg, #ff4f87, #a33ae5 58%, #4f63ec);
-  box-shadow: 0 8px 22px rgba(240, 24, 96, .2);
+  background: linear-gradient(180deg, #ffb52e, #19e4f2 58%, #075cff);
+  box-shadow: 0 8px 22px rgba(10, 168, 255, .2);
   transition: height 320ms ease;
 }
 
@@ -112,8 +112,8 @@
 }
 
 .admin-status-chart-fill-pending { background: #f5b83d; }
-.admin-status-chart-fill-processing { background: #4f63ec; }
-.admin-status-chart-fill-shipped { background: #a33ae5; }
+.admin-status-chart-fill-processing { background: #075cff; }
+.admin-status-chart-fill-shipped { background: #19e4f2; }
 .admin-status-chart-fill-completed { background: #25c783; }
 .admin-status-chart-fill-cancelled { background: #ff4358; }
 
@@ -360,8 +360,8 @@
 .admin-create-product-form .admin-field > textarea:focus,
 .admin-input-with-icon:focus-within {
   outline: none;
-  border-color: rgba(240, 24, 96, .65);
-  box-shadow: 0 0 0 4px rgba(240, 24, 96, .1);
+  border-color: rgba(10, 168, 255, .65);
+  box-shadow: 0 0 0 4px rgba(10, 168, 255, .1);
 }
 
 .admin-input-with-icon {
