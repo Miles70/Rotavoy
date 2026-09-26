@@ -169,7 +169,9 @@ function Header() {
 
             <NavLink
               to="/travel"
-              className={({ isActive }) => (isActive ? "active" : "")}
+              className={({ isActive }) =>
+                `travelNavLink${isActive ? " active" : ""}`
+              }
             >
               {t("nav.travel")}
             </NavLink>
