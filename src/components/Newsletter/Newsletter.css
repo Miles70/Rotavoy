@@ -52,7 +52,7 @@
 .newsletterForm:focus-within {
   border-color: var(--color-primary-border);
   box-shadow:
-    0 0 0 4px rgba(240, 24, 96, 0.07),
+    0 0 0 4px rgba(10, 168, 255, 0.07),
     var(--shadow-small);
 }
 
