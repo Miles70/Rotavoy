@@ -7,7 +7,7 @@
   place-items: center;
   overflow-y: auto;
   background:
-    radial-gradient(circle at 20% 18%, rgba(240, 24, 96, 0.2), transparent 34%),
+    radial-gradient(circle at 20% 18%, rgba(10, 168, 255, 0.2), transparent 34%),
     radial-gradient(circle at 82% 82%, rgba(93, 78, 255, 0.2), transparent 34%),
     rgba(9, 8, 18, 0.72);
   backdrop-filter: blur(16px);
@@ -23,7 +23,7 @@
   border: 1px solid rgba(255, 255, 255, 0.82);
   border-radius: 28px;
   background:
-    radial-gradient(circle at 100% 0, rgba(240, 24, 96, 0.1), transparent 34%),
+    radial-gradient(circle at 100% 0, rgba(10, 168, 255, 0.1), transparent 34%),
     radial-gradient(circle at 0 100%, rgba(93, 78, 255, 0.1), transparent 36%),
     rgba(255, 255, 255, 0.98);
   box-shadow:
@@ -41,7 +41,7 @@
   width: 220px;
   height: 220px;
   border-radius: 50%;
-  background: rgba(240, 24, 96, 0.08);
+  background: rgba(10, 168, 255, 0.08);
   pointer-events: none;
 }
 
@@ -67,7 +67,7 @@
 }
 
 .customerAuthClose:hover {
-  border-color: rgba(240, 24, 96, 0.25);
+  border-color: rgba(10, 168, 255, 0.25);
   background: #ffffff;
   color: var(--color-primary);
   transform: rotate(4deg) scale(1.04);
@@ -92,9 +92,9 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  border: 1px solid rgba(240, 24, 96, 0.18);
+  border: 1px solid rgba(10, 168, 255, 0.18);
   border-radius: 999px;
-  background: rgba(240, 24, 96, 0.075);
+  background: rgba(10, 168, 255, 0.075);
   color: var(--color-primary);
   font-size: 11px;
   font-weight: 900;
@@ -160,7 +160,7 @@
 }
 
 .customerAuthOption:hover:not(:disabled) {
-  border-color: rgba(240, 24, 96, 0.28);
+  border-color: rgba(10, 168, 255, 0.28);
   box-shadow: 0 12px 28px rgba(44, 31, 86, 0.11);
   transform: translateY(-1px);
 }
@@ -218,7 +218,7 @@
 }
 
 .customerAuthOptionIcon--wallet {
-  background: linear-gradient(135deg, #5b4dff, #f01860);
+  background: linear-gradient(135deg, #075cff, #0aa8ff);
   color: #ffffff;
 }
 
@@ -253,7 +253,7 @@
 }
 
 .customerAuthGuestButton:hover:not(:disabled) {
-  border-color: rgba(240, 24, 96, 0.34);
+  border-color: rgba(10, 168, 255, 0.34);
   background: #ffffff;
   color: var(--color-primary);
   transform: translateY(-1px);
@@ -319,9 +319,9 @@
   margin: 2px auto 18px;
   display: grid;
   place-items: center;
-  border: 1px solid rgba(240, 24, 96, 0.18);
+  border: 1px solid rgba(10, 168, 255, 0.18);
   border-radius: 23px;
-  background: linear-gradient(135deg, rgba(240, 24, 96, 0.11), rgba(91, 77, 255, 0.11));
+  background: linear-gradient(135deg, rgba(10, 168, 255, 0.11), rgba(91, 77, 255, 0.11));
   color: var(--color-primary);
   box-shadow: 0 16px 34px rgba(79, 54, 145, 0.12);
 }
@@ -404,7 +404,7 @@
 }
 
 .customerAuthSecondaryAction:hover:not(:disabled) {
-  border-color: rgba(240, 24, 96, 0.25);
+  border-color: rgba(10, 168, 255, 0.25);
   color: var(--color-primary);
   transform: translateY(-1px);
 }
