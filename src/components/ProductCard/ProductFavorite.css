@@ -34,9 +34,9 @@
 }
 
 .productFavoriteButton:hover {
-  border-color: rgba(240, 24, 96, 0.28);
+  border-color: rgba(10, 168, 255, 0.28);
   color: var(--color-primary);
-  box-shadow: 0 13px 28px rgba(240, 24, 96, 0.18);
+  box-shadow: 0 13px 28px rgba(10, 168, 255, 0.18);
   transform: translateY(-2px) scale(1.04);
 }
 
@@ -48,6 +48,6 @@
 }
 
 .productFavoriteButton:focus-visible {
-  outline: 3px solid rgba(240, 24, 96, 0.22);
+  outline: 3px solid rgba(10, 168, 255, 0.22);
   outline-offset: 3px;
 }
