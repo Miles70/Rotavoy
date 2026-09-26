@@ -97,7 +97,7 @@
   width: 260px;
   height: 260px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(240, 24, 96, 0.34), transparent 68%);
+  background: radial-gradient(circle, rgba(10, 168, 255, 0.34), transparent 68%);
   pointer-events: none;
   transition: transform var(--transition-normal);
 }
@@ -114,7 +114,7 @@
 }
 
 .featuredCategoryCard:focus-visible {
-  outline: 3px solid rgba(240, 24, 96, 0.34);
+  outline: 3px solid rgba(10, 168, 255, 0.34);
   outline-offset: 4px;
 }
 
