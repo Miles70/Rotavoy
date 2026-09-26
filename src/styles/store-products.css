@@ -55,7 +55,7 @@
 .storePagination button:hover:not(:disabled),
 .storePagination a:hover {
   transform: translateY(-1px);
-  border-color: rgba(240,24,96,.45);
+  border-color: rgba(10,168,255,.45);
   color: var(--color-text);
 }
 
@@ -63,8 +63,8 @@
 .storePagination a.is-active {
   border-color: transparent;
   color: white;
-  background: linear-gradient(135deg, var(--color-primary), #c61470);
-  box-shadow: 0 10px 24px rgba(240,24,96,.2);
+  background: linear-gradient(135deg, var(--color-primary), #ff8a1f);
+  box-shadow: 0 10px 24px rgba(10,168,255,.2);
 }
 
 .storePagination button:disabled { cursor: not-allowed; opacity: .35; }
