@@ -65,7 +65,7 @@
   place-items: center;
   border: 1px solid var(--color-border);
   border-radius: 34px;
-  background: radial-gradient(circle at 50% 42%, rgba(240, 24, 96, 0.13), transparent 52%), var(--color-background-soft);
+  background: radial-gradient(circle at 50% 42%, rgba(10, 168, 255, 0.13), transparent 52%), var(--color-background-soft);
   box-shadow: var(--shadow-medium);
 }
 
@@ -92,7 +92,7 @@
   inset: 0;
   display: grid;
   place-items: center;
-  color: rgba(240, 24, 96, 0.4);
+  color: rgba(10, 168, 255, 0.4);
   font-size: 120px;
   font-weight: 950;
 }
