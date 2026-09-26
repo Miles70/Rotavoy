@@ -19,10 +19,10 @@
 }
 
 .cartItemTotal .cartRemoveButton:hover {
-  border-color: rgba(240, 24, 96, 0.3);
+  border-color: rgba(10, 168, 255, 0.3);
   background: var(--color-primary-soft);
   color: var(--color-primary);
-  box-shadow: 0 10px 22px rgba(240, 24, 96, 0.14);
+  box-shadow: 0 10px 22px rgba(10, 168, 255, 0.14);
   transform: translateY(-1px);
 }
 
@@ -31,7 +31,7 @@
 }
 
 .cartItemTotal .cartRemoveButton:focus-visible {
-  outline: 3px solid rgba(240, 24, 96, 0.2);
+  outline: 3px solid rgba(10, 168, 255, 0.2);
   outline-offset: 3px;
 }
 
