@@ -7,40 +7,42 @@
     sans-serif;
 
   color: #101326;
-  background: #f7fcfb;
+  background: #f6faff;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  --color-primary: #f01860;
-  --color-primary-hover: #d81050;
-  --color-primary-active: #bd0c45;
-  --color-primary-soft: #fff0f5;
-  --color-primary-border: rgba(240, 24, 96, 0.24);
-  --color-primary-shadow: rgba(240, 24, 96, 0.23);
+  --color-primary: #0aa8ff;
+  --color-primary-hover: #087edb;
+  --color-primary-active: #0667b8;
+  --color-primary-soft: #eef8ff;
+  --color-primary-border: rgba(10, 168, 255, 0.24);
+  --color-primary-shadow: rgba(10, 168, 255, 0.23);
 
-  --color-secondary: #4f63ec;
-  --color-gradient-start: #3867f4;
-  --color-gradient-middle: #a33ae5;
-  --color-gradient-end: #f01860;
+  --color-secondary: #ff9a1f;
+  --color-gradient-start: #075cff;
+  --color-gradient-middle: #19e4f2;
+  --color-gradient-end: #ff8a1f;
+  --color-accent-warm: #ff9a1f;
+  --color-accent-gold: #ffe15b;
 
   --color-text: #101326;
   --color-text-secondary: #4f586d;
   --color-text-muted: #747d91;
 
-  --color-background: #f7fcfb;
-  --color-background-soft: #ecf9f7;
-  --color-background-muted: #e4f4f1;
+  --color-background: #f6faff;
+  --color-background-soft: #eef7ff;
+  --color-background-muted: #e7f2ff;
 
   --color-surface: #ffffff;
-  --color-border: #d8ebe7;
-  --color-border-strong: #c8e2dc;
+  --color-border: #d9e8f7;
+  --color-border-strong: #c5dcef;
 
-  --shadow-small: 0 8px 24px rgba(10, 74, 66, 0.06);
-  --shadow-medium: 0 18px 45px rgba(10, 74, 66, 0.09);
-  --shadow-large: 0 26px 80px rgba(10, 74, 66, 0.12);
+  --shadow-small: 0 8px 24px rgba(7, 92, 255, 0.06);
+  --shadow-medium: 0 18px 45px rgba(7, 92, 255, 0.09);
+  --shadow-large: 0 26px 80px rgba(7, 92, 255, 0.12);
 
   --container-width: 1180px;
 
@@ -127,7 +129,7 @@ img {
 }
 
 :focus-visible {
-  outline: 3px solid rgba(240, 24, 96, 0.22);
+  outline: 3px solid rgba(10, 168, 255, 0.22);
   outline-offset: 3px;
 }
 
@@ -142,7 +144,7 @@ img {
 ::-webkit-scrollbar-thumb {
   border: 2px solid var(--color-background-soft);
   border-radius: 999px;
-  background: rgba(240, 24, 96, 0.55);
+  background: rgba(10, 168, 255, 0.55);
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -223,7 +225,7 @@ img {
 .checkoutPaymentOption.active {
   border-color: var(--color-primary);
   background: var(--color-primary-soft);
-  box-shadow: 0 0 0 4px rgba(240, 24, 96, 0.07);
+  box-shadow: 0 0 0 4px rgba(10, 168, 255, 0.07);
 }
 
 .checkoutPaymentOption.disabled {
