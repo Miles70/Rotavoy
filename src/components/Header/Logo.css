@@ -20,11 +20,22 @@
   display: grid;
   place-items: center;
   border-radius: 13px;
-  background: #000000;
+  background:
+    radial-gradient(circle at 72% 28%, rgba(255, 232, 92, 0.98) 0 12%, transparent 31%),
+    conic-gradient(
+      from 215deg,
+      #075cff 0deg,
+      #0aa8ff 72deg,
+      #19e4f2 132deg,
+      #ffe15b 218deg,
+      #ff9a1f 282deg,
+      #ff6a00 330deg,
+      #075cff 360deg
+    );
   box-shadow:
-    0 10px 22px rgba(0, 0, 0, 0.2),
-    0 3px 8px rgba(0, 0, 0, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    0 10px 22px rgba(8, 92, 255, 0.24),
+    0 4px 12px rgba(255, 142, 26, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
   transition:
     transform var(--transition-fast),
     box-shadow var(--transition-fast);
@@ -40,9 +51,9 @@
 .logo:hover .logoMark {
   transform: rotate(-2deg) scale(1.035);
   box-shadow:
-    0 13px 27px rgba(0, 0, 0, 0.24),
-    0 5px 12px rgba(0, 0, 0, 0.16),
-    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    0 13px 27px rgba(8, 92, 255, 0.3),
+    0 5px 14px rgba(255, 142, 26, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32);
 }
 
 .logoText {
