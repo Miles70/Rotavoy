@@ -28,6 +28,12 @@ const travelBookingSchema = new mongoose.Schema(
       default: "unpaid",
       index: true,
     },
+    paymentMethod: {
+      type: String,
+      enum: ["crypto", "card"],
+      default: "crypto",
+      required: true,
+    },
     payment: { type: mongoose.Schema.Types.Mixed, default: {} },
     total: { type: Number, required: true, min: 0 },
     currency: { type: String, required: true, trim: true, uppercase: true },
