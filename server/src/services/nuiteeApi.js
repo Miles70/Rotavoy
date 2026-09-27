@@ -18,8 +18,8 @@ function getSettings() {
   return {
     apiKey,
     environment: apiKey.startsWith("sand_") ? "sandbox" : apiKey ? "production" : "unconfigured",
-    dataBaseUrl: String(process.env.NUITEE_DATA_BASE_URL || DATA_BASE_URL).replace(/\/$, ""),
-    bookingBaseUrl: String(process.env.NUITEE_BOOKING_BASE_URL || BOOKING_BASE_URL).replace(/\/$, ""),
+    dataBaseUrl: String(process.env.NUITEE_DATA_BASE_URL || DATA_BASE_URL).replace(/\/$/, ""),
+    bookingBaseUrl: String(process.env.NUITEE_BOOKING_BASE_URL || BOOKING_BASE_URL).replace(/\/$/, ""),
   };
 }
 
