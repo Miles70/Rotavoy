@@ -1,0 +1,10 @@
+.travelCardPayment{margin-top:26px;background:#fff;border:1px solid rgba(7,139,150,.14);border-radius:22px;padding:24px;box-shadow:0 18px 42px rgba(16,67,73,.06)}
+.travelCardPayment--error{border-color:rgba(182,59,50,.2)}
+.travelCardPaymentHeading{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.travelCardPaymentIcon{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:#e7f5f3;color:#087985}
+.travelCardPaymentHeading h2{margin:0;font-size:1.1rem;color:#17363d}
+.travelCardPaymentHeading p{margin:4px 0 0;color:#587176;font-size:.83rem}
+.travelCardPaymentElement{padding:2px 0 4px}
+.travelCardPaymentError{display:flex;align-items:flex-start;gap:8px;color:#b63b32;font-weight:700;line-height:1.45}
+.travelCardPaymentForm .travelCheckoutSubmit{margin-top:18px}
+@media(max-width:560px){.travelCardPayment{padding:18px;border-radius:18px}}
