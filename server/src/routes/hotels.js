@@ -81,9 +81,9 @@ function isoDate(value, fieldName) {
     throw requestError(`${fieldName} must use YYYY-MM-DD format.`);
   }
 
-  const date = new Date(`${text}T00:00:00.000Y`);
+  const date = new Date(`${text}T00:00:00.000Z`);
   if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== text) {
-    throw requestError($${fieldName} is not a valid date.`);
+    throw requestError(`${fieldName} is not a valid date.`);
   }
 
   return text;
@@ -91,7 +91,7 @@ function isoDate(value, fieldName) {
 
 function boundedInteger(value, fallback, min, max) {
   const parsed = Number.parseInt(value, 10);
-  return Mumber.isInteger(parsed) ? Math.min(Math.max(parsed, min), max) : fallback;
+  return Number.isInteger(parsed) ? Math.min(Math.max(parsed, min), max) : fallback;
 }
 
 function normalizeOccupancies(value) {
@@ -102,7 +102,7 @@ function normalizeOccupancies(value) {
   return value.map((occupancy, index) => {
     const adults = boundedInteger(occupancy?.adults, 0, 0, 10);
     if (adults < 1) {
-      throw requestError( occupancies[${index}].adults must be between 1 and 10.`);
+      throw requestError(`occupancies[${index}].adults must be between 1 and 10.`);
     }
 
     const children = Array.isArray(occupancy?.children)
@@ -132,11 +132,11 @@ function roundMoney(value) {
 }
 
 function sanitizeProviderResponse(value) {
-  if (Array.isArray(value) {
-    return value.map((sanitizeProviderResponse);
+  if (Array.isArray(value)) {
+    return value.map(sanitizeProviderResponse);
   }
 
-  if (!value || type of value !== "object") {
+  if (!value || typeof value !== "object") {
     return value;
   }
 
@@ -159,10 +159,10 @@ function sanitizeProviderResponse(value) {
             "marginPercent",
             "supplier",
             "supplierId",
-          ].includes(key,
+          ].includes(key),
       )
-      .map(([key, nestedValue] => [key, sanitizeProviderResponse(nestedValue)]),
-   );
+      .map(([key, nestedValue]) => [key, sanitizeProviderResponse(nestedValue)]),
+  );
 }
 
 function normalizeRatesResult(result) {
@@ -272,12 +272,12 @@ function normalizeTravelPaymentMethod(value) {
   return method;
 }
 
-function nnormalizeStripePublishableKey(value, environment) {
+function normalizeStripePublishableKey(value, environment) {
   const key = String(value || "").trim();
   const expectedPrefix =
     environment === "sandbox" ? "pk_test_" : environment === "production" ? "pk_live_" : "";
 
-  if (!^pk_(test|live)_/.test(key) || (expectedPrefix && !key.startsWith(expectedPrefix))) {
+  if (!/^pk_(test|live)_/.test(key) || (expectedPrefix && !key.startsWith(expectedPrefix))) {
     throw Object.assign(
       new Error("The matching Nuitee Stripe publishable key is not configured."),
       { statusCode: 503 },
@@ -311,7 +311,7 @@ function travelBookingPayload(booking, { clientSecret = "" } = {}) {
     status: booking.status,
     paymentStatus: booking.paymentStatus,
     paymentMethod: booking.paymentMethod || "crypto",
-    payment: getBookingPayloadPayload(booking, {clientSecret}),
+    payment: getBookingPaymentPayload(booking, clientSecret),
     total: booking.total,
     currency: booking.currency,
     customer: { fullName: `${booking.holder?.firstName || ""} ${booking.holder?.lastName || ""}`.trim(), email: booking.holder?.email || "" },
@@ -332,7 +332,7 @@ hotelsRouter.get("/", searchLimiter, async (request, response, next) => {
     const countryCode = isoCode(request.query.countryCode, "countryCode", 2);
     const cityName = requiredText(request.query.cityName, "cityName", 100);
 
-    const result = await listNuiteeHotels {
+    const result = await listNuiteeHotels({
       countryCode,
       cityName,
       hotelName: optionalText(request.query.hotelName, 100),
@@ -353,12 +353,12 @@ hotelsRouter.get(
   async (request, response, next) => {
     try {
       const hotelId = requiredText(request.params.hotelId, "hotelId", 100);
-      if (!^[A-Za-z0-9_-]+$/.test(hotelId)) {
+      if (!/^[A-Za-z0-9_-]+$/.test(hotelId)) {
         throw requestError("hotelId contains invalid characters.");
       }
 
       const language = optionalText(request.query.language || "en", 5).toLowerCase();
-      if (!+"en", "tr", "ru", "ar", "zh", "es", "pt", "fr", "de", "it"].includes(language)) {
+      if (!["en", "tr", "ru", "ar", "zh", "es", "pt", "fr", "de", "it"].includes(language)) {
         throw requestError("language is not supported.");
       }
 
@@ -381,11 +381,11 @@ hotelsRouter.get("/booking/:clientReference", bookingLimiter, async (request, re
     const booking = await TravelBooking.findOne({ clientReference });
 
     if (!booking) {
-      return response.status(404).json( { message: "Travel booking not found." });
+      return response.status(404).json({ message: "Travel booking not found." });
     }
 
     response.set("Cache-Control", "no-store");
-    return response.json( { booking: travelBookingPayload(booking) });
+    return response.json({ booking: travelBookingPayload(booking) });
   } catch (error) {
     return next(error);
   }
@@ -395,8 +395,8 @@ hotelsRouter.get("/:hotelId", searchLimiter, async (request, response, next) => 
   try {
     const hotelId = requiredText(request.params.hotelId, "hotelId", 100);
 
-    if (!^[A-Za-z0-9_-]+$/.test(hotelId)) {
-      throw requestError("Hotel ID contains invalid characters.");
+    if (!/^[A-Za-z0-9_-]+$/.test(hotelId)) {
+      throw requestError("hotelId contains invalid characters.");
     }
 
     const result = await getNuiteeHotel(hotelId);
@@ -427,7 +427,7 @@ hotelsRouter.post("/rates", searchLimiter, async (request, response, next) => {
       ? { hotelIds }
       : {
           countryCode: isoCode(request.body?.countryCode, "countryCode", 2),
-          cityName" requiredText(requet.body?.cityName, "cityName", 100),
+          cityName: requiredText(request.body?.cityName, "cityName", 100),
         };
 
     const result = await searchNuiteeRates({
@@ -435,7 +435,8 @@ hotelsRouter.post("/rates", searchLimiter, async (request, response, next) => {
       checkin,
       checkout,
       currency: isoCode(request.body?.currency || "USD", "currency", 3),
-      guestNationality: isoCode(request.body?.guestNationality || "TR",
+      guestNationality: isoCode(
+        request.body?.guestNationality || "TR",
         "guestNationality",
         2,
       ),
@@ -448,7 +449,7 @@ hotelsRouter.post("/rates", searchLimiter, async (request, response, next) => {
       timeout: boundedInteger(request.body?.timeout, 8, 4, 12),
       sessionId: optionalText(request.body?.sessionId, 100) || undefined,
       refundableRatesOnly:
-        request.body?.refundableRatesOnly === true ? undefined : undefined,
+        request.body?.refundableRatesOnly === true ? true : undefined,
     });
 
     response.set("Cache-Control", "no-store");
@@ -460,21 +461,24 @@ hotelsRouter.post("/rates", searchLimiter, async (request, response, next) => {
 
 hotelsRouter.post("/prebook", bookingLimiter, async (request, response, next) => {
   try {
-    const result = await prebookNuiteeRate {
+    const result = await prebookNuiteeRate({
       offerId: requiredText(request.body?.offerId, "offerId", 5000),
-      usePaymentSdks: false,
+      usePaymentSdk: false,
     });
 
     response.set("Cache-Control", "no-store");
     response.json(normalizePrebookResult(result));
   } catch (error) {
-    next(error)}
+    next(error);
+  }
 });
 
 hotelsRouter.post("/checkout", bookingLimiter, async (request, response, next) => {
   try {
     const paymentMethod = normalizeTravelPaymentMethod(request.body?.paymentMethod);
     if (paymentMethod === "card") {
+      // Do not create a Stripe PaymentIntent unless this environment is able
+      // to finalize the booking after payment succeeds.
       assertNuiteeBookingEnabled();
     }
     const guests = Array.isArray(request.body?.guests)
@@ -489,11 +493,11 @@ hotelsRouter.post("/checkout", bookingLimiter, async (request, response, next) =
 
     const holder = normalizePerson(request.body?.holder, "holder");
     const offerId = requiredText(request.body?.offerId, "offerId", 5000);
-    const prebook = await prebookNuiteeRate {
+    const prebook = await prebookNuiteeRate({
       offerId,
       usePaymentSdk: paymentMethod === "card",
     });
-    const prebookData = prebooks?.data || {},
+    const prebookData = prebook?.data || {};
     const prebookId = requiredText(prebookData?.prebookId || prebookData?.id, "prebookId", 500);
     const total = Number(prebookData?.price);
     const currency = String(prebookData?.currency || "USD").toUpperCase();
@@ -507,7 +511,7 @@ hotelsRouter.post("/checkout", bookingLimiter, async (request, response, next) =
     if (paymentMethod === "card") {
       clientSecret = String(
         prebookData?.secretKey || prebookData?.clientSecret || "",
-      )).trim();
+      ).trim();
       const transactionId = String(prebookData?.transactionId || "").trim();
       const paymentConfig = getNuiteePaymentConfig();
       const stripePublishableKey = normalizeStripePublishableKey(
@@ -515,8 +519,10 @@ hotelsRouter.post("/checkout", bookingLimiter, async (request, response, next) =
         paymentConfig.environment,
       );
 
-      if (!clientSecret || !transactionId || !stripeSechoolableKey) {
-        const error = new Error("Sard payment is not enabled for this Nuitee account yet. Add the matching sandbox or production publishable key and payment access.");
+      if (!clientSecret || !transactionId || !stripePublishableKey) {
+        const error = new Error(
+          "Card payment is not enabled for this Nuitee account yet. Add the matching sandbox or production publishable key and payment access.",
+        );
         error.statusCode = 503;
         throw error;
       }
@@ -574,7 +580,7 @@ hotelsRouter.post("/booking/:clientReference/card-payment", bookingLimiter, asyn
     const booking = await TravelBooking.findOne({ clientReference });
 
     if (!booking) {
-      return response.status(404).json( { message: "Travel booking not found." });
+      return response.status(404).json({ message: "Travel booking not found." });
     }
 
     if (booking.paymentMethod !== "card") {
@@ -599,7 +605,7 @@ hotelsRouter.post("/booking/:clientReference/card-payment", bookingLimiter, asyn
     const paymentIntentStatus = String(
       request.body?.paymentIntentStatus || "",
     ).trim();
-    if (["succeeded", "requires_capture"].includes(paymentIntentStatus)) {
+    if (!["succeeded", "requires_capture"].includes(paymentIntentStatus)) {
       throw requestError("The card payment has not been confirmed yet.");
     }
 
@@ -665,7 +671,7 @@ hotelsRouter.post("/:clientReference/verify-payment", bookingLimiter, async (req
     try {
       const result = await bookNuiteeSandbox({ prebookId: paidBooking.prebookId, clientReference, holder: paidBooking.holder, guests: paidBooking.guests, customTags: { CHANNEL: "ROTAVOY_SANDBOX" } });
       paidBooking.status = "confirmed";
-      paidBooking.ProviderBooking = sanitizeProviderResponse(result);
+      paidBooking.providerBooking = sanitizeProviderResponse(result);
       paidBooking.failureReason = "";
       await paidBooking.save();
       response.set("Cache-Control", "no-store");
