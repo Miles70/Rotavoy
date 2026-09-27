@@ -88,10 +88,23 @@ export function bookSandboxHotel({ prebookId, clientReference, holder, guests })
   });
 }
 
-export function createTravelCheckout({ offerId, holder, guests }) {
+export function createTravelCheckout({ offerId, holder, guests, paymentMethod = "crypto" }) {
   return hotelRequest("/checkout", {
     method: "POST",
-    body: JSON.stringify({ offerId, holder, guests }),
+    body: JSON.stringify({ offerId, holder, guests, paymentMethod }),
+  }).then((payload) => payload.booking);
+}
+
+export function getTravelBooking(clientReference) {
+  return hotelRequest(`/booking/${encodeURIComponent(clientReference)}`, {
+    method: "GET",
+  }).then((payload) => payload.booking);
+}
+
+export function finalizeTravelCardPayment(clientReference, { paymentIntentStatus }) {
+  return hotelRequest(`/booking/${encodeURIComponent(clientReference)}/card-payment`, {
+    method: "POST",
+    body: JSON.stringify({ paymentIntentStatus }),
   }).then((payload) => payload.booking);
 }
 
