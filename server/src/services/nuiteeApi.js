@@ -18,8 +18,8 @@ function getSettings() {
   return {
     apiKey,
     environment: apiKey.startsWith("sand_") ? "sandbox" : apiKey ? "production" : "unconfigured",
-    dataBaseUrl: String(process.env.NUITEE_DATA_BASE_URL || DATA_BASE_URL).replace(/\/$/, ""),
-    bookingBaseUrl: String(process.env.NUITEE_BOOKING_BASE_URL || BOOKING_BASE_URL).replace(/\/$/, ""),
+    dataBaseUrl: String(process.env.NUITEE_DATA_BASE_URL || DATA_BASE_URL).replace(//$/, ""),
+    bookingBaseUrl: String(process.env.NUITEE_BOOKING_BASE_URL || BOOKING_BASE_URL).replace(//$/, ""),
   };
 }
 
@@ -143,6 +143,39 @@ export function getNuiteeStatus() {
   };
 }
 
+export function getNuiteePaymentConfig() {
+  const settings = getSettings();
+
+  return {
+    environment: settings.environment,
+    stripePublishableKey: String(
+      process.env.NUITEE_STRIPE_PUBLISHABLE_KEY || "",
+    ).trim(),
+  };
+}
+
+export function assertNuiteeBookingEnabled() {
+  const status = getNuiteeStatus();
+  const environmentFlag =
+    status.environment === "sandbox"
+      ? process.env.NUITEE_ENABLE_SANDBOX_BOOKING
+      : process.env.NUITEE_ENABLE_LIVE_BOOKING;
+
+  if (
+    (status.environment !== "sandbox" && status.environment !== "production") ||
+    String(environmentFlag || "").toLowerCase() !== "true"
+  ) {
+    const flagName =
+      status.environment === "sandbox"
+        ? "NUITEE_ENABLE_SANDBOX_BOOKING"
+        : "NUITEE_ENABLE_LIVE_BOOKING";
+    throw createNuiteeError(
+      `Hotel booking is disabled. Set ${flagName}=true only when intentionally testing or enabling bookings.`,
+      503,
+    );
+  }
+}
+
 export function listNuiteeHotels(query) {
   return requestNuitee(getSettings().dataBaseUrl, "/data/hotels", {
     query,
@@ -176,12 +209,14 @@ export function prebookNuiteeRate(body) {
 export function bookNuiteeSandbox(body) {
   const status = getNuiteeStatus();
 
-  if (status.environment !== "sandbox" || !status.sandboxBookingEnabled) {
+  if (status.environment !== "sandbox") {
     throw createNuiteeError(
-      "Sandbox hotel booking is disabled. Set NUITEE_ENABLE_SANDBOX_BOOKING=true only when intentionally testing a booking.",
+      "Sandbox hotel booking requires a sandbox Nuitee API key.",
       503,
     );
   }
+
+  assertNuiteeBookingEnabled();
 
   return requestNuitee(getSettings().bookingBaseUrl, "/rates/book", {
     method: "POST",
@@ -189,6 +224,31 @@ export function bookNuiteeSandbox(body) {
     body: {
       ...body,
       payment: { method: "ACC_CREDIT_CARD" },
+    },
+  });
+}
+
+export function bookNuiteeWithTransaction({ transactionId, ...body }) {
+  const normalizedTransactionId = String(transactionId || "").trim();
+
+  if (!normalizedTransactionId) {
+    throw createNuiteeError(
+      "Nuitee payment transaction is missing. Restart the card payment.",
+      400,
+    );
+  }
+
+  assertNuiteeBookingEnabled();
+
+  return requestNuitee(getSettings().bookingBaseUrl, "/rates/book", {
+    method: "POST",
+    query: { timeout: 30 },
+    body: {
+      ...body,
+      payment: {
+        method: "TRANSACTION_ID",
+        transactionId: normalizedTransactionId,
+      },
     },
   });
 }
