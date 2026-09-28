@@ -1,13 +1,11 @@
 import { useEffect } from "react";
 import {
-  LayoutDashboard,
   LogOut,
   ShieldCheck,
   UserRound,
   WalletCards,
   X,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { FaFacebookF } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 
@@ -26,7 +24,6 @@ function shortenAddress(address) {
 }
 
 function AuthModal() {
-  const navigate = useNavigate();
   const { t } = useLanguage();
   const {
     address,
@@ -77,11 +74,6 @@ function AuthModal() {
   const methodLabel = authType ? t(`auth.method.${authType}`) : "";
   const visibleName = isGuest ? t("auth.method.guest") : displayName;
   const isBusy = Boolean(busyAction);
-
-  function openAccountDashboard() {
-    closeAuthModal();
-    navigate("/account");
-  }
 
   function renderProviderStatus(provider) {
     if (providerAvailability?.[provider] !== false) {
@@ -243,7 +235,7 @@ function AuthModal() {
             )}
 
             <div className="customerAuthProfileActions">
-              {isGuest ? (
+              {isGuest && (
                 <button
                   type="button"
                   className="customerAuthPrimaryAction"
@@ -251,15 +243,6 @@ function AuthModal() {
                 >
                   <UserRound size={18} />
                   {t("auth.upgradeGuest")}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="customerAuthPrimaryAction"
-                  onClick={openAccountDashboard}
-                >
-                  <LayoutDashboard size={18} />
-                  {t("account.accountHome")}
                 </button>
               )}
 
