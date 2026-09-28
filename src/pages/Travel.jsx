@@ -62,6 +62,36 @@ function money(amount, currency = "EUR") {
   }).format(Number(amount || 0));
 }
 
+function stayNights(checkin, checkout) {
+  if (!checkin || !checkout) return 0;
+
+  const start = new Date(`${checkin}T00:00:00.000Z`);
+  const end = new Date(`${checkout}T00:00:00.000Z`);
+  const diff = Math.round((end.getTime() - start.getTime()) / 86400000);
+
+  return Number.isFinite(diff) && diff > 0 ? diff : 0;
+}
+
+function stayMetaText({ adults, checkin, checkout, t }) {
+  const guestCount = Math.max(Number(adults) || 1, 1);
+  const nights = stayNights(checkin, checkout);
+  const guestLabel = t(
+    guestCount === 1
+      ? "travelPage.runtime.guestSingular"
+      : "travelPage.runtime.guestPlural",
+  );
+  const nightLabel = t(
+    nights === 1
+      ? "travelPage.runtime.nightSingular"
+      : "travelPage.runtime.nightPlural",
+  );
+
+  return {
+    guests: `${guestCount} ${guestLabel}`,
+    nights: `${nights} ${nightLabel}`,
+  };
+}
+
 function findVideoUrl(value) {
   if (!value) return "";
 
@@ -929,6 +959,16 @@ function Travel() {
                       <BedDouble size={17} />
                       <span>{hotel.offer?.rates?.[0]?.name || t("travelPage.runtime.roomFallback")}</span>
                     </div>
+                    <div className="travelStayMeta">
+                      <span>
+                        <UsersRound size={15} />
+                        {stayMetaText({ adults, checkin, checkout, t }).guests}
+                      </span>
+                      <span>
+                        <CalendarDays size={15} />
+                        {stayMetaText({ adults, checkin, checkout, t }).nights}
+                      </span>
+                    </div>
                     <div className="travelHotelPrice">
                       <span>{t("travelPage.runtime.totalSalePrice")}</span>
                       <strong>
@@ -1122,6 +1162,27 @@ function Travel() {
                       <span>
                         {hotel.offer?.rates?.[0]?.name ||
                           t("travelPage.runtime.roomFallback")}
+                      </span>
+                    </div>
+
+                    <div className="travelStayMeta">
+                      <span>
+                        <UsersRound size={15} />
+                        {stayMetaText({
+                          adults: hotel.showcaseAdults,
+                          checkin: hotel.showcaseCheckin,
+                          checkout: hotel.showcaseCheckout,
+                          t,
+                        }).guests}
+                      </span>
+                      <span>
+                        <CalendarDays size={15} />
+                        {stayMetaText({
+                          adults: hotel.showcaseAdults,
+                          checkin: hotel.showcaseCheckin,
+                          checkout: hotel.showcaseCheckout,
+                          t,
+                        }).nights}
                       </span>
                     </div>
 
