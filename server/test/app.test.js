@@ -23,7 +23,7 @@ test("health endpoint reports a healthy Rotavoy API", async () => {
 
     assert.equal(response.status, 200);
     assert.equal(body.ok, true);
-    assert.equal(body.service, "rotavoy-api");
+    assert.equal(body.service, "rotavoy-travel-api");
     assert.ok(Date.parse(body.timestamp));
   });
 });
