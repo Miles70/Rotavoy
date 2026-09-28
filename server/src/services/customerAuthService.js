@@ -159,7 +159,7 @@ export async function createWalletChallenge(addressValue) {
   const message = [
     `${appName} wallet sign-in`,
     "",
-    "Sign this message to securely access your customer account.",
+    "Sign this message to securely access your Rotavoy Travel account.",
     "This request does not trigger a blockchain transaction or gas fee.",
     "",
     `Wallet: ${address}`,
