@@ -170,6 +170,57 @@ export async function listIndexedShowcaseHotels(limit = 80) {
     .lean();
 }
 
+export async function refreshIndexedShowcasePhotos({
+  maxChecks = 30,
+  delayMs = 10000,
+} = {}) {
+  const max = Math.min(Math.max(Number(maxChecks) || 30, 1), 120);
+  const delay = Math.max(Number(delayMs) || 10000, 3000);
+  const hotels = await HotelVideoIndex.find({ stars: { $gte: 5 } })
+    .sort({ checkedAt: -1 })
+    .limit(max)
+    .lean();
+
+  let checked = 0;
+  let updated = 0;
+  let stoppedByRateLimit = false;
+
+  for (const indexedHotel of hotels) {
+    try {
+      const payload = await getNuiteeHotel(indexedHotel.hotelId);
+      const hotel = unwrapHotel(payload);
+      const mainPhoto = hotelPhoto(hotel);
+
+      if (mainPhoto && mainPhoto !== indexedHotel.mainPhoto) {
+        await HotelVideoIndex.updateOne(
+          { hotelId: indexedHotel.hotelId },
+          { $set: { mainPhoto } },
+        );
+        updated += 1;
+      }
+
+      checked += 1;
+      console.log(
+        `[${checked}/${hotels.length}] cover checked · ${indexedHotel.hotelId} · ${String(indexedHotel.name || "Unknown hotel").trim()}`,
+      );
+    } catch (error) {
+      if (error?.statusCode === 429) {
+        stoppedByRateLimit = true;
+        break;
+      }
+
+      checked += 1;
+      console.log(
+        `[${checked}/${hotels.length}] cover error · ${indexedHotel.hotelId}`,
+      );
+    }
+
+    if (checked < hotels.length) await sleep(delay);
+  }
+
+  return { checked, updated, stoppedByRateLimit };
+}
+
 export async function indexHotelVideos({
   targets = DEFAULT_VIDEO_INDEX_TARGETS,
   maxChecks = 12,
