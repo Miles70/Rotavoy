@@ -470,10 +470,17 @@ hotelsRouter.post("/checkout", bookingLimiter, async (request, response, next) =
     const prebook = await prebookNuiteeRate({ offerId, usePaymentSdk: false });
     const prebookData = prebook?.data || {};
     const prebookId = requiredText(prebookData?.prebookId || prebookData?.id, "prebookId", 500);
-    const total = Number(prebookData?.price);
+    const providerTotal = Number(prebookData?.price);
     const currency = String(prebookData?.currency || "USD").toUpperCase();
-    if (!Number.isFinite(total) || total <= 0) throw requestError("The hotel price could not be confirmed.");
+    if (!Number.isFinite(providerTotal) || providerTotal <= 0) throw requestError("The hotel price could not be confirmed.");
     if (currency !== "USD") throw requestError("Hotel checkout currently requires a USD rate.");
+
+    // Keep the amount charged to the customer identical to the amount shown
+    // after prebook. Both paths use the same configured Rotavoy margin.
+    const customerTotal = roundMoney(
+      providerTotal * (1 + getMargin() / 100),
+    );
+
     const payment = getPublicCryptoPaymentConfig();
     if (!payment.configured) {
       const error = new Error("Crypto payment is not configured on the server.");
@@ -482,9 +489,9 @@ hotelsRouter.post("/checkout", bookingLimiter, async (request, response, next) =
     }
     const booking = await TravelBooking.create({
       clientReference: travelReference(), offerId, prebookId, holder, guests,
-      total: Math.round((total + Number.EPSILON) * 100) / 100,
+      total: customerTotal,
       currency,
-      payment: { ...payment, expectedAmount: Number(total).toFixed(2), currency: payment.token },
+      payment: { ...payment, expectedAmount: customerTotal.toFixed(2), currency: payment.token },
       paymentExpiresAt: new Date(Date.now() + 20 * 60 * 1000),
     });
     response.set("Cache-Control", "no-store");
