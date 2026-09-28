@@ -39,8 +39,8 @@ async function main() {
   try {
     const result = await indexHotelVideos({
       targets: readTargets(),
-      maxChecks: readNumberArg("max", 24),
-      delayMs: readNumberArg("delay", 2500),
+      maxChecks: readNumberArg("max", 12),
+      delayMs: readNumberArg("delay", 10000),
       staleAfterDays: readNumberArg("stale-days", 30),
     });
 
