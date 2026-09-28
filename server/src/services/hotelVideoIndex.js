@@ -126,6 +126,18 @@ function collectHotelImages(value, result = [], seen = new Set()) {
 }
 
 function hotelPhoto(hotel) {
+  // Rixos Downtown's provider default is an unhelpful sky-heavy image.
+  // Keep every other hotel's existing cover selection untouched.
+  if (String(hotel?.id || "") === "lp22e91") {
+    const rixosGallery = Array.isArray(hotel?.hotelImages) ? hotel.hotelImages : [];
+    const preferredRixosPhoto = rixosGallery.find(
+      (item) => item?.defaultImage !== true && (item?.urlHd || item?.url),
+    );
+    if (preferredRixosPhoto) {
+      return String(preferredRixosPhoto.urlHd || preferredRixosPhoto.url).trim();
+    }
+  }
+
   const galleryImages = [];
   const seen = new Set();
 
@@ -137,15 +149,7 @@ function hotelPhoto(hotel) {
     hotel?.hotelImages,
     hotel?.hotelPhotos,
     hotel?.media,
-  ].forEach((source) => {
-    if (Array.isArray(source) && source.length > 1) {
-      const preferred = source.filter((item) => item?.defaultImage !== true);
-      collectHotelImages(preferred.length ? preferred : source, galleryImages, seen);
-      return;
-    }
-
-    collectHotelImages(source, galleryImages, seen);
-  });
+  ].forEach((source) => collectHotelImages(source, galleryImages, seen));
 
   if (galleryImages.length) return galleryImages[0];
 
