@@ -873,6 +873,33 @@
   border-top: 1px solid rgba(16, 73, 82, 0.08);
 }
 
+.travelStayMeta {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.travelStayMeta span {
+  min-width: 0;
+  padding: 7px 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(7, 139, 150, 0.12);
+  border-radius: 999px;
+  background: #f2faf9;
+  color: #45676c;
+  font-size: 0.69rem;
+  font-weight: 850;
+  line-height: 1;
+}
+
+.travelStayMeta svg {
+  flex: 0 0 auto;
+  color: #078b96;
+}
+
 .travelHotelPrice {
   margin-top: auto;
   padding-top: 20px;
