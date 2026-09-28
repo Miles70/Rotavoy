@@ -472,6 +472,10 @@ function Travel() {
             knownIds.add(hotel.hotelId);
             collected.push({
               ...hotel,
+              main_photo:
+                hotel.hotelId === "lp22e91"
+                  ? "https://static.cupid.travel/hotels/527859076.jpg"
+                  : (indexedHotel.mainPhoto || hotel.main_photo || ""),
               videoUrl: indexedHotel.videoUrl || hotel.videoUrl || "",
               showcaseCheckin: checkin,
               showcaseCheckout: checkout,
