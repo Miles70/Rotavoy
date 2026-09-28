@@ -55,9 +55,9 @@ const tr = {
       "people5": "5+ kişi"
     },
     "prototypeNote": "Arama ekranı hazır. Gerçek fiyat ve müsaitlik sonuçları travel API bağlantısıyla burada açılacak.",
-    "routesEyebrow": "ROTAVOY ROTALARI",
-    "routesTitle": "Alışveriş rotandan tatil rotana.",
-    "routesText": "Travel bölümü mağazadan ayrı çalışır; hesap, dil ve ödeme deneyimi Rotavoy çatısı altında kalır.",
+    "routesEyebrow": "SEYAHAT İLHAMı",
+    "routesTitle": "Sıradaki konaklamanı seç, yolculuğunu onun etrafında oluştur.",
+    "routesText": "Rotavoy deneyiminin merkezinde oteller, odalar ve canlı müsaitlik var.",
     "cards": {
       "antalya": {
         "badge": "Popüler",
