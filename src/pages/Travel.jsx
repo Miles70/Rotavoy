@@ -44,6 +44,8 @@ const SHOWCASE_LIMIT = 20;
 const SHOWCASE_SCAN_BATCH = 100;
 const SHOWCASE_MAX_BATCHES = 5;
 const SHOWCASE_REFRESH_MS = 2 * 60 * 1000;
+const DEFAULT_SHOWCASE_CITY = "Antalya";
+const DEFAULT_SHOWCASE_FALLBACK_CITIES = ["Belek", "Side", "Kemer", "Alanya"];
 
 function addDays(days) {
   const date = new Date();
@@ -206,7 +208,12 @@ function Travel() {
     if (showcaseRefreshingRef.current) return;
 
     showcaseRefreshingRef.current = true;
-    const showcaseCity = cityName.trim() || "Antalya";
+    const requestedCity = cityName.trim() || DEFAULT_SHOWCASE_CITY;
+    const showcaseCities =
+      requestedCity.toLocaleLowerCase("tr-TR") ===
+      DEFAULT_SHOWCASE_CITY.toLocaleLowerCase("tr-TR")
+        ? [DEFAULT_SHOWCASE_CITY, ...DEFAULT_SHOWCASE_FALLBACK_CITIES]
+        : [requestedCity];
 
     if (!silent) {
       setShowcaseState("loading");
@@ -216,8 +223,6 @@ function Travel() {
     setShowcaseError("");
 
     try {
-      let offset = 0;
-      let total = Number.POSITIVE_INFINITY;
       const collected = [];
       const knownIds = new Set();
 
@@ -241,51 +246,58 @@ function Travel() {
         });
       };
 
-      for (
-        let batch = 0;
-        batch < SHOWCASE_MAX_BATCHES &&
-        collected.length < SHOWCASE_LIMIT &&
-        offset < total;
-        batch += 1
-      ) {
-        const catalog = await listHotels({
-          countryCode: "TR",
-          cityName: showcaseCity,
-          limit: SHOWCASE_SCAN_BATCH,
-          offset,
-        });
+      for (const showcaseCity of showcaseCities) {
+        if (collected.length >= SHOWCASE_LIMIT) break;
 
-        const hotelIds = (catalog?.hotelIds || []).slice(0, SHOWCASE_SCAN_BATCH);
-        total = Number(catalog?.total || offset + hotelIds.length);
+        let offset = 0;
+        let total = Number.POSITIVE_INFINITY;
 
-        if (!hotelIds.length) break;
-
-        const rateResponse = await searchHotelRates({
-          hotelIds,
-          checkin,
-          checkout,
-          adults,
-        });
-
-        for (const hotel of buildResults(rateResponse)) {
-          if (!isFiveStarHotel(hotel) || knownIds.has(hotel.hotelId)) continue;
-
-          knownIds.add(hotel.hotelId);
-          collected.push({
-            ...hotel,
-            showcaseCheckin: checkin,
-            showcaseCheckout: checkout,
-            showcaseAdults: adults,
-            showcaseCity,
+        for (
+          let batch = 0;
+          batch < SHOWCASE_MAX_BATCHES &&
+          collected.length < SHOWCASE_LIMIT &&
+          offset < total;
+          batch += 1
+        ) {
+          const catalog = await listHotels({
+            countryCode: "TR",
+            cityName: showcaseCity,
+            limit: SHOWCASE_SCAN_BATCH,
+            offset,
           });
 
-          if (collected.length >= SHOWCASE_LIMIT) break;
-        }
+          const hotelIds = (catalog?.hotelIds || []).slice(0, SHOWCASE_SCAN_BATCH);
+          total = Number(catalog?.total || offset + hotelIds.length);
 
-        // Publish each batch immediately so the first available 5★ hotels render
-        // while the remaining catalog batches continue filling the showcase.
-        publishCollectedHotels();
-        offset += hotelIds.length;
+          if (!hotelIds.length) break;
+
+          const rateResponse = await searchHotelRates({
+            hotelIds,
+            checkin,
+            checkout,
+            adults,
+          });
+
+          for (const hotel of buildResults(rateResponse)) {
+            if (!isFiveStarHotel(hotel) || knownIds.has(hotel.hotelId)) continue;
+
+            knownIds.add(hotel.hotelId);
+            collected.push({
+              ...hotel,
+              showcaseCheckin: checkin,
+              showcaseCheckout: checkout,
+              showcaseAdults: adults,
+              showcaseCity,
+            });
+
+            if (collected.length >= SHOWCASE_LIMIT) break;
+          }
+
+          // Render every successful batch immediately. Antalya appears first;
+          // nearby resort cities only fill any remaining slots up to 20.
+          publishCollectedHotels();
+          offset += hotelIds.length;
+        }
       }
 
       setShowcaseState("success");
