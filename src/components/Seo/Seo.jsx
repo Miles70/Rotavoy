@@ -15,8 +15,8 @@ function safeJson(data) {
 }
 
 export default function Seo({
-  title = "Rotavoy | Global Marketplace",
-  description = "Discover electronics, fashion, home, lifestyle and more on Rotavoy.",
+  title = "Rotavoy Travel | Hotels & Global Stays",
+  description = "Search hotels, compare live room offers and book global stays with Rotavoy Travel.",
   path = "/",
   image = "",
   type = "website",
