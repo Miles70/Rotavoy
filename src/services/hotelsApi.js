@@ -41,13 +41,6 @@ export function getHotelDetails(hotelId) {
   });
 }
 
-export function getHotelVideos(hotelIds) {
-  return hotelRequest("/videos", {
-    method: "POST",
-    body: JSON.stringify({ hotelIds }),
-  });
-}
-
 export function getHotelTranslation(hotelId, language) {
   const query = new URLSearchParams({ language });
   return hotelRequest(
