@@ -135,35 +135,3 @@ export async function logoutCustomerSession() {
     clearStoredCustomerSession();
   }
 }
-
-export async function fetchCustomerAccount() {
-  return request(
-    "/api/customer",
-    { method: "GET" },
-    { authenticated: true },
-  );
-}
-
-export async function saveCustomerAccount(account) {
-  return request(
-    "/api/customer",
-    {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(account),
-    },
-    { authenticated: true },
-  );
-}
-
-export async function claimCustomerOrders(orders) {
-  return request(
-    "/api/customer/claim-orders",
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orders }),
-    },
-    { authenticated: true },
-  );
-}
