@@ -22,6 +22,7 @@ import {
 
 import { useLanguage } from "../i18n/LanguageContext";
 import {
+  getHotelVideos,
   listHotels,
   prebookHotel,
   searchHotelRates,
@@ -37,6 +38,7 @@ const services = [
 ];
 
 const SHOWCASE_LIMIT = 20;
+const SHOWCASE_CANDIDATE_LIMIT = 40;
 // Nuitee availability can vary from one request to the next. Scan a wider
 // catalog window, then keep previously found live offers while new results
 // replenish the showcase. This prevents the 5★ shelf from jumping from 20
@@ -97,6 +99,59 @@ function buildResults(rateResponse) {
 function isFiveStarHotel(hotel) {
   const stars = Number.parseFloat(String(hotel?.stars ?? "").replace(/[^\d.]/g, ""));
   return Number.isFinite(stars) && stars >= 5;
+}
+
+function ShowcaseHotelMedia({ hotel, to, ariaLabel, starLabel }) {
+  const videoRef = useRef(null);
+
+  const playVideo = () => {
+    if (!hotel.videoUrl || !videoRef.current) return;
+    const playPromise = videoRef.current.play();
+    if (playPromise?.catch) playPromise.catch(() => {});
+  };
+
+  const stopVideo = () => {
+    if (!videoRef.current) return;
+    videoRef.current.pause();
+    videoRef.current.currentTime = 0;
+  };
+
+  return (
+    <Link
+      className={`travelHotelMedia${hotel.videoUrl ? " travelHotelMedia--video" : ""}`}
+      to={to}
+      state={{ hotel }}
+      aria-label={ariaLabel}
+      onMouseEnter={playVideo}
+      onMouseLeave={stopVideo}
+      onFocus={playVideo}
+      onBlur={stopVideo}
+    >
+      {hotel.main_photo ? (
+        <img src={hotel.main_photo} alt="" loading="lazy" />
+      ) : (
+        <Hotel size={42} aria-hidden="true" />
+      )}
+
+      {hotel.videoUrl ? (
+        <>
+          <video
+            ref={videoRef}
+            src={hotel.videoUrl}
+            poster={hotel.main_photo || undefined}
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            aria-hidden="true"
+          />
+          <span className="travelVideoBadge">VIDEO</span>
+        </>
+      ) : null}
+
+      <span className="travelStarsBadge">{starLabel}</span>
+    </Link>
+  );
 }
 
 function Travel() {
@@ -230,8 +285,12 @@ function Travel() {
         setShowcaseHotels((currentHotels) => {
           const merged = [];
           const mergedIds = new Set();
+          const videoFirst = [...collected, ...currentHotels].sort(
+            (left, right) =>
+              Number(Boolean(right?.videoUrl)) - Number(Boolean(left?.videoUrl)),
+          );
 
-          for (const hotel of [...collected, ...currentHotels]) {
+          for (const hotel of videoFirst) {
             if (!hotel?.hotelId || !hotel?.offer?.offerId || mergedIds.has(hotel.hotelId)) {
               continue;
             }
@@ -247,7 +306,7 @@ function Travel() {
       };
 
       for (const showcaseCity of showcaseCities) {
-        if (collected.length >= SHOWCASE_LIMIT) break;
+        if (collected.length >= SHOWCASE_CANDIDATE_LIMIT) break;
 
         let offset = 0;
         let total = Number.POSITIVE_INFINITY;
@@ -258,7 +317,7 @@ function Travel() {
         for (
           let batch = 0;
           batch < maxBatchesForCity &&
-          collected.length < SHOWCASE_LIMIT &&
+          collected.length < SHOWCASE_CANDIDATE_LIMIT &&
           offset < total;
           batch += 1
         ) {
@@ -281,6 +340,8 @@ function Travel() {
             adults,
           });
 
+          const newlyAddedHotelIds = [];
+
           for (const hotel of buildResults(rateResponse)) {
             if (!isFiveStarHotel(hotel) || knownIds.has(hotel.hotelId)) continue;
 
@@ -292,13 +353,33 @@ function Travel() {
               showcaseAdults: adults,
               showcaseCity,
             });
+            newlyAddedHotelIds.push(hotel.hotelId);
 
-            if (collected.length >= SHOWCASE_LIMIT) break;
+            if (collected.length >= SHOWCASE_CANDIDATE_LIMIT) break;
           }
 
-          // Render every successful batch immediately. Antalya appears first;
-          // nearby resort cities only fill any remaining slots up to 20.
+          // Keep the fast path: show live 5★ hotels before video metadata finishes.
           publishCollectedHotels();
+
+          if (newlyAddedHotelIds.length) {
+            try {
+              const videoResponse = await getHotelVideos(newlyAddedHotelIds);
+              const videos = videoResponse?.videos || {};
+              let videoFound = false;
+
+              for (const hotel of collected) {
+                const videoUrl = videos[hotel.hotelId];
+                if (!videoUrl) continue;
+                hotel.videoUrl = videoUrl;
+                videoFound = true;
+              }
+
+              if (videoFound) publishCollectedHotels();
+            } catch {
+              // Video discovery is an enhancement; never block hotel availability.
+            }
+          }
+
           offset += hotelIds.length;
         }
       }
@@ -869,19 +950,12 @@ function Travel() {
             <div className="travelHotelGrid travelShowcaseGrid">
               {showcaseHotels.map((hotel) => (
                 <article className="travelHotelCard" key={hotel.hotelId}>
-                  <Link
-                    className="travelHotelMedia"
+                  <ShowcaseHotelMedia
+                    hotel={hotel}
                     to={hotelDetailsUrl(hotel)}
-                    state={{ hotel }}
-                    aria-label={`${hotel.name || t("travelPage.runtime.hotelFallback")} ${t("travelPage.runtime.detailsAria")}`}
-                  >
-                    {hotel.main_photo ? (
-                      <img src={hotel.main_photo} alt="" loading="lazy" />
-                    ) : (
-                      <Hotel size={42} aria-hidden="true" />
-                    )}
-                    <span>5 {t("travelPage.runtime.stars")}</span>
-                  </Link>
+                    ariaLabel={`${hotel.name || t("travelPage.runtime.hotelFallback")} ${t("travelPage.runtime.detailsAria")}`}
+                    starLabel={`5 ${t("travelPage.runtime.stars")}`}
+                  />
 
                   <div className="travelHotelBody">
                     <div className="travelHotelRating">
