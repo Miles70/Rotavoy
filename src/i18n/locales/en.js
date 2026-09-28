@@ -55,9 +55,9 @@ const en = {
       "people5": "5+ people"
     },
     "prototypeNote": "The search interface is ready. Live prices and availability will appear here after the travel API integration.",
-    "routesEyebrow": "ROTAVOY ROUTES",
-    "routesTitle": "From your shopping route to your holiday route.",
-    "routesText": "Travel works separately from the store while the account, language and payment experience stay under the Rotavoy roof.",
+    "routesEyebrow": "TRAVEL INSPIRATION",
+    "routesTitle": "Choose your next stay and build the trip around it.",
+    "routesText": "Hotels, rooms and live availability stay at the center of the Rotavoy experience.",
     "cards": {
       "antalya": {
         "badge": "Popular",
