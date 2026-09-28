@@ -3,12 +3,8 @@ import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider } from "wagmi";
 
-import "./utils/orderStorage";
 import { LanguageProvider } from "./i18n/LanguageContext";
-import { CartProvider } from "./context/CartContext";
 import { CustomerAuthProvider } from "./context/CustomerAuthContext";
-import { CustomerAccountProvider } from "./context/CustomerAccountContext";
-import { AdminAuthProvider } from "./context/AdminAuthContext";
 import { wagmiAdapter } from "./config/wagmi";
 
 import "./index.css";
@@ -17,23 +13,13 @@ import App from "./App.jsx";
 
 const queryClient = new QueryClient();
 
-// Product requests receive SEO-complete HTML from the server. Remove those
-// temporary head nodes before React installs the live route metadata.
-document.querySelectorAll('[data-seo-server="true"]').forEach((element) => element.remove());
-
 createRoot(document.getElementById("root")).render(
   <WagmiProvider config={wagmiAdapter.wagmiConfig}>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <LanguageProvider>
           <CustomerAuthProvider>
-            <CustomerAccountProvider>
-              <CartProvider>
-                <AdminAuthProvider>
-                  <App />
-                </AdminAuthProvider>
-              </CartProvider>
-            </CustomerAccountProvider>
+            <App />
           </CustomerAuthProvider>
         </LanguageProvider>
       </BrowserRouter>
