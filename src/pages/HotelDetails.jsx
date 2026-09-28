@@ -382,19 +382,43 @@ function HotelDetails() {
   }, [hotelId, language]);
 
   const images = useMemo(() => {
-    const collected = collectImages(hotel);
+    const galleryImages = [];
+    const seen = new Set();
 
-    // Prefer the hotel's real gallery. Provider main_photo is often a smaller
-    // duplicate of one of those images, so only use it when no gallery exists.
-    if (
-      collected.length === 0 &&
-      fallbackHotel?.main_photo &&
-      !collected.includes(fallbackHotel.main_photo)
-    ) {
-      collected.push(fallbackHotel.main_photo);
+    const gallerySources = [
+      hotel?.images,
+      hotel?.photos,
+      hotel?.pictures,
+      hotel?.gallery,
+      hotel?.hotelImages,
+      hotel?.hotelPhotos,
+      hotel?.media,
+    ];
+
+    for (const source of gallerySources) {
+      collectImages(source, galleryImages, seen);
     }
 
-    return collected;
+    // Provider main_photo/thumbnail is often a smaller duplicate of a gallery
+    // image. Never let it become photo #1 when a real gallery exists.
+    if (galleryImages.length > 0) {
+      return galleryImages;
+    }
+
+    const fallbackImages = [];
+    const fallbackSeen = new Set();
+
+    collectImages(hotel?.main_photo, fallbackImages, fallbackSeen);
+    collectImages(hotel?.mainPhoto, fallbackImages, fallbackSeen);
+    collectImages(fallbackHotel?.main_photo, fallbackImages, fallbackSeen);
+    collectImages(fallbackHotel?.mainPhoto, fallbackImages, fallbackSeen);
+
+    if (fallbackImages.length > 0) {
+      return fallbackImages;
+    }
+
+    // Last-resort discovery for unusual provider payload shapes.
+    return collectImages(hotel);
   }, [hotel, fallbackHotel]);
 
   const facilities = useMemo(
