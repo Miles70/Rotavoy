@@ -45,7 +45,14 @@ async function main() {
       const hotel = payload?.data?.hotel || payload?.data || payload?.hotel || payload || {};
       const keys = ["images", "photos", "pictures", "gallery", "hotelImages", "hotelPhotos", "media", "main_photo", "mainPhoto", "thumbnail", "image"];
       const summarize = (value) => {
-        if (Array.isArray(value)) return { count: value.length, first: value.slice(0, 2) };
+        if (Array.isArray(value)) return { count: value.length, first: value.slice(0, 12).map((item, index) => ({
+          index,
+          url: item?.url,
+          urlHd: item?.urlHd,
+          caption: item?.caption,
+          order: item?.order,
+          defaultImage: item?.defaultImage,
+        })) };
         return value;
       };
       console.log("Hotel image fields:", JSON.stringify(
