@@ -262,7 +262,7 @@ function ShowcaseHotelMedia({ hotel, to, ariaLabel, starLabel, language }) {
           src={hotel.main_photo}
           alt=""
           loading="lazy"
-          style={hotel.hotelId === "lp22e91" ? { objectFit: "cover", objectPosition: "center center" } : undefined}
+          style={hotel.hotelId === "lp22e91" ? { objectFit: "cover", objectPosition: "center 78%" } : undefined}
         />
       ) : (
         <Hotel size={42} aria-hidden="true" />
