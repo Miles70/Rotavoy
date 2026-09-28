@@ -93,12 +93,12 @@ export async function listIndexedVideoHotels(limit = 40) {
 
 export async function indexHotelVideos({
   targets = DEFAULT_VIDEO_INDEX_TARGETS,
-  maxChecks = 24,
-  delayMs = 2500,
+  maxChecks = 12,
+  delayMs = 10000,
   staleAfterDays = 30,
 } = {}) {
-  const max = Math.min(Math.max(Number(maxChecks) || 24, 1), 200);
-  const delay = Math.max(Number(delayMs) || 2500, 1000);
+  const max = Math.min(Math.max(Number(maxChecks) || 12, 1), 200);
+  const delay = Math.max(Number(delayMs) || 10000, 3000);
   const staleBefore = new Date(Date.now() - staleAfterDays * 24 * 60 * 60 * 1000);
 
   let checked = 0;
