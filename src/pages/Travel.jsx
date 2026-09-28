@@ -23,6 +23,7 @@ import {
 import { useLanguage } from "../i18n/LanguageContext";
 import {
   listHotels,
+  listIndexedVideoHotels,
   prebookHotel,
   searchHotelRates,
 } from "../services/hotelsApi";
@@ -337,6 +338,58 @@ function Travel() {
           return merged;
         });
       };
+
+      try {
+        const indexedResponse = await listIndexedVideoHotels(40);
+        const indexedHotels = Array.isArray(indexedResponse?.hotels)
+          ? indexedResponse.hotels
+          : [];
+        const indexedVideoById = new Map(
+          indexedHotels
+            .filter((hotel) => hotel?.hotelId && hotel?.videoUrl)
+            .map((hotel) => [hotel.hotelId, hotel]),
+        );
+        const indexedHotelIds = [...indexedVideoById.keys()];
+
+        if (indexedHotelIds.length) {
+          const indexedRates = await searchHotelRates({
+            hotelIds: indexedHotelIds,
+            checkin,
+            checkout,
+            adults,
+          });
+
+          for (const hotel of buildResults(indexedRates)) {
+            const indexedHotel = indexedVideoById.get(hotel.hotelId);
+            if (
+              !indexedHotel ||
+              !isFiveStarHotel(hotel) ||
+              knownIds.has(hotel.hotelId)
+            ) {
+              continue;
+            }
+
+            knownIds.add(hotel.hotelId);
+            collected.push({
+              ...hotel,
+              videoUrl: indexedHotel.videoUrl,
+              showcaseCheckin: checkin,
+              showcaseCheckout: checkout,
+              showcaseAdults: adults,
+              showcaseCity:
+                indexedHotel.cityName ||
+                hotel.city_name ||
+                DEFAULT_SHOWCASE_CITY,
+            });
+
+            if (collected.length >= SHOWCASE_LIMIT) break;
+          }
+
+          publishCollectedHotels();
+        }
+      } catch {
+        // The video index is optional. Normal live 5★ discovery continues below.
+      }
 
       for (const showcaseCity of showcaseCities) {
         if (collected.length >= SHOWCASE_LIMIT) break;
