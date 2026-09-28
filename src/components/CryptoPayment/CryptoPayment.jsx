@@ -11,41 +11,11 @@ import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
 import { usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
 import { isAddress, parseUnits } from "viem";
 import { useLanguage } from "../../i18n/LanguageContext";
-import { verifyOrderPayment } from "../../services/orderApi";
 import {
   BSC_EXPLORER_TRANSACTION_URL,
   ERC20_TRANSFER_ABI,
 } from "../../config/cryptoPayment";
 import "./CryptoPayment.css";
-
-function safeParse(value, fallback) {
-  try {
-    return value ? JSON.parse(value) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function persistOrder(order) {
-  const existingOrders = safeParse(
-    localStorage.getItem("rotavoy_orders"),
-    []
-  );
-  let orderWasUpdated = false;
-
-  const nextOrders = Array.isArray(existingOrders)
-    ? existingOrders.map((existingOrder) => {
-        if (existingOrder.id !== order.id) return existingOrder;
-        orderWasUpdated = true;
-        return order;
-      })
-    : [];
-
-  if (!orderWasUpdated) nextOrders.unshift(order);
-
-  localStorage.setItem("rotavoy_orders", JSON.stringify(nextOrders));
-  localStorage.setItem("rotavoy_last_order", JSON.stringify(order));
-}
 
 function shortenAddress(value) {
   const address = String(value || "");
@@ -202,7 +172,6 @@ function CryptoPayment({ order, onOrderUpdated, verifyPaymentRequest, forceDispl
   ].includes(paymentStage);
 
   const updateOrder = (nextOrder) => {
-    persistOrder(nextOrder);
     setTransactionHash(nextOrder.payment?.transactionHash || "");
     onOrderUpdated?.(nextOrder);
   };
@@ -211,8 +180,11 @@ function CryptoPayment({ order, onOrderUpdated, verifyPaymentRequest, forceDispl
     setPaymentStage("verifying");
     setPaymentError("");
 
-    const request = verifyPaymentRequest || verifyOrderPayment;
-    const verifiedOrder = await request(order.id, {
+    if (typeof verifyPaymentRequest !== "function") {
+      throw new Error("Travel payment verification is unavailable.");
+    }
+
+    const verifiedOrder = await verifyPaymentRequest(order.id, {
       email: order.customer?.email,
       transactionHash: hash,
       payerAddress,
