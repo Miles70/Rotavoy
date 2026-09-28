@@ -1,12 +1,10 @@
 import { Link } from "react-router-dom";
 import { FaFacebookF, FaInstagram, FaXTwitter, FaYoutube } from "react-icons/fa6";
-import { useLanguage } from "../../i18n/LanguageContext";
 import siteConfig from "../../config/site";
 import "./Footer.css";
 
 function Footer() {
   const currentYear = new Date().getFullYear();
-  const { t } = useLanguage();
 
   return (
     <footer className="footer">
@@ -18,40 +16,38 @@ function Footer() {
 
           <p>{siteConfig.description}</p>
 
-          <div className="socialLinks" aria-label="Rotavoy sosyal medya hesapları yakında">
-            <span aria-label="Facebook yakında"><FaFacebookF /></span>
-            <span aria-label="Instagram yakında"><FaInstagram /></span>
-            <span aria-label="X yakında"><FaXTwitter /></span>
-            <span aria-label="YouTube yakında"><FaYoutube /></span>
+          <div className="socialLinks" aria-label="Rotavoy social channels">
+            <span aria-label="Facebook"><FaFacebookF /></span>
+            <span aria-label="Instagram"><FaInstagram /></span>
+            <span aria-label="X"><FaXTwitter /></span>
+            <span aria-label="YouTube"><FaYoutube /></span>
           </div>
         </div>
 
         <div className="footerColumn">
-          <h3>{t("footer.shop")}</h3>
-          <Link to="/products">{t("footer.products")}</Link>
-          <Link to="/categories">{t("footer.categories")}</Link>
-          <Link to="/cart">{t("footer.cart")}</Link>
+          <h3>Travel</h3>
+          <Link to="/">Hotels</Link>
+          <Link to="/support">Reservation support</Link>
+          <Link to="/refund">Cancellation & refunds</Link>
         </div>
 
         <div className="footerColumn">
-          <h3>{t("footer.company")}</h3>
-          <Link to="/about">{t("footer.about")}</Link>
-          <Link to="/contact">{t("footer.contact")}</Link>
-          <Link to="/support">{t("footer.support")}</Link>
+          <h3>Rotavoy</h3>
+          <Link to="/about">About</Link>
+          <Link to="/contact">Contact</Link>
+          <Link to="/support">Support</Link>
         </div>
 
         <div className="footerColumn">
-          <h3>{t("footer.legal")}</h3>
-          <Link to="/privacy">{t("footer.privacy")}</Link>
-          <Link to="/terms">{t("footer.terms")}</Link>
-          <Link to="/refund">{t("footer.refund")}</Link>
+          <h3>Legal</h3>
+          <Link to="/privacy">Privacy</Link>
+          <Link to="/terms">Terms</Link>
+          <Link to="/refund">Refund policy</Link>
         </div>
       </div>
 
       <div className="container footerBottom">
-        <p>
-          © {currentYear} {siteConfig.brandName}. {t("footer.rights")}
-        </p>
+        <p>© {currentYear} {siteConfig.brandName}. Travel platform.</p>
       </div>
     </footer>
   );
