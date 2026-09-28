@@ -76,7 +76,7 @@ function getPaymentErrorMessage(error, transactionWasSubmitted, text) {
     },
     {
       pattern: /already paid/i,
-      key: "orderAlreadyPaid",
+      key: "reservationAlreadyPaid",
       fallback: "This booking has already been paid.",
     },
     {
@@ -140,8 +140,7 @@ function CryptoPayment({ booking, onBookingUpdated, verifyPaymentRequest, forceD
     setTransactionHash(booking?.payment?.transactionHash || "");
   }, [booking?.payment?.transactionHash]);
 
-  // A travel checkout must never become a blank screen. Its payment payload
-  // is validated visibly below, while ordinary orders retain their guard.
+  // Travel checkout validates its payment payload visibly before payment.
   if (!booking || (!forceDisplay && booking.paymentMethod !== "crypto")) return null;
 
   const text = (key, fallback) => {
@@ -171,9 +170,9 @@ function CryptoPayment({ booking, onBookingUpdated, verifyPaymentRequest, forceD
     "verifying",
   ].includes(paymentStage);
 
-  const updateOrder = (nextOrder) => {
-    setTransactionHash(nextOrder.payment?.transactionHash || "");
-    onBookingUpdated?.(nextOrder);
+  const updateBooking = (nextBooking) => {
+    setTransactionHash(nextBooking.payment?.transactionHash || "");
+    onBookingUpdated?.(nextBooking);
   };
 
   const verifyPayment = async (hash, payerAddress = "") => {
@@ -184,13 +183,13 @@ function CryptoPayment({ booking, onBookingUpdated, verifyPaymentRequest, forceD
       throw new Error("Travel payment verification is unavailable.");
     }
 
-    const verifiedOrder = await verifyPaymentRequest(booking.id, {
+    const verifiedBooking = await verifyPaymentRequest(booking.id, {
       email: booking.customer?.email,
       transactionHash: hash,
       payerAddress,
     });
 
-    updateOrder(verifiedOrder);
+    updateBooking(verifiedBooking);
     setPaymentStage("paid");
   };
 
@@ -273,7 +272,7 @@ function CryptoPayment({ booking, onBookingUpdated, verifyPaymentRequest, forceD
 
       submittedHash = hash;
 
-      const pendingOrder = {
+      const pendingBooking = {
         ...booking,
         paymentStatus: "pending",
         payment: {
@@ -283,7 +282,7 @@ function CryptoPayment({ booking, onBookingUpdated, verifyPaymentRequest, forceD
         },
       };
 
-      updateOrder(pendingOrder);
+      updateBooking(pendingBooking);
       setPaymentStage("confirming");
 
       if (!publicClient) {
