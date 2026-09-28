@@ -135,13 +135,11 @@ function isFiveStarHotel(hotel) {
   return Number.isFinite(stars) && stars >= 5;
 }
 
-function countryFlag(countryCode) {
-  const code = String(countryCode || "").trim().toUpperCase();
-  if (!/^[A-Z]{2}$/.test(code)) return "🌍";
-
-  return [...code]
-    .map((letter) => String.fromCodePoint(127397 + letter.charCodeAt(0)))
-    .join("");
+function countryFlagImage(countryCode) {
+  const code = String(countryCode || "").trim().toLowerCase();
+  return /^[a-z]{2}$/.test(code)
+    ? `https://flagcdn.com/40x30/${code}.png`
+    : "";
 }
 
 function countryName(countryCode, language) {
@@ -247,16 +245,28 @@ function ShowcaseHotelMedia({ hotel, to, ariaLabel, starLabel, language }) {
             preload="metadata"
             aria-hidden="true"
           />
-          <span className="travelVideoBadge">VIDEO</span>
         </>
       ) : null}
 
-      <span className="travelCountryBadge">
-        <span aria-hidden="true">{countryFlag(hotel.showcaseCountryCode)}</span>
-        {countryName(hotel.showcaseCountryCode, language)}
-      </span>
+      <span className="travelHotelMediaOverlay" aria-hidden="true">
+        {hotel.videoUrl ? <span className="travelVideoBadge">VIDEO</span> : null}
 
-      <span className="travelStarsBadge">{starLabel}</span>
+        <span className="travelCountryBadge">
+          {countryFlagImage(hotel.showcaseCountryCode) ? (
+            <img
+              className="travelCountryFlag"
+              src={countryFlagImage(hotel.showcaseCountryCode)}
+              alt=""
+              loading="lazy"
+            />
+          ) : null}
+          <span className="travelCountryName">
+            {countryName(hotel.showcaseCountryCode, language)}
+          </span>
+        </span>
+
+        <span className="travelStarsBadge">{starLabel}</span>
+      </span>
     </Link>
   );
 }
