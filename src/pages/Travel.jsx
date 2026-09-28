@@ -258,7 +258,12 @@ function ShowcaseHotelMedia({ hotel, to, ariaLabel, starLabel, language }) {
       onBlur={stopVideo}
     >
       {hotel.main_photo ? (
-        <img src={hotel.main_photo} alt="" loading="lazy" />
+        <img
+          src={hotel.main_photo}
+          alt=""
+          loading="lazy"
+          style={hotel.hotelId === "lp22e91" ? { objectFit: "cover", objectPosition: "center center" } : undefined}
+        />
       ) : (
         <Hotel size={42} aria-hidden="true" />
       )}
@@ -474,7 +479,7 @@ function Travel() {
               ...hotel,
               main_photo:
                 hotel.hotelId === "lp22e91"
-                  ? "https://static.cupid.travel/hotels/527859076.jpg"
+                  ? "https://static.cupid.travel/hotels/579989812.jpg"
                   : (indexedHotel.mainPhoto || hotel.main_photo || ""),
               videoUrl: indexedHotel.videoUrl || hotel.videoUrl || "",
               showcaseCheckin: checkin,
