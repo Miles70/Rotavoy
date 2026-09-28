@@ -1,15 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import {
-  ArrowRight,
   ChevronDown,
-  Heart,
   LogOut,
-  MapPin,
-  Package,
   ShieldCheck,
-  ShoppingBag,
-  Sparkles,
   UserRound,
   WalletCards,
 } from "lucide-react";
@@ -17,11 +11,9 @@ import { FaFacebookF } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 
 import { useLanguage } from "../../i18n/LanguageContext";
-import { useCart } from "../../context/CartContext";
 import { useCustomerAuth } from "../../context/CustomerAuthContext";
 import CustomerAvatar from "../CustomerAvatar/CustomerAvatar";
 import LanguageSwitcher from "../LanguageSwitcher";
-import LocalNavigation from "../LocalNavigation/LocalNavigation";
 import siteConfig from "../../config/site";
 
 import "./Header.css";
@@ -34,7 +26,6 @@ function Header() {
   const accountControlRef = useRef(null);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const { t } = useLanguage();
-  const { cartCount } = useCart();
   const {
     address,
     authType,
@@ -70,9 +61,7 @@ function Header() {
   }, [location.pathname]);
 
   useEffect(() => {
-    if (!isAccountMenuOpen) {
-      return undefined;
-    }
+    if (!isAccountMenuOpen) return undefined;
 
     function handlePointerDown(event) {
       if (!accountControlRef.current?.contains(event.target)) {
@@ -111,28 +100,12 @@ function Header() {
 
   return (
     <header className="headerWrapper">
-      <div className="promoBar">
-        <div className="promoBarContent">
-          <span className="promoBadge">
-            <Sparkles size={13} />
-            {t("deals.tag")}
-          </span>
-
-          <span className="promoText">{t("deals.text")}</span>
-
-          <Link className="promoLink" to="/products">
-            {t("deals.button")}
-            <ArrowRight size={15} />
-          </Link>
-        </div>
-      </div>
-
       <div className="mainHeader">
         <div className="siteHeader">
           <Link
             to="/"
             className="logo"
-            aria-label={`${siteConfig.brandName} home`}
+            aria-label={`${siteConfig.brandName} Travel home`}
           >
             <span className="logoMark" aria-hidden="true">
               <img src="/rotavoy-logo.png" alt="" />
@@ -144,42 +117,35 @@ function Header() {
             </span>
           </Link>
 
-          <nav className="navLinks" aria-label="Main navigation">
+          <nav className="navLinks" aria-label="Travel navigation">
             <NavLink
               to="/"
               end
-              className={({ isActive }) => (isActive ? "active" : "")}
-            >
-              {t("nav.home")}
-            </NavLink>
-
-            <NavLink
-              to="/categories"
-              className={({ isActive }) => (isActive ? "active" : "")}
-            >
-              {t("nav.categories")}
-            </NavLink>
-
-            <NavLink
-              to="/products"
-              className={({ isActive }) => (isActive ? "active" : "")}
-            >
-              {t("nav.products")}
-            </NavLink>
-
-            <NavLink
-              to="/travel"
               className={({ isActive }) =>
                 `travelNavLink${isActive ? " active" : ""}`
               }
             >
-              {t("nav.travel")}
+              {text("nav.travel", "Travel")}
             </NavLink>
 
-            <LocalNavigation />
+            <NavLink
+              to="/about"
+              className={({ isActive }) => (isActive ? "active" : "")}
+            >
+              About
+            </NavLink>
+
+            <NavLink
+              to="/support"
+              className={({ isActive }) => (isActive ? "active" : "")}
+            >
+              Support
+            </NavLink>
           </nav>
 
           <div className="headerActions">
+            <LanguageSwitcher />
+
             <div className="customerAccountControl" ref={accountControlRef}>
               <button
                 type="button"
@@ -271,17 +237,17 @@ function Header() {
 
               {isAuthenticated && isAccountMenuOpen && (
                 <div className="customerAccountDropdown" role="menu">
-                  <Link className="customerAccountDropdownProfile" to="/account">
+                  <div className="customerAccountDropdownProfile">
                     <CustomerAvatar size="medium" />
                     <span>
                       <strong>{displayName || accountLabel}</strong>
                       <small>
                         {profileEmail ||
                           address ||
-                          text(`auth.method.${authType}`, "Account")}
+                          text(`auth.method.${authType}`, "Travel account")}
                       </small>
                     </span>
-                  </Link>
+                  </div>
 
                   {isGuest && (
                     <button
@@ -294,34 +260,11 @@ function Header() {
                     >
                       <ShieldCheck size={17} />
                       <span>
-                        <strong>{text("account.guestUpgrade", "Create an account")}</strong>
-                        <small>{text("account.guestHint", "Keep your details across devices.")}</small>
+                        <strong>Create an account</strong>
+                        <small>Keep your travel access across devices.</small>
                       </span>
                     </button>
                   )}
-
-                  <nav aria-label={text("account.menuLabel", "Account menu")}>
-                    <Link to="/account/orders" role="menuitem">
-                      <Package size={18} />
-                      {text("account.orders", "My orders")}
-                    </Link>
-                    <Link to="/account/favorites" role="menuitem">
-                      <Heart size={18} />
-                      {text("account.favorites", "Favorites")}
-                    </Link>
-                    <Link to="/account/addresses" role="menuitem">
-                      <MapPin size={18} />
-                      {text("account.addresses", "Addresses")}
-                    </Link>
-                    <Link to="/account/profile" role="menuitem">
-                      <UserRound size={18} />
-                      {text("account.profile", "Profile details")}
-                    </Link>
-                    <Link to="/account/security" role="menuitem">
-                      <ShieldCheck size={18} />
-                      {text("account.security", "Account & security")}
-                    </Link>
-                  </nav>
 
                   <button
                     type="button"
@@ -335,22 +278,6 @@ function Header() {
                 </div>
               )}
             </div>
-
-            <Link
-              to="/cart"
-              className="cartButton"
-              aria-label={t("header.cart")}
-            >
-              <ShoppingBag size={18} />
-
-              <span className="cartButtonText">{t("header.cart")}</span>
-
-              {cartCount > 0 && (
-                <strong className="cartCount">{cartCount}</strong>
-              )}
-            </Link>
-
-            <LanguageSwitcher />
           </div>
         </div>
       </div>
