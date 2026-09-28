@@ -1,10 +1,12 @@
-# Rotavoy
+# Rotavoy Travel
 
-Rotavoy is a multilingual marketplace for shopping, travel and local discovery. The repository contains a Vite/React frontend and an Express/MongoDB backend with Firebase customer authentication, admin tools, stock reservation and on-chain USDT payment verification.
+Rotavoy is a multilingual travel platform focused on hotel discovery, live Nuitee room availability, hotel details, prebooking, reservation checkout and travel payments.
+
+The former shopping / dropshipping catalog has been moved out of Rotavoy. Rotavoy now has one job: travel.
 
 ## Local development
 
-Requirements: Node.js 22+, npm and a MongoDB deployment.
+Requirements: Node.js 22+, npm and MongoDB.
 
 ```bash
 npm ci
@@ -15,26 +17,28 @@ npm run server:dev
 npm run dev
 ```
 
-The frontend runs at `http://localhost:5173` and proxies `/api` requests to the backend at `http://localhost:5000`.
+Frontend: `http://localhost:5173`  
+Backend: `http://localhost:5000`  
+Health: `http://localhost:5000/api/health`
 
-## Quality checks
+## Travel stack
 
-```bash
-npm run check
-npm audit --omit=dev --audit-level=high
-npm --prefix server audit --omit=dev --audit-level=high
-```
-
-The same checks run in GitHub Actions for pushes and pull requests targeting `master`.
+- React / Vite frontend
+- Express / MongoDB backend
+- Nuitee / LiteAPI hotel inventory
+- Firebase customer authentication
+- Reown / Wagmi wallet support
+- BNB Chain USDT payment verification
+- 10-language travel UI and hotel-content localization
 
 ## Production
 
-The frontend is configured for Vercel through `vercel.json`. Set these frontend variables in Vercel:
+Frontend configuration:
 
-- `VITE_API_BASE_URL`: public Railway backend URL without a trailing slash
-- `VITE_REOWN_PROJECT_ID`: Reown project identifier
-- `VITE_SUPPORT_EMAIL`: public support address
+- `VITE_API_BASE_URL`
+- `VITE_REOWN_PROJECT_ID`
+- `VITE_SUPPORT_EMAIL`
 
-The backend is configured for Railway through `railway.toml`. Set every variable documented in `server/.env.example`; use the production Vercel origins in `CLIENT_ORIGINS` as a comma-separated allowlist.
+Backend configuration is documented in `server/.env.example`.
 
-Never commit `.env` files or production credentials.
+Never commit local `.env` files or production credentials.
