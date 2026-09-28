@@ -37,7 +37,7 @@ const services = [
   { key: "activities", icon: MapPinned },
 ];
 
-const SHOWCASE_LIMIT = 20;
+const SHOWCASE_LIMIT = 21;
 // Nuitee availability can vary from one request to the next. Scan a wider
 // catalog window, then keep previously found live offers while new results
 // replenish the showcase. This prevents the 5★ shelf from jumping from 20
