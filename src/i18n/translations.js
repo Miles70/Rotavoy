@@ -8,8 +8,8 @@ import pt from "./locales/pt";
 import fr from "./locales/fr";
 import de from "./locales/de";
 import it from "./locales/it";
-import paymentTranslations from "./paymentTranslations";
-import authTranslations from "./authTranslations";
+import travelPaymentTranslations from "./travelPaymentTranslations";
+import travelAuthTranslations from "./travelAuthTranslations";
 import hotelDetailTranslations from "./hotelDetailTranslations";
 import travelRuntimeTranslations from "./travelRuntimeTranslations";
 
@@ -77,8 +77,8 @@ const travelAuthOverrides = {
 };
 
 function withTravelTranslations(baseTranslations, language) {
-  const payment = paymentTranslations[language] || paymentTranslations.en;
-  const auth = authTranslations[language] || authTranslations.en;
+  const payment = travelPaymentTranslations[language] || travelPaymentTranslations.en;
+  const auth = travelAuthTranslations[language] || travelAuthTranslations.en;
 
   return {
     ...baseTranslations,
@@ -91,14 +91,7 @@ function withTravelTranslations(baseTranslations, language) {
       ...baseTranslations.travelPage,
       runtime: travelRuntimeTranslations[language] || travelRuntimeTranslations.en,
     },
-    checkoutPage: {
-      ...baseTranslations.checkoutPage,
-      ...payment.checkoutPage,
-    },
-    orderSuccessPage: {
-      ...baseTranslations.orderSuccessPage,
-      ...payment.orderSuccessPage,
-    },
+    orderSuccessPage: payment,
   };
 }
 
