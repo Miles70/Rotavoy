@@ -3,6 +3,7 @@ import { connectDatabase, disconnectDatabase } from "../config/database.js";
 import {
   DEFAULT_VIDEO_INDEX_TARGETS,
   indexHotelVideos,
+  refreshIndexedShowcasePhotos,
 } from "../services/hotelVideoIndex.js";
 
 function readNumberArg(name, fallback) {
@@ -37,14 +38,23 @@ async function main() {
   await connectDatabase();
 
   try {
-    const result = await indexHotelVideos({
-      targets: readTargets(),
-      maxChecks: readNumberArg("max", 12),
-      delayMs: readNumberArg("delay", 10000),
-      staleAfterDays: readNumberArg("stale-days", 30),
-    });
+    const refreshCovers = process.argv.includes("--refresh-covers");
+    const result = refreshCovers
+      ? await refreshIndexedShowcasePhotos({
+          maxChecks: readNumberArg("max", 30),
+          delayMs: readNumberArg("delay", 10000),
+        })
+      : await indexHotelVideos({
+          targets: readTargets(),
+          maxChecks: readNumberArg("max", 12),
+          delayMs: readNumberArg("delay", 10000),
+          staleAfterDays: readNumberArg("stale-days", 30),
+        });
 
-    console.log("Hotel video index complete:", result);
+    console.log(
+      refreshCovers ? "Hotel showcase cover refresh complete:" : "Hotel video index complete:",
+      result,
+    );
   } finally {
     await disconnectDatabase();
   }
