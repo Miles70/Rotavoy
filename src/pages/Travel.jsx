@@ -374,18 +374,17 @@ function Travel() {
       window.clearInterval(refreshTimer);
       document.removeEventListener("visibilitychange", refreshShowcase);
     };
-  }, []);
+  }, [checkin, checkout, adults]);
 
   async function loadFiveStarShowcase({ silent = false } = {}) {
     if (showcaseRefreshingRef.current) return;
 
     showcaseRefreshingRef.current = true;
-    const requestedCity = cityName.trim() || DEFAULT_SHOWCASE_CITY;
-    const showcaseCities =
-      requestedCity.toLocaleLowerCase("tr-TR") ===
-      DEFAULT_SHOWCASE_CITY.toLocaleLowerCase("tr-TR")
-        ? [DEFAULT_SHOWCASE_CITY, ...DEFAULT_SHOWCASE_FALLBACK_CITIES]
-        : [requestedCity];
+    const requestedCity = DEFAULT_SHOWCASE_CITY;
+    const showcaseCities = [
+      DEFAULT_SHOWCASE_CITY,
+      ...DEFAULT_SHOWCASE_FALLBACK_CITIES,
+    ];
 
     if (!silent) {
       setShowcaseState("loading");
@@ -398,10 +397,12 @@ function Travel() {
       const collected = [];
       const knownIds = new Set();
 
-      const publishCollectedHotels = () => {
-        setShowcaseHotels((currentHotels) =>
+      const publishCollectedHotels = ({ final = false } = {}) => {
+        if (silent && !final) return;
+
+        setShowcaseHotels(
           diversifyShowcaseHotels(
-            [...collected, ...currentHotels],
+            collected,
             SHOWCASE_LIMIT,
           ),
         );
@@ -521,6 +522,7 @@ function Travel() {
         }
       }
 
+      publishCollectedHotels({ final: true });
       setShowcaseState("success");
     } catch (error) {
       if (!silent) {
