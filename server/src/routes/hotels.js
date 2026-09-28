@@ -162,77 +162,6 @@ function sanitizeProviderResponse(value) {
   );
 }
 
-const HOTEL_VIDEO_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
-const hotelVideoCache = new Map();
-
-function findVideoUrl(value) {
-  if (!value) return "";
-
-  if (typeof value === "string") {
-    return /^https?:\/\//i.test(value) && /\.(mp4|webm|mov|m3u8)(\?|$)/i.test(value)
-      ? value
-      : "";
-  }
-
-  if (Array.isArray(value)) {
-    for (const item of value) {
-      const found = findVideoUrl(item);
-      if (found) return found;
-    }
-    return "";
-  }
-
-  if (typeof value !== "object") return "";
-
-  for (const [key, nested] of Object.entries(value)) {
-    if (/video/i.test(key) && typeof nested === "string" && /^https?:\/\//i.test(nested)) {
-      return nested;
-    }
-  }
-
-  for (const nested of Object.values(value)) {
-    const found = findVideoUrl(nested);
-    if (found) return found;
-  }
-
-  return "";
-}
-
-function getCachedHotelVideo(hotelId) {
-  const cached = hotelVideoCache.get(hotelId);
-  if (!cached || Date.now() - cached.cachedAt > HOTEL_VIDEO_CACHE_TTL_MS) {
-    hotelVideoCache.delete(hotelId);
-    return undefined;
-  }
-  return cached.videoUrl;
-}
-
-function cacheHotelVideo(hotelId, videoUrl) {
-  hotelVideoCache.set(hotelId, {
-    videoUrl: videoUrl || "",
-    cachedAt: Date.now(),
-  });
-}
-
-async function mapWithConcurrency(items, concurrency, worker) {
-  const results = new Array(items.length);
-  let nextIndex = 0;
-
-  async function runWorker() {
-    while (nextIndex < items.length) {
-      const index = nextIndex;
-      nextIndex += 1;
-      results[index] = await worker(items[index], index);
-    }
-  }
-
-  await Promise.all(
-    Array.from({ length: Math.min(concurrency, items.length) }, () => runWorker()),
-  );
-
-  return results;
-}
-
 function normalizeRatesResult(result) {
   if (!Array.isArray(result?.data)) {
     return result;
@@ -392,47 +321,6 @@ hotelsRouter.get(
     }
   },
 );
-
-hotelsRouter.post("/videos", searchLimiter, async (request, response, next) => {
-  try {
-    const hotelIds = Array.isArray(request.body?.hotelIds)
-      ? [...new Set(
-          request.body.hotelIds
-            .map((id) => String(id || "").trim())
-            .filter((id) => /^[A-Za-z0-9_-]+$/.test(id)),
-        )].slice(0, 40)
-      : [];
-
-    if (!hotelIds.length) {
-      throw requestError("hotelIds must contain at least one valid hotel ID.");
-    }
-
-    const entries = await mapWithConcurrency(hotelIds, 4, async (hotelId) => {
-      const cached = getCachedHotelVideo(hotelId);
-      if (cached !== undefined) {
-        return [hotelId, cached];
-      }
-
-      try {
-        const hotel = await getNuiteeHotel(hotelId);
-        const videoUrl = findVideoUrl(hotel);
-        cacheHotelVideo(hotelId, videoUrl);
-        return [hotelId, videoUrl];
-      } catch {
-        return [hotelId, ""];
-      }
-    });
-
-    const videos = Object.fromEntries(
-      entries.filter(([, videoUrl]) => Boolean(videoUrl)),
-    );
-
-    response.set("Cache-Control", "private, max-age=1800");
-    response.json({ videos, checked: hotelIds.length });
-  } catch (error) {
-    next(error);
-  }
-});
 
 hotelsRouter.get("/:hotelId", searchLimiter, async (request, response, next) => {
   try {
