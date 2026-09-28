@@ -162,17 +162,29 @@ export async function indexHotelVideos({
               checkedAt: new Date(),
             },
           },
-          { upsert: true, new: true, setDefaultsOnInsert: true },
+          { upsert: true, returnDocument: "after", setDefaultsOnInsert: true },
         );
 
         checked += 1;
-        if (videoUrl && stars >= 5) videosFound += 1;
+        if (videoUrl && stars >= 5) {
+          videosFound += 1;
+          console.log(
+            `[${checked}/${max}] VIDEO FOUND · ${target.cityName} · ${hotelId} · ${String(hotel?.name || hotel?.hotelName || "Unknown hotel").trim()}`,
+          );
+        } else {
+          console.log(
+            `[${checked}/${max}] checked · ${target.cityName} · ${hotelId} · no video`,
+          );
+        }
       } catch (error) {
         if (error?.statusCode === 429) {
           stoppedByRateLimit = true;
           break;
         }
         checked += 1;
+        console.log(
+          `[${checked}/${max}] checked · ${target.cityName} · ${hotelId} · detail error`,
+        );
       }
 
       if (checked < max) {
