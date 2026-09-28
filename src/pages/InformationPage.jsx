@@ -7,24 +7,24 @@ const supportEmail = import.meta.env.VITE_SUPPORT_EMAIL || "support@rotavoy.com"
 
 const content = {
   en: {
-    about: ["About Rotavoy", "Rotavoy is an evolving marketplace that brings shopping, travel and local discovery into one experience. The platform is currently in beta; services and availability will expand over time."],
-    contact: ["Contact", `Questions, partnership requests and feedback can be sent to ${supportEmail}. We aim to respond as soon as possible during the beta period.`],
-    support: ["Support", `For order support, include your order number and the email address used at checkout when contacting ${supportEmail}. Never send a wallet recovery phrase or private key.`],
-    privacy: ["Privacy Policy", "Rotavoy processes the information required to provide accounts, orders, payments and customer support. Authentication may be handled by third-party identity providers. Payment transactions made on public blockchains are public by design. We do not sell personal information. Data may be retained where needed for security, fraud prevention, service delivery and legal obligations."],
-    terms: ["Terms of Service", "Rotavoy is provided as a beta service. Product availability, prices and features may change. Users must provide accurate order and delivery information and are responsible for activity performed through their accounts and wallets. Orders are accepted only after payment verification and stock confirmation."],
-    refund: ["Refund Policy", "Refund eligibility depends on the product, fulfillment status and payment method. Contact support with the order number before returning an item or disputing a delivery. Blockchain network fees and completed irreversible transactions cannot be refunded by Rotavoy. Approved refunds are returned using the method communicated by support."],
-    updated: "Last updated: September 11, 2026",
-    back: "Back to home",
+    about: ["About Rotavoy", "Rotavoy is a travel-first platform focused on hotel discovery, live room availability and secure reservation flows. The service is currently evolving in beta as travel inventory and payment options expand."],
+    contact: ["Contact", `Questions, hotel partnership requests and travel feedback can be sent to ${supportEmail}. We aim to respond as soon as possible during the beta period.`],
+    support: ["Travel Support", `For reservation support, include your Rotavoy booking reference and the email address used during checkout when contacting ${supportEmail}. Never send a wallet recovery phrase or private key.`],
+    privacy: ["Privacy Policy", "Rotavoy processes the information required to provide hotel search, reservations, payments, authentication and customer support. Authentication may be handled by third-party identity providers. Payment transactions made on public blockchains are public by design. Personal information is not sold."],
+    terms: ["Travel Terms of Service", "Rotavoy provides travel search and booking services in beta. Hotel availability, room conditions, cancellation terms and prices may change until a reservation is confirmed. Users must provide accurate guest and contact information and review the live rate conditions before payment."],
+    refund: ["Cancellation & Refund Policy", "Cancellation and refund eligibility depends on the hotel rate and reservation conditions shown during booking. Some rates may be non-refundable. Blockchain network fees and completed irreversible transfers cannot be reversed by Rotavoy. Contact support with your booking reference for eligible cancellation or refund requests."],
+    updated: "Last updated: September 28, 2026",
+    back: "Back to travel",
   },
   tr: {
-    about: ["Rotavoy Hakkında", "Rotavoy; alışveriş, seyahat ve yerel keşif deneyimlerini tek platformda birleştirmek üzere geliştirilen bir pazaryeridir. Platform şu anda beta sürecindedir; hizmetler ve kullanılabilirlik zaman içinde genişletilecektir."],
-    contact: ["İletişim", `Soru, iş birliği talebi ve geri bildirimlerini ${supportEmail} adresine gönderebilirsin. Beta sürecinde mümkün olan en kısa sürede dönüş yapmayı hedefliyoruz.`],
-    support: ["Destek", `Sipariş desteği için ${supportEmail} adresine yazarken sipariş numaranı ve ödeme sırasında kullandığın e-posta adresini ekle. Cüzdan kurtarma kelimelerini veya özel anahtarını asla gönderme.`],
-    privacy: ["Gizlilik Politikası", "Rotavoy; hesap, sipariş, ödeme ve müşteri desteği sunmak için gerekli bilgileri işler. Kimlik doğrulama üçüncü taraf sağlayıcılar tarafından gerçekleştirilebilir. Herkese açık blokzincirlerde yapılan ödeme işlemleri yapıları gereği açıktır. Kişisel bilgiler satılmaz. Veriler güvenlik, dolandırıcılığın önlenmesi, hizmet sunumu ve yasal yükümlülükler için gerektiği sürece saklanabilir."],
-    terms: ["Kullanım Şartları", "Rotavoy beta hizmeti olarak sunulmaktadır. Ürün bulunabilirliği, fiyatlar ve özellikler değişebilir. Kullanıcılar doğru sipariş ve teslimat bilgisi vermekle, hesapları ve cüzdanları üzerinden gerçekleştirilen işlemlerden sorumludur. Siparişler yalnızca ödeme doğrulaması ve stok onayından sonra kabul edilir."],
-    refund: ["İade Politikası", "İade uygunluğu ürüne, siparişin hazırlanma durumuna ve ödeme yöntemine göre değişir. Bir ürünü göndermeden veya teslimata itiraz etmeden önce sipariş numarasıyla destek ekibine ulaş. Blokzincir ağ ücretleri ve tamamlanmış geri döndürülemez işlemler Rotavoy tarafından iade edilemez. Onaylanan iadeler destek ekibinin bildirdiği yöntemle gerçekleştirilir."],
-    updated: "Son güncelleme: 11 Eylül 2026",
-    back: "Ana sayfaya dön",
+    about: ["Rotavoy Hakkında", "Rotavoy; otel keşfi, canlı oda müsaitliği ve güvenli rezervasyon akışına odaklanan travel-first bir platformdur. Seyahat envanteri ve ödeme seçenekleri genişletilirken hizmet beta sürecinde geliştirilmeye devam etmektedir."],
+    contact: ["İletişim", `Sorularını, otel iş birliği taleplerini ve seyahat geri bildirimlerini ${supportEmail} adresine gönderebilirsin. Beta sürecinde mümkün olan en kısa sürede dönüş yapmayı hedefliyoruz.`],
+    support: ["Seyahat Desteği", `Rezervasyon desteği için ${supportEmail} adresine yazarken Rotavoy rezervasyon referansını ve checkout sırasında kullandığın e-posta adresini ekle. Cüzdan kurtarma kelimelerini veya özel anahtarını asla gönderme.`],
+    privacy: ["Gizlilik Politikası", "Rotavoy; otel arama, rezervasyon, ödeme, kimlik doğrulama ve müşteri desteği için gereken bilgileri işler. Kimlik doğrulama üçüncü taraf sağlayıcılar üzerinden gerçekleştirilebilir. Herkese açık blokzincirlerdeki ödeme işlemleri yapıları gereği açıktır. Kişisel bilgiler satılmaz."],
+    terms: ["Seyahat Kullanım Şartları", "Rotavoy beta aşamasında seyahat arama ve rezervasyon hizmeti sunar. Otel müsaitliği, oda koşulları, iptal şartları ve fiyatlar rezervasyon onaylanana kadar değişebilir. Kullanıcı doğru misafir ve iletişim bilgisi vermeli ve ödeme öncesinde güncel fiyat koşullarını kontrol etmelidir."],
+    refund: ["İptal ve İade Politikası", "İptal ve iade uygunluğu rezervasyon sırasında gösterilen otel fiyat planı ve rezervasyon koşullarına bağlıdır. Bazı fiyatlar iade edilemez olabilir. Blokzincir ağ ücretleri ve tamamlanmış geri döndürülemez transferler Rotavoy tarafından geri alınamaz. Uygun iptal veya iade talepleri için rezervasyon referansınla desteğe ulaş."],
+    updated: "Son güncelleme: 28 Eylül 2026",
+    back: "Travel'a dön",
   },
 };
 
@@ -35,7 +35,7 @@ function InformationPage({ page }) {
 
   return (
     <main className="informationPage container">
-      <p className="informationEyebrow">{siteConfig.brandName} · Beta</p>
+      <p className="informationEyebrow">{siteConfig.brandName} · Travel</p>
       <h1>{title}</h1>
       <p>{body}</p>
       {page !== "about" && <small>{localized.updated}</small>}
