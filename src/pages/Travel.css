@@ -687,30 +687,63 @@
   text-decoration: none;
 }
 
-.travelHotelMedia img {
+.travelHotelMedia img,
+.travelHotelMedia video {
   width: 100%;
   height: 100%;
   object-fit: contain;
   object-position: center bottom;
   background: #e8f7f5;
-  transition: transform 420ms ease;
+}
+
+.travelHotelMedia img {
+  transition: opacity 220ms ease;
+}
+
+.travelHotelMedia video {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 220ms ease;
+}
+
+.travelHotelMedia--video:hover img,
+.travelHotelMedia--video:focus img {
+  opacity: 0;
+}
+
+.travelHotelMedia--video:hover video,
+.travelHotelMedia--video:focus video {
+  opacity: 1;
 }
 
 .travelHotelCard:hover .travelHotelMedia img {
   transform: none;
 }
 
-.travelHotelMedia > span {
+.travelStarsBadge,
+.travelVideoBadge {
   position: absolute;
   top: 14px;
-  right: 14px;
+  z-index: 2;
   padding: 7px 10px;
   border-radius: 999px;
-  background: rgba(10, 38, 43, 0.82);
   color: #ffffff;
   font-size: 0.68rem;
   font-weight: 900;
   backdrop-filter: blur(8px);
+}
+
+.travelStarsBadge {
+  right: 14px;
+  background: rgba(10, 38, 43, 0.82);
+}
+
+.travelVideoBadge {
+  left: 14px;
+  background: rgba(7, 139, 150, 0.9);
+  letter-spacing: 0.06em;
 }
 
 .travelHotelBody {
