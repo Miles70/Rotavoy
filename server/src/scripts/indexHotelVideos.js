@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { getNuiteeHotel } from "../services/nuiteeApi.js";
 import { connectDatabase, disconnectDatabase } from "../config/database.js";
 import {
   DEFAULT_VIDEO_INDEX_TARGETS,
@@ -38,6 +39,23 @@ async function main() {
   await connectDatabase();
 
   try {
+    const inspectHotel = process.argv.find((arg) => arg.startsWith("--inspect-hotel="))?.split("=")[1];
+    if (inspectHotel) {
+      const payload = await getNuiteeHotel(inspectHotel);
+      const hotel = payload?.data?.hotel || payload?.data || payload?.hotel || payload || {};
+      const keys = ["images", "photos", "pictures", "gallery", "hotelImages", "hotelPhotos", "media", "main_photo", "mainPhoto", "thumbnail", "image"];
+      const summarize = (value) => {
+        if (Array.isArray(value)) return { count: value.length, first: value.slice(0, 2) };
+        return value;
+      };
+      console.log("Hotel image fields:", JSON.stringify(
+        Object.fromEntries(keys.filter((key) => hotel[key] != null).map((key) => [key, summarize(hotel[key])])),
+        null, 2,
+      ));
+      console.log("Payload keys:", Object.keys(payload || {}));
+      console.log("Hotel keys:", Object.keys(hotel || {}));
+      return;
+    }
     const refreshCovers = process.argv.includes("--refresh-covers");
     const result = refreshCovers
       ? await refreshIndexedShowcasePhotos({
