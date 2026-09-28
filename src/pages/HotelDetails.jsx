@@ -396,12 +396,7 @@ function HotelDetails() {
     ];
 
     for (const source of gallerySources) {
-      if (Array.isArray(source) && source.length > 1) {
-        const preferred = source.filter((item) => item?.defaultImage !== true);
-        collectImages(preferred.length ? preferred : source, galleryImages, seen);
-      } else {
-        collectImages(source, galleryImages, seen);
-      }
+      collectImages(source, galleryImages, seen);
     }
 
     // Provider main_photo/thumbnail is often a smaller duplicate of a gallery
