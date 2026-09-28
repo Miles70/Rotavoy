@@ -124,8 +124,8 @@ function TravelCheckout() {
             <p className="travelCheckoutLead">Bilgileri kontrol et. Oda ve toplam fiyat tekrar doğrulanır; ardından USDT ödeme adımına geçersin.</p>
             {booking ? (
               <CryptoPayment
-                order={booking}
-                onOrderUpdated={setBooking}
+                booking={booking}
+                onBookingUpdated={setBooking}
                 verifyPaymentRequest={verifyTravelPayment}
                 forceDisplay
               />
