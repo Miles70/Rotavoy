@@ -114,6 +114,7 @@ export async function indexHotelVideos({
       catalog = await listNuiteeHotels({
         countryCode: target.countryCode,
         cityName: target.cityName,
+        starRating: "5.0",
         limit: 100,
         offset: 0,
       });
