@@ -9,7 +9,10 @@ import {
   searchNuiteeRates,
 } from "../services/nuiteeApi.js";
 import { getLocalizedHotelDescription } from "../services/hotelTranslation.js";
-import { listIndexedVideoHotels } from "../services/hotelVideoIndex.js";
+import {
+  listIndexedShowcaseHotels,
+  listIndexedVideoHotels,
+} from "../services/hotelVideoIndex.js";
 import { TravelBooking } from "../models/TravelBooking.js";
 import { getPublicCryptoPaymentConfig } from "../config/cryptoPayment.js";
 import { verifyTravelCryptoPayment } from "../services/travelPaymentVerification.js";
@@ -294,6 +297,29 @@ hotelsRouter.get("/video-showcase", async (request, response, next) => {
         stars: hotel.stars,
         mainPhoto: hotel.mainPhoto,
         videoUrl: hotel.videoUrl,
+      })),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+hotelsRouter.get("/showcase-index", async (request, response, next) => {
+  try {
+    const limit = boundedInteger(request.query.limit, 80, 1, 120);
+    const hotels = await listIndexedShowcaseHotels(limit);
+
+    response.set("Cache-Control", "public, max-age=1800");
+    response.json({
+      hotels: hotels.map((hotel) => ({
+        hotelId: hotel.hotelId,
+        name: hotel.name,
+        cityName: hotel.cityName,
+        countryCode: hotel.countryCode,
+        stars: hotel.stars,
+        mainPhoto: hotel.mainPhoto,
+        videoUrl: hotel.videoUrl,
+        hasVideo: hotel.hasVideo,
       })),
     });
   } catch (error) {
