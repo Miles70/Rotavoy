@@ -137,7 +137,15 @@ function hotelPhoto(hotel) {
     hotel?.hotelImages,
     hotel?.hotelPhotos,
     hotel?.media,
-  ].forEach((source) => collectHotelImages(source, galleryImages, seen));
+  ].forEach((source) => {
+    if (Array.isArray(source) && source.length > 1) {
+      const preferred = source.filter((item) => item?.defaultImage !== true);
+      collectHotelImages(preferred.length ? preferred : source, galleryImages, seen);
+      return;
+    }
+
+    collectHotelImages(source, galleryImages, seen);
+  });
 
   if (galleryImages.length) return galleryImages[0];
 
