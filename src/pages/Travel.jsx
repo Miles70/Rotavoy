@@ -22,7 +22,6 @@ import {
 
 import { useLanguage } from "../i18n/LanguageContext";
 import {
-  getHotelVideos,
   listHotels,
   prebookHotel,
   searchHotelRates,
@@ -38,7 +37,6 @@ const services = [
 ];
 
 const SHOWCASE_LIMIT = 20;
-const SHOWCASE_CANDIDATE_LIMIT = 40;
 // Nuitee availability can vary from one request to the next. Scan a wider
 // catalog window, then keep previously found live offers while new results
 // replenish the showcase. This prevents the 5★ shelf from jumping from 20
@@ -63,6 +61,39 @@ function money(amount, currency = "EUR") {
   }).format(Number(amount || 0));
 }
 
+function findVideoUrl(value) {
+  if (!value) return "";
+
+  if (typeof value === "string") {
+    return /^https?:\/\//i.test(value) && /\.(mp4|webm|mov|m3u8)(\?|$)/i.test(value)
+      ? value
+      : "";
+  }
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const found = findVideoUrl(item);
+      if (found) return found;
+    }
+    return "";
+  }
+
+  if (typeof value !== "object") return "";
+
+  for (const [key, nested] of Object.entries(value)) {
+    if (/video/i.test(key) && typeof nested === "string" && /^https?:\/\//i.test(nested)) {
+      return nested;
+    }
+  }
+
+  for (const nested of Object.values(value)) {
+    const found = findVideoUrl(nested);
+    if (found) return found;
+  }
+
+  return "";
+}
+
 function buildResults(rateResponse) {
   const hotelsById = new Map(
     (rateResponse?.hotels || []).map((hotel) => [hotel.id, hotel]),
@@ -81,11 +112,13 @@ function buildResults(rateResponse) {
 
       if (!cheapest) return null;
 
+      const hotelData = hotelsById.get(hotelRate.hotelId) || {};
       return {
-        ...hotelsById.get(hotelRate.hotelId),
+        ...hotelData,
         hotelId: hotelRate.hotelId,
         offer: cheapest,
         offers,
+        videoUrl: findVideoUrl(hotelData) || findVideoUrl(hotelRate),
       };
     })
     .filter(Boolean)
@@ -306,7 +339,7 @@ function Travel() {
       };
 
       for (const showcaseCity of showcaseCities) {
-        if (collected.length >= SHOWCASE_CANDIDATE_LIMIT) break;
+        if (collected.length >= SHOWCASE_LIMIT) break;
 
         let offset = 0;
         let total = Number.POSITIVE_INFINITY;
@@ -317,7 +350,7 @@ function Travel() {
         for (
           let batch = 0;
           batch < maxBatchesForCity &&
-          collected.length < SHOWCASE_CANDIDATE_LIMIT &&
+          collected.length < SHOWCASE_LIMIT &&
           offset < total;
           batch += 1
         ) {
@@ -340,8 +373,6 @@ function Travel() {
             adults,
           });
 
-          const newlyAddedHotelIds = [];
-
           for (const hotel of buildResults(rateResponse)) {
             if (!isFiveStarHotel(hotel) || knownIds.has(hotel.hotelId)) continue;
 
@@ -353,33 +384,13 @@ function Travel() {
               showcaseAdults: adults,
               showcaseCity,
             });
-            newlyAddedHotelIds.push(hotel.hotelId);
 
-            if (collected.length >= SHOWCASE_CANDIDATE_LIMIT) break;
+            if (collected.length >= SHOWCASE_LIMIT) break;
           }
 
-          // Keep the fast path: show live 5★ hotels before video metadata finishes.
+          // Video metadata is taken only from the existing rates payload.
+          // No per-hotel detail requests are fired from the showcase.
           publishCollectedHotels();
-
-          if (newlyAddedHotelIds.length) {
-            try {
-              const videoResponse = await getHotelVideos(newlyAddedHotelIds);
-              const videos = videoResponse?.videos || {};
-              let videoFound = false;
-
-              for (const hotel of collected) {
-                const videoUrl = videos[hotel.hotelId];
-                if (!videoUrl) continue;
-                hotel.videoUrl = videoUrl;
-                videoFound = true;
-              }
-
-              if (videoFound) publishCollectedHotels();
-            } catch {
-              // Video discovery is an enhancement; never block hotel availability.
-            }
-          }
-
           offset += hotelIds.length;
         }
       }
