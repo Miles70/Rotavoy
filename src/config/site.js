@@ -1,7 +1,7 @@
 const siteConfig = {
   brandName: "Rotavoy",
   shortName: "R",
-  description: "Shop, Travel, Discover.",
+  description: "Travel farther. Stay better.",
 };
 
 export default siteConfig;
