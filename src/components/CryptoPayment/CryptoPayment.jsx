@@ -28,7 +28,7 @@ function getPaymentErrorMessage(error, transactionWasSubmitted, text) {
 
   if (transactionWasSubmitted) {
     return text(
-      "orderSuccessPage.transactionSubmitted",
+      "travelPayment.transactionSubmitted",
       "The transaction was submitted. Use Verify Payment after it is confirmed on BNB Smart Chain."
     );
   }
@@ -38,7 +38,7 @@ function getPaymentErrorMessage(error, transactionWasSubmitted, text) {
     /rejected|denied|cancelled|canceled/i.test(message)
   ) {
     return text(
-      "orderSuccessPage.walletRequestCancelled",
+      "travelPayment.walletRequestCancelled",
       "The wallet request was cancelled."
     );
   }
@@ -65,19 +65,19 @@ function getPaymentErrorMessage(error, transactionWasSubmitted, text) {
       fallback: "The transaction was sent to the wrong receiving wallet.",
     },
     {
-      pattern: /lower than the order total/i,
+      pattern: /lower than the booking total/i,
       key: "insufficientPaymentAmount",
-      fallback: "The transaction amount is lower than the order total.",
+      fallback: "The transaction amount is lower than the booking total.",
     },
     {
       pattern: /already been used/i,
       key: "transactionAlreadyUsed",
-      fallback: "This transaction has already been used for another order.",
+      fallback: "This transaction has already been used for another booking.",
     },
     {
       pattern: /already paid/i,
       key: "orderAlreadyPaid",
-      fallback: "This order has already been paid.",
+      fallback: "This booking has already been paid.",
     },
     {
       pattern: /rpc|blockchain.*unavailable|could not be reached|timed out/i,
@@ -104,24 +104,24 @@ function getPaymentErrorMessage(error, transactionWasSubmitted, text) {
   const knownError = knownErrors.find(({ pattern }) => pattern.test(message));
 
   if (knownError) {
-    return text(`orderSuccessPage.${knownError.key}`, knownError.fallback);
+    return text(`travelPayment.${knownError.key}`, knownError.fallback);
   }
 
   return (
     message ||
     text(
-      "orderSuccessPage.cryptoPaymentFailed",
+      "travelPayment.cryptoPaymentFailed",
       "The crypto payment could not be completed."
     )
   );
 }
 
-function CryptoPayment({ order, onOrderUpdated, verifyPaymentRequest, forceDisplay = false }) {
+function CryptoPayment({ booking, onBookingUpdated, verifyPaymentRequest, forceDisplay = false }) {
   const { t } = useLanguage();
   const [paymentStage, setPaymentStage] = useState("idle");
   const [paymentError, setPaymentError] = useState("");
   const [transactionHash, setTransactionHash] = useState(
-    order?.payment?.transactionHash || ""
+    booking?.payment?.transactionHash || ""
   );
   const [manualOpen, setManualOpen] = useState(false);
   const [manualHash, setManualHash] = useState("");
@@ -132,17 +132,17 @@ function CryptoPayment({ order, onOrderUpdated, verifyPaymentRequest, forceDispl
   const switchChainMutation = useSwitchChain();
   const writeContractMutation = useWriteContract();
 
-  const payment = order?.payment || {};
+  const payment = booking?.payment || {};
   const paymentChainId = Number(payment.chainId || 56);
   const publicClient = usePublicClient({ chainId: paymentChainId });
 
   useEffect(() => {
-    setTransactionHash(order?.payment?.transactionHash || "");
-  }, [order?.payment?.transactionHash]);
+    setTransactionHash(booking?.payment?.transactionHash || "");
+  }, [booking?.payment?.transactionHash]);
 
   // A travel checkout must never become a blank screen. Its payment payload
   // is validated visibly below, while ordinary orders retain their guard.
-  if (!order || (!forceDisplay && order.paymentMethod !== "crypto")) return null;
+  if (!booking || (!forceDisplay && booking.paymentMethod !== "crypto")) return null;
 
   const text = (key, fallback) => {
     const value = t(key);
@@ -153,7 +153,7 @@ function CryptoPayment({ order, onOrderUpdated, verifyPaymentRequest, forceDispl
   const recipientAddress = String(payment.recipientAddress || "");
   const tokenDecimals = Number(payment.tokenDecimals ?? 18);
   const paymentAmount = String(
-    payment.expectedAmount || Number(order.total || 0).toFixed(2)
+    payment.expectedAmount || Number(booking.total || 0).toFixed(2)
   );
   const paymentToken = payment.token || "USDT";
   const pendingTransactionHash =
@@ -163,7 +163,7 @@ function CryptoPayment({ order, onOrderUpdated, verifyPaymentRequest, forceDispl
     isAddress(recipientAddress) &&
     Number.isInteger(tokenDecimals) &&
     tokenDecimals >= 0;
-  const isPaid = order.paymentStatus === "paid";
+  const isPaid = booking.paymentStatus === "paid";
   const isPaymentBusy = [
     "switching",
     "signing",
@@ -173,7 +173,7 @@ function CryptoPayment({ order, onOrderUpdated, verifyPaymentRequest, forceDispl
 
   const updateOrder = (nextOrder) => {
     setTransactionHash(nextOrder.payment?.transactionHash || "");
-    onOrderUpdated?.(nextOrder);
+    onBookingUpdated?.(nextOrder);
   };
 
   const verifyPayment = async (hash, payerAddress = "") => {
@@ -184,8 +184,8 @@ function CryptoPayment({ order, onOrderUpdated, verifyPaymentRequest, forceDispl
       throw new Error("Travel payment verification is unavailable.");
     }
 
-    const verifiedOrder = await verifyPaymentRequest(order.id, {
-      email: order.customer?.email,
+    const verifiedOrder = await verifyPaymentRequest(booking.id, {
+      email: booking.customer?.email,
       transactionHash: hash,
       payerAddress,
     });
@@ -214,7 +214,7 @@ function CryptoPayment({ order, onOrderUpdated, verifyPaymentRequest, forceDispl
       setPaymentStage("error");
       setPaymentError(
         text(
-          "orderSuccessPage.receivingWalletNotConfigured",
+          "travelPayment.receivingWalletNotConfigured",
           "The crypto receiving wallet has not been configured on the server yet."
         )
       );
@@ -238,7 +238,7 @@ function CryptoPayment({ order, onOrderUpdated, verifyPaymentRequest, forceDispl
       if (typeof switchChainAsync !== "function") {
         throw new Error(
           text(
-            "orderSuccessPage.walletNetworkUnavailable",
+            "travelPayment.walletNetworkUnavailable",
             "Wallet network switching is unavailable."
           )
         );
@@ -254,7 +254,7 @@ function CryptoPayment({ order, onOrderUpdated, verifyPaymentRequest, forceDispl
       if (typeof writeContractAsync !== "function") {
         throw new Error(
           text(
-            "orderSuccessPage.contractTransactionsUnavailable",
+            "travelPayment.contractTransactionsUnavailable",
             "Wallet contract transactions are unavailable."
           )
         );
@@ -274,7 +274,7 @@ function CryptoPayment({ order, onOrderUpdated, verifyPaymentRequest, forceDispl
       submittedHash = hash;
 
       const pendingOrder = {
-        ...order,
+        ...booking,
         paymentStatus: "pending",
         payment: {
           ...payment,
@@ -289,7 +289,7 @@ function CryptoPayment({ order, onOrderUpdated, verifyPaymentRequest, forceDispl
       if (!publicClient) {
         throw new Error(
           text(
-            "orderSuccessPage.bscClientUnavailable",
+            "travelPayment.bscClientUnavailable",
             "The BNB Smart Chain client is unavailable."
           )
         );
@@ -336,41 +336,41 @@ function CryptoPayment({ order, onOrderUpdated, verifyPaymentRequest, forceDispl
   const getPaymentButtonText = () => {
     if (!paymentConfigured) {
       return text(
-        "orderSuccessPage.paymentSetupRequired",
+        "travelPayment.paymentSetupRequired",
         "Payment setup required"
       );
     }
     if (paymentStage === "switching") {
       return text(
-        "orderSuccessPage.switchingToBnb",
+        "travelPayment.switchingToBnb",
         "Switching to BNB Chain..."
       );
     }
     if (paymentStage === "signing") {
       return text(
-        "orderSuccessPage.confirmInWallet",
+        "travelPayment.confirmInWallet",
         "Confirm in wallet..."
       );
     }
     if (paymentStage === "confirming") {
       return text(
-        "orderSuccessPage.waitingForConfirmation",
+        "travelPayment.waitingForConfirmation",
         "Waiting for confirmation..."
       );
     }
     if (paymentStage === "verifying") {
       return text(
-        "orderSuccessPage.verifyingPayment",
+        "travelPayment.verifyingPayment",
         "Verifying payment..."
       );
     }
     if (pendingTransactionHash) {
-      return text("orderSuccessPage.verifyPayment", "Verify Payment");
+      return text("travelPayment.verifyPayment", "Verify Payment");
     }
     if (!isConnected) {
-      return text("orderSuccessPage.connectWallet", "Connect Wallet");
+      return text("travelPayment.connectWallet", "Connect Wallet");
     }
-    return `${text("orderSuccessPage.pay", "Pay")} ${paymentAmount} ${paymentToken}`;
+    return `${text("travelPayment.pay", "Pay")} ${paymentAmount} ${paymentToken}`;
   };
 
   if (isPaid && payment.transactionHash) {
@@ -381,7 +381,7 @@ function CryptoPayment({ order, onOrderUpdated, verifyPaymentRequest, forceDispl
         target="_blank"
         rel="noreferrer"
       >
-        {text("orderSuccessPage.paymentTransaction", "Payment transaction")} {" "}
+        {text("travelPayment.paymentTransaction", "Payment transaction")} {" "}
         {shortenAddress(payment.transactionHash)}
         <ExternalLink size={15} />
       </a>
@@ -396,15 +396,15 @@ function CryptoPayment({ order, onOrderUpdated, verifyPaymentRequest, forceDispl
         <div>
           <span className="cryptoPaymentBadge">
             <ShieldCheck size={16} />
-            {text("orderSuccessPage.onChainPayment", "On-chain payment")}
+            {text("travelPayment.onChainPayment", "On-chain payment")}
           </span>
           <h2>
-            {text("orderSuccessPage.payWith", "Pay with")} {paymentToken}
+            {text("travelPayment.payWith", "Pay with")} {paymentToken}
           </h2>
           <p>
             {text(
-              "orderSuccessPage.cryptoVerificationText",
-              "Send the exact order total on BNB Smart Chain. The backend verifies the transaction before the order moves to processing."
+              "travelPayment.cryptoVerificationText",
+              "Send the exact booking total on BNB Smart Chain. The backend verifies the transaction before the booking moves to processing."
             )}
           </p>
         </div>
@@ -414,29 +414,29 @@ function CryptoPayment({ order, onOrderUpdated, verifyPaymentRequest, forceDispl
 
       <div className="cryptoPaymentGrid">
         <div>
-          <small>{text("orderSuccessPage.amount", "Amount")}</small>
+          <small>{text("travelPayment.amount", "Amount")}</small>
           <strong>
             {paymentAmount} {paymentToken}
           </strong>
         </div>
         <div>
-          <small>{text("orderSuccessPage.network", "Network")}</small>
+          <small>{text("travelPayment.network", "Network")}</small>
           <strong>{payment.network || "BNB Smart Chain"}</strong>
         </div>
         <div>
-          <small>{text("orderSuccessPage.recipient", "Recipient")}</small>
+          <small>{text("travelPayment.recipient", "Recipient")}</small>
           <strong>
             {recipientAddress
               ? shortenAddress(recipientAddress)
-              : text("orderSuccessPage.notConfigured", "Not configured")}
+              : text("travelPayment.notConfigured", "Not configured")}
           </strong>
         </div>
         <div>
-          <small>{text("orderSuccessPage.yourWallet", "Your wallet")}</small>
+          <small>{text("travelPayment.yourWallet", "Your wallet")}</small>
           <strong>
             {isConnected && address
               ? shortenAddress(address)
-              : text("orderSuccessPage.notConnected", "Not connected")}
+              : text("travelPayment.notConnected", "Not connected")}
           </strong>
         </div>
       </div>
@@ -459,7 +459,7 @@ function CryptoPayment({ order, onOrderUpdated, verifyPaymentRequest, forceDispl
           target="_blank"
           rel="noreferrer"
         >
-          {text("orderSuccessPage.viewTransaction", "View transaction")} {" "}
+          {text("travelPayment.viewTransaction", "View transaction")} {" "}
           {shortenAddress(pendingTransactionHash)}
           <ExternalLink size={15} />
         </a>
@@ -520,7 +520,7 @@ function CryptoPayment({ order, onOrderUpdated, verifyPaymentRequest, forceDispl
 
       <small className="cryptoPaymentGasNote">
         {text(
-          "orderSuccessPage.gasNote",
+          "travelPayment.gasNote",
           "A small amount of BNB is required in the connected wallet for gas."
         )}
       </small>
