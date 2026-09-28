@@ -23,7 +23,7 @@ import {
 import { useLanguage } from "../i18n/LanguageContext";
 import {
   listHotels,
-  listIndexedVideoHotels,
+  listIndexedShowcaseHotels,
   prebookHotel,
   searchHotelRates,
 } from "../services/hotelsApi";
@@ -135,7 +135,75 @@ function isFiveStarHotel(hotel) {
   return Number.isFinite(stars) && stars >= 5;
 }
 
-function ShowcaseHotelMedia({ hotel, to, ariaLabel, starLabel }) {
+function countryFlag(countryCode) {
+  const code = String(countryCode || "").trim().toUpperCase();
+  if (!/^[A-Z]{2}$/.test(code)) return "🌍";
+
+  return [...code]
+    .map((letter) => String.fromCodePoint(127397 + letter.charCodeAt(0)))
+    .join("");
+}
+
+function countryName(countryCode, language) {
+  const code = String(countryCode || "").trim().toUpperCase();
+  if (!code) return "";
+
+  try {
+    return new Intl.DisplayNames([language || "en"], { type: "region" }).of(code) || code;
+  } catch {
+    return code;
+  }
+}
+
+function diversifyShowcaseHotels(hotels, limit) {
+  const unique = [];
+  const seen = new Set();
+
+  for (const hotel of hotels) {
+    if (!hotel?.hotelId || !hotel?.offer?.offerId || seen.has(hotel.hotelId)) continue;
+    seen.add(hotel.hotelId);
+    unique.push(hotel);
+  }
+
+  const output = [];
+  const outputIds = new Set();
+
+  const takeRoundRobin = (items) => {
+    const groups = new Map();
+
+    for (const hotel of items) {
+      const country =
+        hotel.showcaseCountryCode ||
+        hotel.countryCode ||
+        hotel.country_code ||
+        "GLOBAL";
+
+      if (!groups.has(country)) groups.set(country, []);
+      groups.get(country).push(hotel);
+    }
+
+    while (groups.size && output.length < limit) {
+      for (const [country, group] of [...groups.entries()]) {
+        const hotel = group.shift();
+
+        if (hotel && !outputIds.has(hotel.hotelId)) {
+          outputIds.add(hotel.hotelId);
+          output.push(hotel);
+        }
+
+        if (!group.length) groups.delete(country);
+        if (output.length >= limit) break;
+      }
+    }
+  };
+
+  takeRoundRobin(unique.filter((hotel) => hotel.videoUrl));
+  takeRoundRobin(unique.filter((hotel) => !hotel.videoUrl));
+
+  return output.slice(0, limit);
+}
+
+function ShowcaseHotelMedia({ hotel, to, ariaLabel, starLabel, language }) {
   const videoRef = useRef(null);
 
   const playVideo = () => {
@@ -183,6 +251,11 @@ function ShowcaseHotelMedia({ hotel, to, ariaLabel, starLabel }) {
         </>
       ) : null}
 
+      <span className="travelCountryBadge">
+        <span aria-hidden="true">{countryFlag(hotel.showcaseCountryCode)}</span>
+        {countryName(hotel.showcaseCountryCode, language)}
+      </span>
+
       <span className="travelStarsBadge">{starLabel}</span>
     </Link>
   );
@@ -221,7 +294,7 @@ function Travel() {
   const [prebookError, setPrebookError] = useState("");
   const [selectedHotel, setSelectedHotel] = useState(null);
   const [prebook, setPrebook] = useState(null);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const activeServiceKey = `travelPage.services.${activeService}`;
 
   function customerHotelError(error, fallbackKey = "travelPage.runtime.noAvailability") {
@@ -316,40 +389,25 @@ function Travel() {
       const knownIds = new Set();
 
       const publishCollectedHotels = () => {
-        setShowcaseHotels((currentHotels) => {
-          const merged = [];
-          const mergedIds = new Set();
-          const videoFirst = [...collected, ...currentHotels].sort(
-            (left, right) =>
-              Number(Boolean(right?.videoUrl)) - Number(Boolean(left?.videoUrl)),
-          );
-
-          for (const hotel of videoFirst) {
-            if (!hotel?.hotelId || !hotel?.offer?.offerId || mergedIds.has(hotel.hotelId)) {
-              continue;
-            }
-
-            mergedIds.add(hotel.hotelId);
-            merged.push(hotel);
-
-            if (merged.length >= SHOWCASE_LIMIT) break;
-          }
-
-          return merged;
-        });
+        setShowcaseHotels((currentHotels) =>
+          diversifyShowcaseHotels(
+            [...collected, ...currentHotels],
+            SHOWCASE_LIMIT,
+          ),
+        );
       };
 
       try {
-        const indexedResponse = await listIndexedVideoHotels(40);
+        const indexedResponse = await listIndexedShowcaseHotels(60);
         const indexedHotels = Array.isArray(indexedResponse?.hotels)
           ? indexedResponse.hotels
           : [];
-        const indexedVideoById = new Map(
+        const indexedById = new Map(
           indexedHotels
-            .filter((hotel) => hotel?.hotelId && hotel?.videoUrl)
+            .filter((hotel) => hotel?.hotelId)
             .map((hotel) => [hotel.hotelId, hotel]),
         );
-        const indexedHotelIds = [...indexedVideoById.keys()];
+        const indexedHotelIds = [...indexedById.keys()];
 
         if (indexedHotelIds.length) {
           const indexedRates = await searchHotelRates({
@@ -360,7 +418,8 @@ function Travel() {
           });
 
           for (const hotel of buildResults(indexedRates)) {
-            const indexedHotel = indexedVideoById.get(hotel.hotelId);
+            const indexedHotel = indexedById.get(hotel.hotelId);
+
             if (
               !indexedHotel ||
               !isFiveStarHotel(hotel) ||
@@ -372,23 +431,26 @@ function Travel() {
             knownIds.add(hotel.hotelId);
             collected.push({
               ...hotel,
-              videoUrl: indexedHotel.videoUrl,
+              videoUrl: indexedHotel.videoUrl || hotel.videoUrl || "",
               showcaseCheckin: checkin,
               showcaseCheckout: checkout,
               showcaseAdults: adults,
               showcaseCity:
                 indexedHotel.cityName ||
                 hotel.city_name ||
-                DEFAULT_SHOWCASE_CITY,
+                "Global",
+              showcaseCountryCode:
+                indexedHotel.countryCode ||
+                hotel.countryCode ||
+                hotel.country_code ||
+                "",
             });
-
-            if (collected.length >= SHOWCASE_LIMIT) break;
           }
 
           publishCollectedHotels();
         }
       } catch {
-        // The video index is optional. Normal live 5★ discovery continues below.
+        // The global index is optional. The fallback below keeps the page usable.
       }
 
       for (const showcaseCity of showcaseCities) {
@@ -436,6 +498,7 @@ function Travel() {
               showcaseCheckout: checkout,
               showcaseAdults: adults,
               showcaseCity,
+              showcaseCountryCode: "TR",
             });
 
             if (collected.length >= SHOWCASE_LIMIT) break;
@@ -1019,6 +1082,7 @@ function Travel() {
                     to={hotelDetailsUrl(hotel)}
                     ariaLabel={`${hotel.name || t("travelPage.runtime.hotelFallback")} ${t("travelPage.runtime.detailsAria")}`}
                     starLabel={`5 ${t("travelPage.runtime.stars")}`}
+                    language={language}
                   />
 
                   <div className="travelHotelBody">
