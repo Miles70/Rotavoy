@@ -11,7 +11,6 @@
     "server:install": "npm --prefix server install",
     "server:dev": "npm --prefix server run dev",
     "server:start": "npm --prefix server start",
-    "server:seed": "npm --prefix server run seed",
     "server:test": "npm --prefix server test",
     "check": "npm run lint && npm run build && npm run server:test",
     "security:check": "node scripts/audit-high.mjs"
