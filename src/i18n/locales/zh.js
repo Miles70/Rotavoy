@@ -55,9 +55,9 @@ const zh = {
       "people5": "5 人以上"
     },
     "prototypeNote": "搜索界面已准备完成。接入旅行 API 后，实时价格和可订状态将在这里显示。",
-    "routesEyebrow": "ROTAVOY 路线",
-    "routesTitle": "从购物路线到度假路线。",
-    "routesText": "旅行板块与商店独立运行，账户、语言和支付体验仍统一在 Rotavoy 平台中。",
+    "routesEyebrow": "旅行灵感",
+    "routesTitle": "选择下一次住宿，并围绕它规划旅程。",
+    "routesText": "酒店、房型和实时房态是 Rotavoy 体验的核心。",
     "cards": {
       "antalya": {
         "badge": "热门",
