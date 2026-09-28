@@ -68,7 +68,79 @@ function numericStars(hotel) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+function collectHotelImages(value, result = [], seen = new Set()) {
+  if (!value || result.length >= 40) return result;
+
+  if (typeof value === "string") {
+    const looksLikeImage =
+      /^https?:\/\//i.test(value) &&
+      (/\.(jpe?g|png|webp)(\?|$)/i.test(value) ||
+        /image|photo|picture|cdn/i.test(value));
+
+    if (looksLikeImage && !seen.has(value)) {
+      seen.add(value);
+      result.push(value);
+    }
+    return result;
+  }
+
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectHotelImages(item, result, seen));
+    return result;
+  }
+
+  if (typeof value === "object") {
+    const hdPreferred = [
+      "urlHd",
+      "urlHD",
+      "hdUrl",
+      "highResUrl",
+      "originalUrl",
+      "original",
+    ];
+    const fallbackPreferred = ["url", "image", "src", "link", "thumbnail"];
+    const hdValues = hdPreferred
+      .map((key) => value[key])
+      .filter((candidate) => typeof candidate === "string" && candidate.trim());
+
+    if (hdValues.length) {
+      hdValues.forEach((candidate) =>
+        collectHotelImages(candidate, result, seen),
+      );
+    } else {
+      fallbackPreferred.forEach((key) =>
+        collectHotelImages(value[key], result, seen),
+      );
+    }
+
+    const preferred = [...hdPreferred, ...fallbackPreferred];
+    Object.entries(value)
+      .filter(
+        ([key]) =>
+          !preferred.includes(key) && /image|photo|picture|gallery/i.test(key),
+      )
+      .forEach(([, nested]) => collectHotelImages(nested, result, seen));
+  }
+
+  return result;
+}
+
 function hotelPhoto(hotel) {
+  const galleryImages = [];
+  const seen = new Set();
+
+  [
+    hotel?.images,
+    hotel?.photos,
+    hotel?.pictures,
+    hotel?.gallery,
+    hotel?.hotelImages,
+    hotel?.hotelPhotos,
+    hotel?.media,
+  ].forEach((source) => collectHotelImages(source, galleryImages, seen));
+
+  if (galleryImages.length) return galleryImages[0];
+
   return String(
     hotel?.main_photo ||
       hotel?.mainPhoto ||
