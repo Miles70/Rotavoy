@@ -3,19 +3,17 @@ import { getNuiteeHotel, listNuiteeHotels } from "./nuiteeApi.js";
 
 export const DEFAULT_VIDEO_INDEX_TARGETS = [
   { countryCode: "TR", cityName: "Antalya" },
-  { countryCode: "TR", cityName: "Belek" },
-  { countryCode: "TR", cityName: "Side" },
-  { countryCode: "TR", cityName: "Kemer" },
-  { countryCode: "TR", cityName: "Alanya" },
   { countryCode: "AE", cityName: "Dubai" },
-  { countryCode: "TH", cityName: "Bangkok" },
   { countryCode: "TH", cityName: "Phuket" },
   { countryCode: "ID", cityName: "Bali" },
   { countryCode: "VN", cityName: "Da Nang" },
   { countryCode: "KH", cityName: "Siem Reap" },
-  { countryCode: "CO", cityName: "Medellin" },
   { countryCode: "BR", cityName: "Rio de Janeiro" },
   { countryCode: "AU", cityName: "Sydney" },
+  { countryCode: "CO", cityName: "Medellin" },
+  { countryCode: "US", cityName: "Miami" },
+  { countryCode: "US", cityName: "Honolulu" },
+  { countryCode: "US", cityName: "Las Vegas" },
 ];
 
 function sleep(ms) {
@@ -91,6 +89,15 @@ export async function listIndexedVideoHotels(limit = 40) {
     .lean();
 }
 
+export async function listIndexedShowcaseHotels(limit = 80) {
+  return HotelVideoIndex.find({
+    stars: { $gte: 5 },
+  })
+    .sort({ hasVideo: -1, checkedAt: -1 })
+    .limit(Math.min(Math.max(Number(limit) || 80, 1), 120))
+    .lean();
+}
+
 export async function indexHotelVideos({
   targets = DEFAULT_VIDEO_INDEX_TARGETS,
   maxChecks = 12,
@@ -123,14 +130,15 @@ export async function indexHotelVideos({
         stoppedByRateLimit = true;
         break;
       }
+      console.log(`catalog error · ${target.cityName}`);
+      if (checked < max) await sleep(delay);
       continue;
     }
 
     const hotelIds = Array.isArray(catalog?.hotelIds) ? catalog.hotelIds : [];
+    let candidateId = "";
 
     for (const hotelId of hotelIds) {
-      if (checked >= max || stoppedByRateLimit) break;
-
       const fresh = await HotelVideoIndex.exists({
         hotelId,
         checkedAt: { $gte: staleBefore },
@@ -141,58 +149,72 @@ export async function indexHotelVideos({
         continue;
       }
 
-      try {
-        const payload = await getNuiteeHotel(hotelId);
-        const hotel = unwrapHotel(payload);
-        const videoUrl = findHotelVideoUrl(payload);
-        const stars = numericStars(hotel);
+      candidateId = hotelId;
+      break;
+    }
 
-        await HotelVideoIndex.findOneAndUpdate(
-          { hotelId },
-          {
-            $set: {
-              hotelId,
-              name: String(hotel?.name || hotel?.hotelName || "").trim(),
-              cityName: String(hotel?.city || hotel?.cityName || target.cityName).trim(),
-              countryCode: String(hotel?.countryCode || target.countryCode).toUpperCase(),
-              stars,
-              mainPhoto: hotelPhoto(hotel),
-              videoUrl,
-              hasVideo: Boolean(videoUrl),
-              checkedAt: new Date(),
-            },
+    if (!candidateId) {
+      console.log(`no unchecked 5★ candidate · ${target.cityName}`);
+      if (checked < max) await sleep(delay);
+      continue;
+    }
+
+    try {
+      const payload = await getNuiteeHotel(candidateId);
+      const hotel = unwrapHotel(payload);
+      const videoUrl = findHotelVideoUrl(payload);
+      const stars = numericStars(hotel) || 5;
+
+      await HotelVideoIndex.findOneAndUpdate(
+        { hotelId: candidateId },
+        {
+          $set: {
+            hotelId: candidateId,
+            name: String(hotel?.name || hotel?.hotelName || "").trim(),
+            cityName: String(hotel?.city || hotel?.cityName || target.cityName).trim(),
+            countryCode: String(hotel?.countryCode || target.countryCode).toUpperCase(),
+            stars,
+            mainPhoto: hotelPhoto(hotel),
+            videoUrl,
+            hasVideo: Boolean(videoUrl),
+            checkedAt: new Date(),
           },
-          { upsert: true, returnDocument: "after", setDefaultsOnInsert: true },
-        );
+        },
+        { upsert: true, returnDocument: "after", setDefaultsOnInsert: true },
+      );
 
-        checked += 1;
-        if (videoUrl && stars >= 5) {
-          videosFound += 1;
-          console.log(
-            `[${checked}/${max}] VIDEO FOUND · ${target.cityName} · ${hotelId} · ${String(hotel?.name || hotel?.hotelName || "Unknown hotel").trim()}`,
-          );
-        } else {
-          console.log(
-            `[${checked}/${max}] checked · ${target.cityName} · ${hotelId} · no video`,
-          );
-        }
-      } catch (error) {
-        if (error?.statusCode === 429) {
-          stoppedByRateLimit = true;
-          break;
-        }
-        checked += 1;
+      checked += 1;
+
+      if (videoUrl) {
+        videosFound += 1;
         console.log(
-          `[${checked}/${max}] checked · ${target.cityName} · ${hotelId} · detail error`,
+          `[${checked}/${max}] VIDEO FOUND · ${target.countryCode} · ${target.cityName} · ${candidateId} · ${String(hotel?.name || hotel?.hotelName || "Unknown hotel").trim()}`,
+        );
+      } else {
+        console.log(
+          `[${checked}/${max}] checked · ${target.countryCode} · ${target.cityName} · ${candidateId} · no video`,
         );
       }
-
-      if (checked < max) {
-        await sleep(delay);
+    } catch (error) {
+      if (error?.statusCode === 429) {
+        stoppedByRateLimit = true;
+        break;
       }
+
+      checked += 1;
+      console.log(
+        `[${checked}/${max}] checked · ${target.countryCode} · ${target.cityName} · ${candidateId} · detail error`,
+      );
+    }
+
+    if (checked < max) {
+      await sleep(delay);
     }
   }
 
+  const indexedFiveStarHotels = await HotelVideoIndex.countDocuments({
+    stars: { $gte: 5 },
+  });
   const indexedFiveStarVideos = await HotelVideoIndex.countDocuments({
     hasVideo: true,
     videoUrl: { $ne: "" },
@@ -204,6 +226,7 @@ export async function indexHotelVideos({
     videosFound,
     skippedFresh,
     stoppedByRateLimit,
+    indexedFiveStarHotels,
     indexedFiveStarVideos,
   };
 }
