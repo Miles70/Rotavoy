@@ -25,7 +25,7 @@ function withTravelTranslations(baseTranslations, language) {
       ...baseTranslations.travelPage,
       runtime: travelRuntimeTranslations[language] || travelRuntimeTranslations.en,
     },
-    orderSuccessPage: payment,
+    travelPayment: payment,
   };
 }
 
