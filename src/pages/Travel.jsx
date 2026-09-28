@@ -221,6 +221,26 @@ function Travel() {
       const collected = [];
       const knownIds = new Set();
 
+      const publishCollectedHotels = () => {
+        setShowcaseHotels((currentHotels) => {
+          const merged = [];
+          const mergedIds = new Set();
+
+          for (const hotel of [...collected, ...currentHotels]) {
+            if (!hotel?.hotelId || !hotel?.offer?.offerId || mergedIds.has(hotel.hotelId)) {
+              continue;
+            }
+
+            mergedIds.add(hotel.hotelId);
+            merged.push(hotel);
+
+            if (merged.length >= SHOWCASE_LIMIT) break;
+          }
+
+          return merged;
+        });
+      };
+
       for (
         let batch = 0;
         batch < SHOWCASE_MAX_BATCHES &&
@@ -262,26 +282,12 @@ function Travel() {
           if (collected.length >= SHOWCASE_LIMIT) break;
         }
 
+        // Publish each batch immediately so the first available 5★ hotels render
+        // while the remaining catalog batches continue filling the showcase.
+        publishCollectedHotels();
         offset += hotelIds.length;
       }
 
-      setShowcaseHotels((currentHotels) => {
-        const merged = [];
-        const mergedIds = new Set();
-
-        for (const hotel of [...collected, ...currentHotels]) {
-          if (!hotel?.hotelId || !hotel?.offer?.offerId || mergedIds.has(hotel.hotelId)) {
-            continue;
-          }
-
-          mergedIds.add(hotel.hotelId);
-          merged.push(hotel);
-
-          if (merged.length >= SHOWCASE_LIMIT) break;
-        }
-
-        return merged;
-      });
       setShowcaseState("success");
     } catch (error) {
       if (!silent) {
