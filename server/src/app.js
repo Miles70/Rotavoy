@@ -2,21 +2,8 @@ import cors from "cors";
 import express from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
-import { adminRouter } from "./routes/admin.js";
-import { adminAnalyticsRouter } from "./routes/adminAnalytics.js";
-import {
-  adminHomeCampaignRouter,
-  homeCampaignRouter,
-} from "./routes/homeCampaign.js";
-import { adminProductCreateRouter } from "./routes/adminProductCreate.js";
-import { adminProductListRouter } from "./routes/adminProductList.js";
-import { customerAccountRouter } from "./routes/customerAccount.js";
 import { customerAuthRouter } from "./routes/customerAuth.js";
 import { hotelsRouter } from "./routes/hotels.js";
-import { ordersRouter } from "./routes/orders.js";
-import { productListRouter } from "./routes/productList.js";
-import { productMediaRouter } from "./routes/productMedia.js";
-import { productsRouter } from "./routes/products.js";
 
 function getAllowedOrigins() {
   return String(process.env.CLIENT_ORIGINS || "http://localhost:5173")
@@ -63,23 +50,12 @@ export function createApp() {
   app.get("/api/health", (request, response) => {
     response.json({
       ok: true,
-      service: "rotavoy-api",
+      service: "rotavoy-travel-api",
       timestamp: new Date().toISOString(),
     });
   });
 
   app.use("/api/customer-auth", customerAuthRouter);
-  app.use("/api/customer", customerAccountRouter);
-  app.use("/api/admin/analytics", adminAnalyticsRouter);
-  app.use("/api/admin/campaign", adminHomeCampaignRouter);
-  app.use("/api/admin/products", adminProductListRouter);
-  app.use("/api/admin/products", adminProductCreateRouter);
-  app.use("/api/admin", adminRouter);
-  app.use("/api/campaign", homeCampaignRouter);
-  app.use("/api/products", productMediaRouter);
-  app.use("/api/products", productListRouter);
-  app.use("/api/products", productsRouter);
-  app.use("/api/orders", ordersRouter);
   app.use("/api/hotels", hotelsRouter);
 
   app.use((request, response) => {
@@ -96,6 +72,7 @@ export function createApp() {
     if (statusCode >= 500) {
       console.error(`[${request.method} ${request.originalUrl}]`, error);
     }
+
     const message =
       statusCode >= 500 && process.env.NODE_ENV === "production"
         ? "Internal server error."
