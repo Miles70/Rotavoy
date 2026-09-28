@@ -1,20 +1,5 @@
 const paymentTranslations = {
   en: {
-    checkoutPage: {
-      text: "Fill in your delivery details and choose how you want to pay.",
-      paymentTitle: "Payment Method",
-      paymentText: "Crypto is available now. Card payments will be added next.",
-      securePayment: "Secure",
-      cryptoPayment: "Crypto Payment",
-      cryptoPaymentText: "Pay from your wallet. USDT on BNB Chain is available.",
-      availableNow: "Available",
-      cardPayment: "Card Payment",
-      cardPaymentText: "Visa and Mastercard support is being prepared.",
-      comingSoon: "Coming soon",
-      creatingOrder: "Creating order...",
-      placeCryptoOrder: "Create Crypto Order",
-      serverError: "The order could not be created. Please try again.",
-    },
     orderSuccessPage: {
       tag: "Payment confirmed",
       text: "Your payment has been confirmed and your order is being processed.",
@@ -67,21 +52,6 @@ const paymentTranslations = {
     },
   },
   tr: {
-    checkoutPage: {
-      text: "Teslimat bilgilerini doldur ve nasıl ödeme yapmak istediğini seç.",
-      paymentTitle: "Ödeme Yöntemi",
-      paymentText: "Kripto ödeme şu anda aktif. Kartla ödeme daha sonra eklenecek.",
-      securePayment: "Güvenli",
-      cryptoPayment: "Kripto Ödeme",
-      cryptoPaymentText: "Cüzdanından ödeme yap. BNB Chain üzerinde USDT kullanabilirsin.",
-      availableNow: "Aktif",
-      cardPayment: "Kartla Ödeme",
-      cardPaymentText: "Visa ve Mastercard desteği hazırlanıyor.",
-      comingSoon: "Yakında",
-      creatingOrder: "Sipariş oluşturuluyor...",
-      placeCryptoOrder: "Kripto Siparişi Oluştur",
-      serverError: "Sipariş oluşturulamadı. Lütfen tekrar dene.",
-    },
     orderSuccessPage: {
       tag: "Ödeme onaylandı",
       text: "Ödemen onaylandı ve siparişin işleme alındı.",
@@ -134,21 +104,6 @@ const paymentTranslations = {
     },
   },
   ru: {
-    checkoutPage: {
-      text: "Заполните данные доставки и выберите способ оплаты.",
-      paymentTitle: "Способ оплаты",
-      paymentText: "Криптооплата уже доступна. Оплата картой будет добавлена позже.",
-      securePayment: "Безопасно",
-      cryptoPayment: "Оплата криптовалютой",
-      cryptoPaymentText: "Оплатите из кошелька с помощью USDT в сети BNB Chain.",
-      availableNow: "Доступно",
-      cardPayment: "Оплата картой",
-      cardPaymentText: "Поддержка Visa и Mastercard готовится.",
-      comingSoon: "Скоро",
-      creatingOrder: "Создание заказа...",
-      placeCryptoOrder: "Создать криптозаказ",
-      serverError: "Не удалось создать заказ. Попробуйте ещё раз.",
-    },
     orderSuccessPage: {
       tag: "Оплата подтверждена",
       text: "Оплата подтверждена, заказ передан в обработку.",
@@ -201,21 +156,6 @@ const paymentTranslations = {
     },
   },
   ar: {
-    checkoutPage: {
-      text: "أدخل بيانات التوصيل واختر طريقة الدفع المناسبة.",
-      paymentTitle: "طريقة الدفع",
-      paymentText: "الدفع بالعملات الرقمية متاح الآن، وسيتم إضافة الدفع بالبطاقة لاحقاً.",
-      securePayment: "آمن",
-      cryptoPayment: "الدفع بالعملات الرقمية",
-      cryptoPaymentText: "ادفع من محفظتك باستخدام USDT على شبكة BNB Chain.",
-      availableNow: "متاح",
-      cardPayment: "الدفع بالبطاقة",
-      cardPaymentText: "يجري إعداد دعم Visa وMastercard.",
-      comingSoon: "قريباً",
-      creatingOrder: "جارٍ إنشاء الطلب...",
-      placeCryptoOrder: "إنشاء طلب بالدفع الرقمي",
-      serverError: "تعذر إنشاء الطلب. يرجى المحاولة مرة أخرى.",
-    },
     orderSuccessPage: {
       tag: "تم تأكيد الدفع",
       text: "تم تأكيد دفعتك وبدأت معالجة الطلب.",
@@ -268,21 +208,6 @@ const paymentTranslations = {
     },
   },
   zh: {
-    checkoutPage: {
-      text: "填写配送信息并选择付款方式。",
-      paymentTitle: "付款方式",
-      paymentText: "目前支持加密货币付款，银行卡付款将在之后加入。",
-      securePayment: "安全",
-      cryptoPayment: "加密货币付款",
-      cryptoPaymentText: "使用钱包中的 BNB Chain USDT 付款。",
-      availableNow: "可用",
-      cardPayment: "银行卡付款",
-      cardPaymentText: "正在准备 Visa 和 Mastercard 支持。",
-      comingSoon: "即将推出",
-      creatingOrder: "正在创建订单...",
-      placeCryptoOrder: "创建加密货币订单",
-      serverError: "无法创建订单，请重试。",
-    },
     orderSuccessPage: {
       tag: "付款已确认",
       text: "付款已确认，订单正在处理中。",
@@ -333,7 +258,7 @@ const paymentTranslations = {
       invalidTransaction: "交易信息无效。",
       transactionFailed: "区块链交易失败。",
     },
-  },
+  }
 };
 
 export default paymentTranslations;
