@@ -48,6 +48,13 @@ export function listIndexedVideoHotels(limit = 40) {
   });
 }
 
+export function listIndexedShowcaseHotels(limit = 80) {
+  const query = new URLSearchParams({ limit: String(limit) });
+  return hotelRequest(`/showcase-index?${query.toString()}`, {
+    method: "GET",
+  });
+}
+
 export function getHotelTranslation(hotelId, language) {
   const query = new URLSearchParams({ language });
   return hotelRequest(
