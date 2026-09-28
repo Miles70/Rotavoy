@@ -43,7 +43,7 @@ const SHOWCASE_LIMIT = 20;
 // cards down to 11–14 during a background refresh.
 const SHOWCASE_SCAN_BATCH = 100;
 const SHOWCASE_MAX_BATCHES = 5;
-const SHOWCASE_REFRESH_MS = 2 * 60 * 1000;
+const SHOWCASE_REFRESH_MS = 10 * 60 * 1000;
 const DEFAULT_SHOWCASE_CITY = "Antalya";
 const DEFAULT_SHOWCASE_FALLBACK_CITIES = ["Belek", "Side", "Kemer", "Alanya"];
 
@@ -252,9 +252,12 @@ function Travel() {
         let offset = 0;
         let total = Number.POSITIVE_INFINITY;
 
+        const maxBatchesForCity =
+          showcaseCity === requestedCity ? SHOWCASE_MAX_BATCHES : 1;
+
         for (
           let batch = 0;
-          batch < SHOWCASE_MAX_BATCHES &&
+          batch < maxBatchesForCity &&
           collected.length < SHOWCASE_LIMIT &&
           offset < total;
           batch += 1
