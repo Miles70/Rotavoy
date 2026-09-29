@@ -309,3 +309,45 @@ img {
     transition-duration: 0.01ms !important;
   }
 }
+
+
+/* ===== Rotavoy Electric Sunset brand system ===== */
+:root {
+  --rv-midnight:#071B3A;
+  --rv-midnight-deep:#041226;
+  --rv-electric:#0B63F6;
+  --rv-cyan:#19C6D8;
+  --rv-amber:#F5B63A;
+  --rv-coral:#FF5A4F;
+  --rv-magenta:#C92A6D;
+  --rv-plum:#5B2A86;
+  --rv-ink:#0B1730;
+
+  --color-primary:var(--rv-electric);
+  --color-primary-hover:#0753D4;
+  --color-primary-active:#0646B5;
+  --color-primary-soft:#EDF4FF;
+  --color-primary-border:rgba(11,99,246,.24);
+  --color-primary-shadow:rgba(11,99,246,.22);
+  --color-secondary:var(--rv-coral);
+  --color-gradient-start:var(--rv-electric);
+  --color-gradient-middle:var(--rv-cyan);
+  --color-gradient-end:var(--rv-magenta);
+  --color-accent-warm:var(--rv-coral);
+  --color-accent-gold:var(--rv-amber);
+  --color-text:var(--rv-ink);
+  --color-text-secondary:#45516B;
+  --color-text-muted:#73809A;
+  --color-background:#F7F9FE;
+  --color-background-soft:#EEF4FF;
+  --color-background-muted:#E7EEFB;
+  --color-surface:#FFFFFF;
+  --color-border:#DBE5F3;
+  --color-border-strong:#C6D5EA;
+  --shadow-small:0 8px 24px rgba(7,27,58,.07);
+  --shadow-medium:0 18px 48px rgba(7,27,58,.11);
+  --shadow-large:0 32px 90px rgba(7,27,58,.15);
+}
+::selection{background:var(--rv-coral);color:#fff}
+:focus-visible{outline-color:rgba(11,99,246,.34)}
+::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--rv-electric),var(--rv-magenta))}

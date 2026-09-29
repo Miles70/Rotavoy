@@ -201,3 +201,26 @@ body:has(.travelPage) .headerWrapper .navLinks .travelNavLink {
     gap: 5px;
   }
 }
+
+
+/* ===== Electric Sunset header ===== */
+.mainHeader{
+  border-bottom-color:rgba(7,27,58,.08);
+  background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(248,251,255,.96));
+  box-shadow:0 10px 34px rgba(7,27,58,.07)
+}
+.navLinks a{color:#4B5870}
+.navLinks a:hover,.navLinks a.active{color:var(--rv-electric)}
+.navLinks a::after{
+  height:3px;
+  background:linear-gradient(90deg,var(--rv-electric),var(--rv-cyan),var(--rv-coral),var(--rv-magenta))
+}
+.navLinks .travelNavLink{
+  border-color:rgba(255,255,255,.88);
+  background:linear-gradient(105deg,var(--rv-midnight) 0%,var(--rv-electric) 22%,var(--rv-cyan) 40%,var(--rv-amber) 58%,var(--rv-coral) 72%,var(--rv-magenta) 88%,var(--rv-plum) 100%);
+  background-size:220% 220%;
+  box-shadow:0 8px 24px rgba(11,99,246,.22),0 5px 18px rgba(201,42,109,.18)
+}
+.navLinks .travelNavLink:hover,.navLinks .travelNavLink.active{
+  box-shadow:0 0 18px rgba(25,198,216,.25),0 0 28px rgba(255,90,79,.18),0 12px 28px rgba(7,27,58,.16)
+}

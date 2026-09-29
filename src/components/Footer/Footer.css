@@ -114,3 +114,24 @@
     grid-column: auto;
   }
 }
+
+
+/* ===== Electric Sunset footer ===== */
+.footer{
+  border-top-color:rgba(255,255,255,.08);
+  background:
+    radial-gradient(circle at 14% 0%,rgba(11,99,246,.30),transparent 30%),
+    radial-gradient(circle at 82% 8%,rgba(201,42,109,.20),transparent 28%),
+    radial-gradient(circle at 58% 100%,rgba(255,90,79,.14),transparent 36%),
+    linear-gradient(145deg,#041226 0%,#071B3A 58%,#101A3D 100%)
+}
+.footerLogo{
+  background:linear-gradient(90deg,#55E9F1,#0B63F6 38%,#F5B63A 60%,#FF5A4F 76%,#C92A6D 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent
+}
+.footerColumn a:hover{color:#55E9F1}
+.socialLinks span:hover{
+  border-color:rgba(25,198,216,.32);
+  background:linear-gradient(135deg,rgba(11,99,246,.16),rgba(201,42,109,.14));
+  color:#fff;transform:translateY(-2px)
+}
