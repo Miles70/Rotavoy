@@ -108,3 +108,20 @@
     font-size: 1.34rem;
   }
 }
+
+
+/* ===== Electric Sunset logo polish ===== */
+.logoMark{
+  border:1px solid rgba(255,255,255,.14);
+  background:var(--rv-midnight-deep);
+  box-shadow:0 10px 24px rgba(7,27,58,.19),0 4px 18px rgba(11,99,246,.18)
+}
+.logoTextCore{
+  background:linear-gradient(180deg,#52EDF5 0%,#0B63F6 48%,#071B3A 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent
+}
+.logoTextAccent{
+  background:linear-gradient(180deg,#F5B63A 0%,#FF5A4F 34%,#C92A6D 68%,#5B2A86 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent
+}
+.logoText::after{color:#76829A}
