@@ -129,3 +129,6 @@
     transition-duration: 1ms !important;
   }
 }
+
+.customerLoginPreview { border-color: var(--color-border); box-shadow: var(--shadow-large); }
+.customerLoginPreviewIcon--guest { background: #eaf2ff; color: var(--color-blue); }
