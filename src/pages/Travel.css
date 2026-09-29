@@ -138,28 +138,40 @@
   height: 100%;
   display: block;
   object-fit: cover;
-  transform: scale(1.12);
-  transform-origin: center;
 }
 
 .travelBrandName {
   display: flex;
   align-items: baseline;
-  gap: 6px;
-  color: #ff8a1f;
+  gap: 4px;
+  font-family:
+    "Avenir Next",
+    "Segoe UI",
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
   font-size: 1.28rem;
   font-weight: 900;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.055em;
 }
 
 .travelBrandName strong,
 .travelBrandName span {
-  font-weight: 950;
+  font-weight: 900;
+}
+
+.travelBrandName strong {
+  background: linear-gradient(180deg, #22d4ff 0%, #087cf5 42%, #082d8f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .travelBrandName span {
-  color: #075cff;
-  font-style: italic;
+  background: linear-gradient(180deg, #ffcc55 0%, #ff6a28 35%, #e0184e 67%, #6b0a89 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .travelBrandBlock small {

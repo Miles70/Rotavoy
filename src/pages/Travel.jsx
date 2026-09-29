@@ -758,7 +758,7 @@ function Travel() {
           <div className="travelIntro">
             <div className="travelBrandBlock">
               <span className="travelBrandMark" aria-hidden="true">
-                <img src="/rotavoy-logo.png" alt="" />
+                <img src="/rotavoy-mark.webp" alt="" />
               </span>
               <div>
                 <div className="travelBrandName" aria-label="Rotavoy">
