@@ -458,3 +458,14 @@
 .hotelOffer--selected { border-color: var(--color-blue); box-shadow: 0 0 0 3px rgba(11, 99, 246, 0.13); }
 .hotelOffer--selected > button { background: #e8f0ff; color: var(--color-blue); box-shadow: none; }
 .hotelSecureNote { color: var(--color-text-muted); }
+
+
+.hotelStaySearch { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; gap: 16px; align-items: end; margin: 24px 0; padding: 20px; border: 1px solid var(--color-border); border-radius: 20px; background: #fff; }
+.hotelStaySearch label { display: grid; gap: 8px; min-width: 0; color: var(--color-navy); font-weight: 600; font-size: 14px; }
+.hotelStaySearch input, .hotelStaySearch select { width: 100%; min-width: 0; min-height: 48px; box-sizing: border-box; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 12px; background: #f9fbff; color: var(--color-navy); font: inherit; color-scheme: light; }
+.hotelStaySearch button { min-height: 48px; padding: 12px 20px; border: 0; border-radius: 12px; background: var(--sunset-action); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+.hotelStaySearch button:not(:disabled):hover { filter: brightness(1.08); }
+.hotelStaySearch :is(input, select, button):focus-visible { outline: 3px solid var(--color-cyan); outline-offset: 3px; }
+.hotelStaySearch :disabled { opacity: .6; cursor: wait; }
+@media (max-width: 900px) { .hotelStaySearch { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 540px) { .hotelStaySearch { grid-template-columns: minmax(0, 1fr); padding: 16px; } }
