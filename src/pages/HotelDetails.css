@@ -412,3 +412,48 @@
   .hotelFacilities { grid-template-columns: 1fr; }
   .hotelDetailCard { padding: 20px; }
 }
+
+
+/* ===== Electric Sunset hotel details ===== */
+.hotelDetailPage{
+  background:
+    radial-gradient(circle at 88% 3%,rgba(11,99,246,.09),transparent 28%),
+    radial-gradient(circle at 10% 92%,rgba(201,42,109,.07),transparent 25%),
+    #F7F9FE;
+  color:var(--rv-ink)
+}
+.hotelDetailBack,.hotelDetailState a,.hotelDetailEyebrow{color:var(--rv-electric)}
+.hotelDetailHeader h1{color:var(--rv-midnight)}
+.hotelDetailGuestRating{background:#EDF4FF;color:var(--rv-electric)}
+.hotelDetailStay,.hotelDetailCard{
+  border-color:rgba(7,27,58,.09);
+  background:#fff;
+  box-shadow:0 18px 50px rgba(7,27,58,.08)
+}
+.hotelGalleryMain{
+  background:linear-gradient(145deg,#EEF4FF,#E6F8FB);
+  box-shadow:0 22px 60px rgba(7,27,58,.12)
+}
+.hotelGalleryArrow,.hotelGalleryCount{background:rgba(7,27,58,.82)}
+.hotelGalleryThumbs button.active{
+  border-color:var(--rv-electric);
+  box-shadow:0 0 0 2px rgba(25,198,216,.18)
+}
+.hotelFacilities span,.hotelOffer{background:linear-gradient(135deg,#F4F7FF,#FFF8FB)}
+.hotelFacilities svg,.hotelOffer>div svg,.hotelOfferDetails dt svg{color:var(--rv-electric)}
+.hotelOffer{border-color:rgba(11,99,246,.13)}
+.hotelOffer>b{
+  background:linear-gradient(90deg,#0B63F6,#C92A6D);
+  -webkit-background-clip:text;background-clip:text;color:transparent
+}
+.hotelOffer>button,.hotelBookSelected,.hotelCheckoutLink{
+  background:linear-gradient(105deg,#0B63F6 0%,#19C6D8 30%,#F5B63A 52%,#FF5A4F 72%,#C92A6D 100%);
+  color:#fff;
+  box-shadow:0 12px 28px rgba(11,99,246,.18)
+}
+.hotelOffer--selected{
+  border-color:var(--rv-electric);
+  box-shadow:0 0 0 3px rgba(11,99,246,.10)
+}
+.hotelOffer--selected>button{background:#EDF4FF;color:var(--rv-electric);box-shadow:none}
+.hotelDetailState{color:var(--rv-electric)}
