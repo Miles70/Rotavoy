@@ -260,6 +260,13 @@ function dateAfter(value, days = 1) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
+function stayNights(checkin, checkout) {
+  const start = new Date(`${checkin}T00:00:00.000Z`);
+  const end = new Date(`${checkout}T00:00:00.000Z`);
+  const nights = Math.round((end.getTime() - start.getTime()) / 86400000);
+  return Number.isFinite(nights) && nights > 0 ? nights : 0;
+}
+
 function HotelStaySearch({ checkin, checkout, adults, disabled, onSearch, t }) {
   const [start, setStart] = useState(checkin);
   const [end, setEnd] = useState(checkout);
@@ -312,6 +319,10 @@ function HotelDetails() {
   );
   const fallbackHotel = location.state?.hotel || null;
   const { t, language } = useLanguage();
+  const nights = stayNights(checkin, checkout);
+  const totalStayLabel = nights
+    ? `${nights} ${t(nights === 1 ? "travelPage.runtime.nightSingular" : "travelPage.runtime.nightPlural")} · ${adults} ${t(adults === 1 ? "hotelDetail.adult" : "hotelDetail.adults")} · ${t("hotelDetail.totalPrice")}`
+    : t("hotelDetail.totalPrice");
 
   const [hotel, setHotel] = useState(fallbackHotel);
   const [searchVersion, setSearchVersion] = useState(0);
@@ -691,6 +702,14 @@ function HotelDetails() {
             <div className="hotelDetailCard">
               <span className="hotelDetailEyebrow">{t("hotelDetail.availableRooms")}</span>
               <h2>{t("hotelDetail.chooseStay")}</h2>
+              {nights > 0 && (
+                <p className="hotelMuted">
+                  <strong>
+                    {nights} {t(nights === 1 ? "travelPage.runtime.nightSingular" : "travelPage.runtime.nightPlural")}
+                    {" · "}{adults} {t(adults === 1 ? "hotelDetail.adult" : "hotelDetail.adults")}
+                  </strong>
+                </p>
+              )}
 
               {!checkin || !checkout ? (
                 <p className="hotelMuted">
@@ -719,7 +738,7 @@ function HotelDetails() {
                           {offer?.rates?.[0]?.name || t("hotelDetail.roomFallback")}
                         </strong>
                       </div>
-                      <span>{t("hotelDetail.totalPrice")}</span>
+                      <span>{totalStayLabel}</span>
                       <b>
                         {money(
                           offer.suggestedSellingPrice.amount,
@@ -780,7 +799,7 @@ function HotelDetails() {
                         prebook.data.sellingPriceToUser,
                         prebook.data.currency,
                       )}
-                      {" · "}{t("hotelDetail.totalPrice")}
+                      {" · "}{totalStayLabel}
                     </span>
                     <Link
                       className="hotelCheckoutLink"
