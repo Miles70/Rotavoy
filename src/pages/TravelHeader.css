@@ -1,14 +1,14 @@
 body:has(.travelPage) .headerWrapper .mainHeader {
-  border-bottom-color: rgba(7, 128, 139, 0.16);
-  background: rgba(240, 252, 250, 0.94);
-  box-shadow: 0 9px 30px rgba(5, 100, 111, 0.07);
+  border-bottom-color: rgba(7, 27, 58, 0.08);
+  background: rgba(250, 252, 255, 0.93);
+  box-shadow: 0 9px 30px rgba(7, 27, 58, 0.08);
 }
 
 body:has(.travelPage) .headerWrapper .navLinks a:hover,
 body:has(.travelPage) .headerWrapper .navLinks a.active {
-  color: #07838e;
+  color: #0B63F6;
 }
 
 body:has(.travelPage) .headerWrapper .navLinks a::after {
-  background: linear-gradient(90deg, #07818c, #16aaa8);
+  background: linear-gradient(90deg, #0B63F6, #19C6D8, #FF5A4F, #C92A6D);
 }
