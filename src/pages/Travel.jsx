@@ -92,6 +92,11 @@ function stayMetaText({ adults, checkin, checkout, t }) {
   };
 }
 
+function stayPriceLabel({ adults, checkin, checkout, t }) {
+  const stay = stayMetaText({ adults, checkin, checkout, t });
+  return `${stay.nights} · ${stay.guests} · ${t("travelPage.runtime.totalSalePrice")}`;
+}
+
 function findVideoUrl(value) {
   if (!value) return "";
 
@@ -971,7 +976,7 @@ function Travel() {
                       </span>
                     </div>
                     <div className="travelHotelPrice">
-                      <span>{t("travelPage.runtime.totalSalePrice")}</span>
+                      <span>{stayPriceLabel({ adults, checkin, checkout, t })}</span>
                       <strong>
                         {money(
                           hotel.offer.suggestedSellingPrice.amount,
@@ -1034,7 +1039,7 @@ function Travel() {
                                   prebook.data.currency,
                                 )}
                                 {" · "}
-                                {t("travelPage.runtime.totalStayPrice")}
+                                {stayPriceLabel({ adults, checkin, checkout, t })}
                               </span>
                             </div>
                             <Link
@@ -1188,7 +1193,12 @@ function Travel() {
                     </div>
 
                     <div className="travelHotelPrice">
-                      <span>{t("travelPage.runtime.totalSalePrice")}</span>
+                      <span>{stayPriceLabel({
+                        adults: hotel.showcaseAdults,
+                        checkin: hotel.showcaseCheckin,
+                        checkout: hotel.showcaseCheckout,
+                        t,
+                      })}</span>
                       <strong>
                         {money(
                           hotel.offer.suggestedSellingPrice.amount,
