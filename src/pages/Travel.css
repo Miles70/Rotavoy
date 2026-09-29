@@ -14,7 +14,7 @@
   isolation: isolate;
   overflow: hidden;
   padding: 76px 0 110px;
-  background: #064953 url("/images/rotavoy-travel-waves-poster.webp") center 52% / cover no-repeat;
+  background: var(--color-navy);
   color: #12353c;
 }
 
