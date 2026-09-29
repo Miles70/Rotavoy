@@ -254,11 +254,56 @@ function facilityIcon(name) {
   return CheckCircle2;
 }
 
+function dateAfter(value, days = 1) {
+  const date = value ? new Date(`${value}T12:00:00`) : new Date();
+  date.setDate(date.getDate() + days);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function HotelStaySearch({ checkin, checkout, adults, disabled, onSearch, t }) {
+  const [start, setStart] = useState(checkin);
+  const [end, setEnd] = useState(checkout);
+  const [guests, setGuests] = useState(adults);
+  const tomorrow = dateAfter(null);
+  const minimumEnd = start ? dateAfter(start) : tomorrow;
+
+  return (
+    <form className="hotelStaySearch" onSubmit={(event) => {
+      event.preventDefault();
+      if (start >= tomorrow && end > start) onSearch(start, end, guests);
+    }}>
+      <label>
+        <span>{t("travelPage.search.start")}</span>
+        <input type="date" required value={start} min={tomorrow} disabled={disabled}
+          onChange={(event) => {
+            const value = event.target.value;
+            setStart(value);
+            if (end <= value) setEnd("");
+          }} />
+      </label>
+      <label>
+        <span>{t("travelPage.search.end")}</span>
+        <input type="date" required value={end} min={minimumEnd} disabled={disabled}
+          onChange={(event) => setEnd(event.target.value)} />
+      </label>
+      <label>
+        <span>{t("travelPage.search.guests")}</span>
+        <select value={guests} disabled={disabled} onChange={(event) => setGuests(Number(event.target.value))}>
+          {Array.from({ length: 10 }, (_, index) => index + 1).map((count) => (
+            <option key={count} value={count}>{count} {t(count === 1 ? "hotelDetail.adult" : "hotelDetail.adults")}</option>
+          ))}
+        </select>
+      </label>
+      <button type="submit" disabled={disabled}>{t("hotelDetail.checkAvailability")}</button>
+    </form>
+  );
+}
+
 function HotelDetails() {
   const { hotelId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const checkin = searchParams.get("checkin") || "";
   const checkout = searchParams.get("checkout") || "";
   const adults = Math.min(
@@ -269,13 +314,15 @@ function HotelDetails() {
   const { t, language } = useLanguage();
 
   const [hotel, setHotel] = useState(fallbackHotel);
-  const [offers, setOffers] = useState(
-    fallbackHotel?.offers || (fallbackHotel?.offer ? [fallbackHotel.offer] : []),
-  );
+  const [searchVersion, setSearchVersion] = useState(0);
+  const ratesKey = JSON.stringify([hotelId, checkin, checkout, adults, searchVersion]);
+  const [ratesResult, setRatesResult] = useState(null);
+  const ratesLoading = Boolean(checkin && checkout && ratesResult?.key !== ratesKey);
+  const offers = ratesResult?.key === ratesKey ? ratesResult.offers : [];
+  const ratesError = ratesResult?.key === ratesKey ? ratesResult.error : "";
   const [activeImage, setActiveImage] = useState(0);
   const [state, setState] = useState(fallbackHotel ? "success" : "loading");
   const [error, setError] = useState("");
-  const [ratesError, setRatesError] = useState("");
   const [bookingState, setBookingState] = useState("idle");
   const [bookingError, setBookingError] = useState("");
   const [prebook, setPrebook] = useState(null);
@@ -288,14 +335,14 @@ function HotelDetails() {
     async function load() {
       if (!fallbackHotel) setState("loading");
       setError("");
-      setRatesError("");
+      setSelectedOffer(null);
+      setPrebook(null);
+      setBookingError("");
+      setBookingState("idle");
 
       const detailsPromise = getHotelDetails(hotelId);
-      const hasSearchOffers = Boolean(
-        fallbackHotel?.offers?.length || fallbackHotel?.offer,
-      );
       const ratesPromise =
-        checkin && checkout && !hasSearchOffers
+        checkin && checkout
           ? searchHotelRates({
               hotelIds: [hotelId],
               checkin,
@@ -338,15 +385,17 @@ function HotelDetails() {
         );
       }
 
-      if (ratesResult.status === "fulfilled" && ratePayload) {
-        setOffers(buildOffers(ratePayload));
+      if (ratesResult.status === "fulfilled") {
+        setRatesResult({ key: ratesKey, offers: buildOffers(ratePayload), error: "" });
       } else if (ratesResult.status === "rejected") {
         const upstreamMessage = String(ratesResult.reason?.message || "");
-        setRatesError(
-          /no availability|not available/i.test(upstreamMessage)
+        setRatesResult({
+          key: ratesKey,
+          offers: [],
+          error: /no availability|not available/i.test(upstreamMessage)
             ? t("hotelDetail.noRooms")
             : t("hotelDetail.ratesUnavailable"),
-        );
+        });
       }
     }
 
@@ -354,7 +403,7 @@ function HotelDetails() {
     return () => {
       cancelled = true;
     };
-  }, [hotelId, checkin, checkout, adults, fallbackHotel, t]);
+  }, [hotelId, checkin, checkout, adults, fallbackHotel, t, ratesKey]);
 
   useEffect(() => {
     let cancelled = false;
@@ -534,6 +583,22 @@ function HotelDetails() {
           )}
         </section>
 
+        <HotelStaySearch key={JSON.stringify([hotelId, checkin, checkout, adults])}
+          checkin={checkin} checkout={checkout} adults={adults} t={t}
+          disabled={bookingState === "loading"}
+          onSearch={(start, end, guests) => {
+            const params = new URLSearchParams(searchParams);
+            params.set("checkin", start);
+            params.set("checkout", end);
+            params.set("adults", String(guests));
+            setSelectedOffer(null);
+            setPrebook(null);
+            setBookingError("");
+            setBookingState("idle");
+            setSearchVersion((version) => version + 1);
+            setSearchParams(params, { state: location.state });
+          }} />
+
         <section className="hotelGallery">
           <div className="hotelGalleryMain">
             {images.length ? (
@@ -630,6 +695,10 @@ function HotelDetails() {
               {!checkin || !checkout ? (
                 <p className="hotelMuted">
                   {t("hotelDetail.selectDates")}
+                </p>
+              ) : ratesLoading ? (
+                <p className="hotelMuted" role="status">
+                  <LoaderCircle className="travelSpin" size={18} /> {t("travelPage.runtime.checking")}
                 </p>
               ) : ratesError ? (
                 <p className="hotelBookingMessage hotelBookingMessage--error">

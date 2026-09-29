@@ -123,4 +123,10 @@ const hotelDetailTranslations = {
   },
 };
 
+const availabilityLabels = {"en": "Check availability", "tr": "Müsaitliği kontrol et", "de": "Verfügbarkeit prüfen", "fr": "Vérifier la disponibilité", "es": "Consultar disponibilidad", "it": "Verifica disponibilità", "pt": "Verificar disponibilidade", "ru": "Проверить наличие", "ar": "تحقق من التوفر", "zh": "查询空房"};
+
+for (const [language, label] of Object.entries(availabilityLabels)) {
+  hotelDetailTranslations[language].checkAvailability = label;
+}
+
 export default hotelDetailTranslations;
