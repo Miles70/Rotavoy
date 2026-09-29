@@ -749,11 +749,10 @@ function Travel() {
           playsInline
           preload="auto"
           onCanPlay={(event) => event.currentTarget.play().catch(() => {})}
-          poster="/images/rotavoy-travel-waves-poster.webp"
           aria-hidden="true"
           tabIndex={-1}
         >
-          <source src="/images/rotavoy-travel-waves-hd.mp4" type="video/mp4" />
+          <source src="https://videos.pexels.com/video-files/26229923/11941247_1920_1080_30fps.mp4" type="video/mp4" />
         </video>
 
         <div className="travelHeroGlow travelHeroGlow--one" />
