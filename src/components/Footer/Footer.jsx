@@ -11,7 +11,8 @@ function Footer() {
       <div className="container footerInner">
         <div className="footerBrand">
           <Link to="/" className="footerLogo">
-            {siteConfig.brandName}
+            <img src="/rotavoy-mark-new.png" alt="" aria-hidden="true" />
+            <img src="/rotavoy-wordmark.png" alt={siteConfig.brandName} />
           </Link>
 
           <p>{siteConfig.description}</p>

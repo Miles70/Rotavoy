@@ -193,10 +193,6 @@ body:has(.travelPage) .headerWrapper .navLinks .travelNavLink {
     width: calc(100% - 24px);
   }
 
-  .logoText {
-    display: none;
-  }
-
   .headerActions {
     gap: 5px;
   }

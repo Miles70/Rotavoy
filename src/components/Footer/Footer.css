@@ -18,11 +18,20 @@
 
 .footerLogo {
   display: inline-flex;
+  align-items: center;
+  gap: 7px;
   margin-bottom: 14px;
-  color: #ffffff;
-  font-size: 1.45rem;
-  font-weight: 950;
-  letter-spacing: -0.05em;
+}
+
+.footerLogo img:first-child {
+  width: 46px;
+  height: 42px;
+  object-fit: contain;
+}
+
+.footerLogo img:last-child {
+  width: 150px;
+  height: auto;
 }
 
 .footerBrand p {

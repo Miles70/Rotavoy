@@ -758,13 +758,10 @@ function Travel() {
           <div className="travelIntro">
             <div className="travelBrandBlock">
               <span className="travelBrandMark" aria-hidden="true">
-                <img src="/rotavoy-mark.webp" alt="" />
+                <img src="/rotavoy-mark-new.png" alt="" />
               </span>
               <div>
-                <div className="travelBrandName" aria-label="Rotavoy">
-                  <strong>Rota</strong>
-                  <span>voy</span>
-                </div>
+                <img className="travelBrandName" src="/rotavoy-wordmark.png" alt="Rotavoy" />
                 <small>{t("travelPage.onlineTravelAgency")}</small>
               </div>
             </div>

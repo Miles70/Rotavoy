@@ -108,13 +108,9 @@ function Header() {
             aria-label={`${siteConfig.brandName} Travel home`}
           >
             <span className="logoMark" aria-hidden="true">
-              <img src="/rotavoy-mark.webp" alt="" />
+              <img src="/rotavoy-mark-new.png" alt="" />
             </span>
-
-            <span className="logoText" aria-hidden="true">
-              <span className="logoTextCore">Rota</span>
-              <span className="logoTextAccent">voy</span>
-            </span>
+            <img className="logoWordmark" src="/rotavoy-wordmark.png" alt="" aria-hidden="true" />
           </Link>
 
           <nav className="navLinks" aria-label="Travel navigation">

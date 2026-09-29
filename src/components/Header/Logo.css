@@ -1,110 +1,47 @@
 .logo {
-  gap: 11px;
+  gap: 7px;
   isolation: isolate;
-  transition:
-    transform var(--transition-fast),
-    filter var(--transition-fast);
+  transition: transform var(--transition-fast), filter var(--transition-fast);
 }
 
 .logo:hover {
   transform: translateY(-1px);
-  filter: saturate(1.05);
+  filter: saturate(1.08);
 }
 
 .logoMark {
-  position: relative;
-  width: 46px;
-  height: 46px;
-  flex: 0 0 46px;
-  overflow: hidden;
+  width: 53px;
+  height: 48px;
+  flex: 0 0 53px;
   display: grid;
   place-items: center;
-  border-radius: 13px;
-  background: #050b1c;
-  box-shadow:
-    0 10px 22px rgba(5, 20, 55, 0.2),
-    0 4px 14px rgba(0, 132, 255, 0.18);
-  transition:
-    transform var(--transition-fast),
-    box-shadow var(--transition-fast);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
 }
 
 .logoMark img {
   width: 100%;
   height: 100%;
   display: block;
-  object-fit: cover;
+  object-fit: contain;
 }
 
-.logo:hover .logoMark {
-  transform: rotate(-1.5deg) scale(1.035);
-  box-shadow:
-    0 13px 27px rgba(5, 20, 55, 0.24),
-    0 5px 16px rgba(0, 132, 255, 0.24);
-}
-
-.logoText {
-  position: relative;
-  padding-bottom: 11px;
-  display: inline-flex;
-  align-items: baseline;
-  line-height: 1;
-  font-family:
-    "Avenir Next",
-    "Segoe UI",
-    "Helvetica Neue",
-    Arial,
-    sans-serif;
-  font-size: 1.48rem;
-  font-weight: 900;
-  letter-spacing: -0.065em;
-  text-rendering: geometricPrecision;
-}
-
-.logoText::after {
-  content: "Online Travel Agency";
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 1px;
-  color: #667085;
-  font-size: 0.46rem;
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: 0.18em;
-  white-space: nowrap;
-  text-transform: uppercase;
-}
-
-.logoTextCore {
-  background: linear-gradient(180deg, #22d4ff 0%, #087cf5 42%, #082d8f 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.logoTextAccent {
-  margin-left: 2px;
-  background: linear-gradient(180deg, #ffcc55 0%, #ff6a28 35%, #e0184e 67%, #6b0a89 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  letter-spacing: -0.08em;
+.logoWordmark {
+  width: 157px;
+  height: auto;
+  display: block;
 }
 
 @media (max-width: 620px) {
-  .logo {
-    gap: 8px;
-  }
-
   .logoMark {
-    width: 40px;
+    width: 43px;
     height: 40px;
-    flex-basis: 40px;
-    border-radius: 12px;
+    flex-basis: 43px;
   }
 
-  .logoText {
-    font-size: 1.34rem;
+  .logoWordmark {
+    width: 125px;
   }
 }
