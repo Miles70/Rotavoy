@@ -1111,3 +1111,180 @@
   width: fit-content;
   margin: 24px auto 0;
 }
+
+/* Electric Sunset: visual layer only. Search, video and hotel behavior stay intact. */
+.travelPage {
+  background: var(--color-background);
+  color: var(--color-navy);
+}
+
+.travelHero {
+  background-color: var(--color-navy);
+}
+
+.travelHero::before {
+  background:
+    linear-gradient(90deg, rgba(7, 27, 58, 0.76), rgba(7, 27, 58, 0.35) 48%, rgba(91, 42, 134, 0.13)),
+    linear-gradient(0deg, rgba(7, 27, 58, 0.42), transparent 55%);
+}
+
+.travelHeroGlow--one { background: rgba(25, 198, 216, 0.4); }
+.travelHeroGlow--two { background: rgba(255, 90, 79, 0.3); }
+
+.travelIntro {
+  border: 1px solid rgba(255, 255, 255, 0.54);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.93), rgba(237, 246, 255, 0.83));
+  box-shadow: 0 28px 76px rgba(7, 27, 58, 0.24);
+}
+
+.travelBrandBlock small { color: var(--color-text-secondary); }
+
+.travelPill {
+  border-color: rgba(11, 99, 246, 0.18);
+  background: rgba(11, 99, 246, 0.09);
+  color: var(--color-blue);
+}
+
+.travelIntro h1 { color: var(--color-navy); }
+.travelIntro h1 span {
+  background: var(--sunset-action);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.travelIntro > p { color: var(--color-text-secondary); }
+.travelTrustRow span { color: var(--color-text-secondary); }
+.travelTrustRow svg { color: var(--color-blue); }
+
+.travelSearchShell {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: linear-gradient(145deg, rgba(7, 27, 58, 0.91), rgba(39, 29, 95, 0.88));
+  box-shadow: 0 34px 90px rgba(7, 27, 58, 0.35);
+}
+
+.travelServiceTabs button {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.travelServiceTabs button:hover {
+  border-color: rgba(25, 198, 216, 0.55);
+  background: rgba(25, 198, 216, 0.16);
+  color: #ffffff;
+}
+
+.travelServiceTabs button.active {
+  border-color: rgba(255, 255, 255, 0.8);
+  background: #ffffff;
+  color: var(--color-navy);
+  box-shadow: 0 10px 30px rgba(7, 27, 58, 0.23);
+}
+
+.travelServiceTabs button.active svg { color: var(--color-blue); }
+.travelSearchCard { background: rgba(255, 255, 255, 0.97); }
+.travelSearchHeading > span { color: var(--color-berry); }
+.travelSearchHeading h2 { color: var(--color-navy); }
+.travelField > span { color: var(--color-text-secondary); }
+
+.travelField > div {
+  border-color: var(--color-border);
+  background: #f6f9ff;
+}
+
+.travelField > div:focus-within {
+  border-color: var(--color-blue);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(11, 99, 246, 0.13);
+}
+
+.travelField svg { color: var(--color-blue); }
+.travelField input, .travelField select { color: var(--color-navy); }
+.travelField input::placeholder { color: #8090a9; }
+
+.travelSearchButton {
+  background: var(--sunset-action);
+  box-shadow: 0 13px 28px rgba(91, 42, 134, 0.23);
+}
+.travelSearchButton:hover { box-shadow: 0 17px 34px rgba(201, 42, 109, 0.3); }
+.travelPrototypeNote { color: var(--color-text-muted); }
+
+.travelRoutesSection {
+  background:
+    radial-gradient(circle at 90% 6%, rgba(245, 182, 58, 0.12), transparent 30%),
+    radial-gradient(circle at 4% 66%, rgba(25, 198, 216, 0.14), transparent 34%),
+    linear-gradient(180deg, #ffffff, #f1f5ff);
+}
+.travelSectionHeading span,
+.travelResultsHeading span,
+.travelPrebookPanel > div > span { color: var(--color-blue); }
+.travelSectionHeading h2,
+.travelResultsHeading h2 { color: var(--color-navy); }
+.travelSectionHeading > p,
+.travelResultsHeading p { color: var(--color-text-secondary); }
+.travelShowcaseStatus { color: var(--color-blue); }
+
+.travelHotelResults {
+  background: radial-gradient(circle at 86% 5%, rgba(201, 42, 109, 0.06), transparent 34%), #f6f8ff;
+}
+.travelHotelCard {
+  border-color: rgba(11, 99, 246, 0.12);
+  box-shadow: 0 18px 48px rgba(7, 27, 58, 0.09);
+}
+.travelHotelCard:hover {
+  border-color: rgba(11, 99, 246, 0.32);
+  box-shadow: 0 26px 62px rgba(7, 27, 58, 0.15);
+}
+.travelHotelMedia { background: linear-gradient(145deg, #e5f2ff, #e3f7f9); color: var(--color-blue); }
+.travelHotelMedia > img, .travelHotelMedia > video { background: #edf4ff; }
+.travelStarsBadge { background: rgba(7, 27, 58, 0.88); }
+.travelVideoBadge { background: linear-gradient(110deg, var(--color-blue), var(--color-plum)); }
+.travelCountryBadge { color: var(--color-navy); box-shadow: 0 7px 18px rgba(7, 27, 58, 0.17); }
+.travelHotelRating { color: #c28210; }
+.travelHotelRating span,
+.travelHotelBody > p,
+.travelRoomLine { color: var(--color-text-muted); }
+.travelHotelBody h3 { color: var(--color-navy); }
+.travelHotelBody h3 a:hover { color: var(--color-blue); }
+.travelHotelBody > p svg,
+.travelRoomLine svg,
+.travelStayMeta svg { color: var(--color-blue); }
+.travelRoomLine { border-top-color: var(--color-border); }
+.travelStayMeta span {
+  border-color: rgba(11, 99, 246, 0.15);
+  background: #edf4ff;
+  color: var(--color-text-secondary);
+}
+.travelHotelPrice span { color: var(--color-text-muted); }
+.travelHotelPrice strong { color: var(--color-navy); }
+.travelHotelDetailsLink {
+  border-color: rgba(11, 99, 246, 0.28);
+  color: var(--color-blue);
+  background: #f7faff;
+}
+.travelHotelDetailsLink:hover { background: #eaf2ff; border-color: var(--color-blue); }
+.travelHotelBody > button,
+.travelBookSelected,
+.travelPrebookSuccess button,
+.travelPrebookSuccess a { background: var(--sunset-action); color: #ffffff; }
+.travelHotelBody > button:hover,
+.travelPrebookSuccess button:hover,
+.travelPrebookSuccess a:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.travelPrebookPanel { border-color: var(--color-border); box-shadow: var(--shadow-medium); }
+.travelPrebookPanel h3 { color: var(--color-navy); }
+.travelPrebookPanel p,
+.travelPrebookSuccess span { color: var(--color-text-muted); }
+.travelPrebookStatus { color: var(--color-blue) !important; }
+.travelPrebookStatus--error { color: #a43b2c !important; }
+.travelCardPrebook { border-color: var(--color-border); background: #f6f9ff; }
+.travelLoadMoreButton {
+  border-color: rgba(11, 99, 246, 0.28);
+  color: var(--color-blue);
+  box-shadow: var(--shadow-small);
+}
+.travelLoadMoreButton:hover { border-color: var(--color-blue); background: #edf4ff; }
+
+@media (max-width: 640px) {
+  .travelIntro { background: rgba(255, 255, 255, 0.94); }
+  .travelSearchShell { background: linear-gradient(145deg, #071b3a, #30235f); }
+}

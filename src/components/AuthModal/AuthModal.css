@@ -477,3 +477,20 @@
     transition-duration: 1ms !important;
   }
 }
+
+.customerAuthOverlay {
+  background: radial-gradient(circle at 15% 10%, rgba(25,198,216,.2), transparent 36%),
+    radial-gradient(circle at 85% 85%, rgba(201,42,109,.21), transparent 36%), rgba(7,27,58,.78);
+}
+.customerAuthModal {
+  background: radial-gradient(circle at 100% 0, rgba(25,198,216,.1), transparent 34%),
+    radial-gradient(circle at 0 100%, rgba(201,42,109,.09), transparent 38%), #fff;
+  box-shadow: 0 36px 100px rgba(7,27,58,.33);
+}
+.customerAuthModal::before { background: rgba(25,198,216,.08); }
+.customerAuthEyebrow { border-color: var(--color-primary-border); background: #edf4ff; color: var(--color-blue); }
+.customerAuthHeading h2 { color: var(--color-navy); }
+.customerAuthPrimaryAction { border-color: transparent; background: var(--sunset-action); box-shadow: 0 12px 25px rgba(91,42,134,.22); }
+.customerAuthPrimaryAction:hover { border-color: transparent; background: var(--sunset-action); filter: brightness(1.08); }
+.customerAuthGuestButton:hover:not(:disabled),
+.customerAuthOption:hover:not(:disabled) { border-color: var(--color-primary-border); background: #f6f9ff; }

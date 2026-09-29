@@ -6,43 +6,53 @@
     "Segoe UI",
     sans-serif;
 
-  color: #101326;
-  background: #f6faff;
+  color: #071b3a;
+  background: #f6f8ff;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  --color-primary: #0aa8ff;
-  --color-primary-hover: #087edb;
-  --color-primary-active: #0667b8;
-  --color-primary-soft: #eef8ff;
-  --color-primary-border: rgba(10, 168, 255, 0.24);
-  --color-primary-shadow: rgba(10, 168, 255, 0.23);
+  --color-navy: #071b3a;
+  --color-blue: #0b63f6;
+  --color-cyan: #19c6d8;
+  --color-amber: #f5b63a;
+  --color-coral: #ff5a4f;
+  --color-berry: #c92a6d;
+  --color-plum: #5b2a86;
+  --sunset-gradient: linear-gradient(110deg, #0b63f6 0%, #19c6d8 26%, #f5b63a 53%, #ff5a4f 72%, #c92a6d 88%, #5b2a86 100%);
+  --sunset-action: linear-gradient(110deg, #0b63f6 0%, #5b2a86 49%, #c92a6d 100%);
 
-  --color-secondary: #ff9a1f;
-  --color-gradient-start: #075cff;
-  --color-gradient-middle: #19e4f2;
-  --color-gradient-end: #ff8a1f;
-  --color-accent-warm: #ff9a1f;
-  --color-accent-gold: #ffe15b;
+  --color-primary: #0b63f6;
+  --color-primary-hover: #074fc5;
+  --color-primary-active: #063b9e;
+  --color-primary-soft: #edf4ff;
+  --color-primary-border: rgba(11, 99, 246, 0.25);
+  --color-primary-shadow: rgba(11, 99, 246, 0.22);
 
-  --color-text: #101326;
-  --color-text-secondary: #4f586d;
-  --color-text-muted: #747d91;
+  --color-secondary: #5b2a86;
+  --color-gradient-start: #0b63f6;
+  --color-gradient-middle: #19c6d8;
+  --color-gradient-end: #ff5a4f;
+  --color-accent-warm: #ff5a4f;
+  --color-accent-gold: #f5b63a;
 
-  --color-background: #f6faff;
-  --color-background-soft: #eef7ff;
-  --color-background-muted: #e7f2ff;
+  --color-text: #071b3a;
+  --color-text-secondary: #3e5271;
+  --color-text-muted: #647592;
+
+  --color-background: #f6f8ff;
+  --color-background-soft: #eef4ff;
+  --color-background-muted: #e8f0ff;
 
   --color-surface: #ffffff;
-  --color-border: #d9e8f7;
-  --color-border-strong: #c5dcef;
+  --color-border: #dce5f4;
+  --color-border-strong: #bed0eb;
 
-  --shadow-small: 0 8px 24px rgba(7, 92, 255, 0.06);
-  --shadow-medium: 0 18px 45px rgba(7, 92, 255, 0.09);
-  --shadow-large: 0 26px 80px rgba(7, 92, 255, 0.12);
+  --shadow-small: 0 8px 24px rgba(7, 27, 58, 0.06);
+  --shadow-medium: 0 18px 45px rgba(7, 27, 58, 0.1);
+  --shadow-large: 0 26px 80px rgba(7, 27, 58, 0.14);
 
   --container-width: 1180px;
 
@@ -129,7 +139,7 @@ img {
 }
 
 :focus-visible {
-  outline: 3px solid rgba(10, 168, 255, 0.22);
+  outline: 3px solid rgba(11, 99, 246, 0.48);
   outline-offset: 3px;
 }
 
@@ -144,7 +154,7 @@ img {
 ::-webkit-scrollbar-thumb {
   border: 2px solid var(--color-background-soft);
   border-radius: 999px;
-  background: rgba(10, 168, 255, 0.55);
+  background: rgba(11, 99, 246, 0.55);
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -225,7 +235,7 @@ img {
 .checkoutPaymentOption.active {
   border-color: var(--color-primary);
   background: var(--color-primary-soft);
-  box-shadow: 0 0 0 4px rgba(10, 168, 255, 0.07);
+  box-shadow: 0 0 0 4px rgba(11, 99, 246, 0.11);
 }
 
 .checkoutPaymentOption.disabled {

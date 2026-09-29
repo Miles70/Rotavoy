@@ -412,3 +412,49 @@
   .hotelFacilities { grid-template-columns: 1fr; }
   .hotelDetailCard { padding: 20px; }
 }
+
+/* Electric Sunset detail surfaces; gallery and offer interactions are unchanged. */
+.hotelDetailPage {
+  background:
+    radial-gradient(circle at 88% 2%, rgba(25, 198, 216, 0.12), transparent 30%),
+    radial-gradient(circle at 0% 65%, rgba(201, 42, 109, 0.06), transparent 32%),
+    var(--color-background);
+  color: var(--color-navy);
+}
+.hotelDetailBack,
+.hotelDetailEyebrow { color: var(--color-blue); }
+.hotelDetailBack:hover { color: var(--color-plum); }
+.hotelDetailStars { color: #bc7c0b; }
+.hotelDetailGuestRating { background: #e9f8fa; color: #07556a; }
+.hotelDetailHeader h1 { color: var(--color-navy); }
+.hotelDetailHeader p,
+.hotelDetailStay span,
+.hotelDescription,
+.hotelMuted { color: var(--color-text-secondary); }
+.hotelDetailStay,
+.hotelDetailCard,
+.hotelOffer { border-color: var(--color-border); box-shadow: var(--shadow-small); }
+.hotelGalleryMain { background: #e6f1ff; color: var(--color-blue); box-shadow: var(--shadow-medium); }
+.hotelGalleryEmpty { color: var(--color-blue); }
+.hotelGalleryThumbs button.active { border-color: var(--color-blue); }
+.hotelFacilities span { background: #eff5ff; color: var(--color-text-secondary); }
+.hotelFacilities svg,
+.hotelOffer > div svg,
+.hotelOfferDetails dt svg { color: var(--color-blue); }
+.hotelDetailCard h2,
+.hotelDetailBooking h2 { color: var(--color-navy); }
+.hotelOffer { background: #f9fbff; }
+.hotelOffer > span,
+.hotelOfferDetails dt { color: var(--color-text-muted); }
+.hotelOffer > b,
+.hotelOfferDetails dd { color: var(--color-navy); }
+.hotelOffer > button,
+.hotelBookSelected,
+.hotelCheckoutLink,
+.hotelDetailState a { background: var(--sunset-action); color: #ffffff; box-shadow: 0 10px 25px rgba(91, 42, 134, 0.18); }
+.hotelOffer > button:not(:disabled):hover,
+.hotelBookSelected:not(:disabled):hover,
+.hotelCheckoutLink:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.hotelOffer--selected { border-color: var(--color-blue); box-shadow: 0 0 0 3px rgba(11, 99, 246, 0.13); }
+.hotelOffer--selected > button { background: #e8f0ff; color: var(--color-blue); box-shadow: none; }
+.hotelSecureNote { color: var(--color-text-muted); }
