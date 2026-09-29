@@ -14,7 +14,7 @@
   isolation: isolate;
   overflow: hidden;
   padding: 76px 0 110px;
-  background: var(--color-navy);
+  background: var(--color-navy) url("/images/rotavoy-travel-beach-poster.webp") center 52% / cover no-repeat;
   color: #12353c;
 }
 
