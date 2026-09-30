@@ -107,10 +107,7 @@ function Header() {
             className="logo"
             aria-label={`${siteConfig.brandName} Travel home`}
           >
-            <span className="logoMark" aria-hidden="true">
-              <img src="/rotavoy-mark-new.png" alt="" />
-            </span>
-            <img className="logoWordmark" src="/rotavoy-wordmark.png" alt="" aria-hidden="true" />
+            <img className="approvedLogo" src="/rotavoy-approved-logo.png" alt="" aria-hidden="true" />
           </Link>
 
           <nav className="navLinks" aria-label="Travel navigation">

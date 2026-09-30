@@ -45,3 +45,12 @@
     width: 125px;
   }
 }
+
+/* Preserve the approved monogram and lettering proportions as one asset. */
+.logo .approvedLogo { width: 217px; height: auto; display: block; }
+.footerLogo .approvedLogo { width: 203px; height: auto; display: block; }
+.travelBrandBlock .approvedLogo { width: 236px; max-width: 100%; height: auto; display: block; }
+@media (max-width: 620px) {
+  .logo .approvedLogo { width: 175px; }
+  .travelBrandBlock .approvedLogo { width: 210px; }
+}

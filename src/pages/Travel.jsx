@@ -762,11 +762,8 @@ function Travel() {
         <div className="travelContainer travelHeroContent">
           <div className="travelIntro">
             <div className="travelBrandBlock">
-              <span className="travelBrandMark" aria-hidden="true">
-                <img src="/rotavoy-mark-new.png" alt="" />
-              </span>
               <div>
-                <img className="travelBrandName" src="/rotavoy-wordmark.png" alt="Rotavoy" />
+                <img className="approvedLogo" src="/rotavoy-approved-logo.png" alt="Rotavoy" />
                 <small>{t("travelPage.onlineTravelAgency")}</small>
               </div>
             </div>
