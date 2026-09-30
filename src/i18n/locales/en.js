@@ -2,7 +2,7 @@ const en = {
   language: { current: "English" },
   nav: { travel: "Travel" },
   travelPage: {
-    nearby: {"button": "Find stays near me", "locating": "Finding your location…", "title": "Stays near me", "radius": "Search radius", "denied": "Location permission denied. Allow it in browser settings or search by city.", "unavailable": "Location unavailable. Try again or search by city.", "timeout": "Location request timed out. Try again.", "unsupported": "This browser does not support location search. Search by city instead.", "insecure": "Open the site over HTTPS to use location.", "empty": "No stays found in this area. Try a wider radius."},
+    nearby: {"distance": "Distance from you", "straightLine": "Straight-line distance", "button": "Find stays near me", "locating": "Finding your location…", "title": "Stays near me", "radius": "Search radius", "denied": "Location permission denied. Allow it in browser settings or search by city.", "unavailable": "Location unavailable. Try again or search by city.", "timeout": "Location request timed out. Try again.", "unsupported": "This browser does not support location search. Search by city instead.", "insecure": "Open the site over HTTPS to use location.", "empty": "No stays found in this area. Try a wider radius."},
     "onlineTravelAgency": "ONLINE TRAVEL AGENCY",
     "pill": "Rotavoy Travel",
     "heroTitle": "Build your holiday route",

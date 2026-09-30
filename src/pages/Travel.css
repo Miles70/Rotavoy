@@ -1326,3 +1326,8 @@
 .travelNearbyControls label { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; color: inherit; font-size: .85rem; }
 .travelNearbyControls select { min-height: 44px; border: 1px solid #19C6D8; border-radius: 10px; padding: 8px; background: #071B3A; color: white; font: inherit; }
 @media(max-width:620px) { .travelNearbyButton { width: 100%; } }
+
+.travelHotelDistance { display: flex; align-items: center; gap: 8px; margin: 10px 0; padding: 9px 12px; border-radius: 10px; background: rgba(25,198,216,.1); color: #071B3A; font-size: .86rem; }
+.travelHotelDistance > svg { flex-shrink: 0; color: #0B63F6; }
+.travelHotelDistance strong { color: #0B63F6; }
+.travelHotelDistance small { display: block; margin-top: 2px; font-size: .7rem; color: #526581; }

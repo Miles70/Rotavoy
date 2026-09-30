@@ -2,7 +2,7 @@ const es = {
   language: { current: "Español" },
   nav: { travel: "Viajes" },
   travelPage: {
-    nearby: {"button": "Buscar alojamientos cerca de mí", "locating": "Obteniendo ubicación…", "title": "Alojamientos cerca de mí", "radius": "Radio de búsqueda", "denied": "Permiso de ubicación denegado. Actívalo en el navegador o busca una ciudad.", "unavailable": "Ubicación no disponible. Reintenta o busca una ciudad.", "timeout": "La solicitud de ubicación caducó. Reintenta.", "unsupported": "Este navegador no admite geolocalización. Busca una ciudad.", "insecure": "Abre el sitio con HTTPS para usar tu ubicación.", "empty": "No hay alojamientos en esta zona. Amplía el radio."},
+    nearby: {"distance": "Distancia desde tu ubicación", "straightLine": "En línea recta", "button": "Buscar alojamientos cerca de mí", "locating": "Obteniendo ubicación…", "title": "Alojamientos cerca de mí", "radius": "Radio de búsqueda", "denied": "Permiso de ubicación denegado. Actívalo en el navegador o busca una ciudad.", "unavailable": "Ubicación no disponible. Reintenta o busca una ciudad.", "timeout": "La solicitud de ubicación caducó. Reintenta.", "unsupported": "Este navegador no admite geolocalización. Busca una ciudad.", "insecure": "Abre el sitio con HTTPS para usar tu ubicación.", "empty": "No hay alojamientos en esta zona. Amplía el radio."},
     onlineTravelAgency: "AGENCIA DE VIAJES ONLINE",
     pill: "Rotavoy Viajes",
     heroTitle: "Crea la ruta de tus vacaciones",

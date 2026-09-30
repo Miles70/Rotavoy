@@ -1,3 +1,4 @@
+import { withHotelDistances } from "../services/hotelDistance.js";
 import { getCurrentCoordinates } from "../services/geolocation.js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -624,7 +625,7 @@ function Travel() {
         checkout,
         adults,
       });
-      const availableHotels = buildResults(rateResponse);
+      const availableHotels = withHotelDistances(buildResults(rateResponse), catalog, location);
 
       if (!availableHotels.length) {
         throw new Error(t("travelPage.runtime.noAvailability"));
@@ -714,7 +715,7 @@ function Travel() {
         adults: selection.adults,
       });
       if (completedSearch.current !== selection) return;
-      const nextHotels = buildResults(rateResponse);
+      const nextHotels = withHotelDistances(buildResults(rateResponse), catalog, selection);
 
       setResults((current) => {
         const knownIds = new Set(current.map((hotel) => hotel.hotelId));
@@ -1018,6 +1019,14 @@ function Travel() {
                       <MapPin size={15} />
                       {hotel.address || hotel.city_name || cityName}
                     </p>
+                    {Number.isFinite(hotel.distanceKm) && (
+                      <div className="travelHotelDistance">
+                        <MapPinned size={16} aria-hidden="true" />
+                        <span>{t("travelPage.nearby.distance")} <strong>{new Intl.NumberFormat(language, { maximumFractionDigits: 1 }).format(hotel.distanceKm)} km</strong>
+                          <small>{t("travelPage.nearby.straightLine")}</small>
+                        </span>
+                      </div>
+                    )}
                     <div className="travelRoomLine">
                       <BedDouble size={17} />
                       <span>{hotel.offer?.rates?.[0]?.name || t("travelPage.runtime.roomFallback")}</span>
