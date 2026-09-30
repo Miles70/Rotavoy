@@ -50,7 +50,7 @@ function wait(ms) {
 async function requestNuitee(
   baseUrl,
   path,
-  { method = "GET", query, body, retries = 0 } = {},
+  { method = "GET", query, body, retries = 0, timeoutMs } = {},
 ) {
   const settings = getSettings();
 
@@ -67,7 +67,7 @@ async function requestNuitee(
   }
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), getTimeoutMs());
+  const timer = setTimeout(() => controller.abort(), timeoutMs || getTimeoutMs());
 
   try {
     const response = await fetch(url, {
@@ -113,6 +113,7 @@ async function requestNuitee(
         query,
         body,
         retries: retries - 1,
+        timeoutMs,
       });
     }
 
@@ -201,5 +202,15 @@ export function bookNuiteeSandbox(body) {
       ...body,
       payment: { method: "ACC_CREDIT_CARD" },
     },
+  });
+}
+
+export function searchNuiteeAirports(q) {
+  return requestNuitee(getSettings().dataBaseUrl, '/data/flights/airports', { query: { q } });
+}
+
+export function searchNuiteeFlights(body) {
+  return requestNuitee(getSettings().dataBaseUrl, '/flights/rates', {
+    method: 'POST', body, timeoutMs: 60000,
   });
 }

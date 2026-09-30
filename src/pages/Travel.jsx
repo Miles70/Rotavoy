@@ -846,6 +846,7 @@ function Travel() {
                   aria-selected={activeService === key}
                   className={activeService === key ? "active" : ""}
                   onClick={() => {
+                    if (key === "flights") { navigate("/flights"); return; }
                     setActiveService(key);
                     setSearchError("");
                   }}

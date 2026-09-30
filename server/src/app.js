@@ -1,3 +1,4 @@
+import { flightsRouter } from "./routes/flights.js";
 import cors from "cors";
 import express from "express";
 import rateLimit from "express-rate-limit";
@@ -57,6 +58,7 @@ export function createApp() {
 
   app.use("/api/customer-auth", customerAuthRouter);
   app.use("/api/hotels", hotelsRouter);
+  app.use("/api/flights", flightsRouter);
 
   app.use((request, response) => {
     response.status(404).json({ message: "API route not found." });

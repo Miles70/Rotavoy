@@ -42,7 +42,7 @@ const STATIC_SEO = {
 function MainLayout() {
   const { pathname } = useLocation();
   const staticSeo = STATIC_SEO[pathname] || null;
-  const shouldNoIndex = pathname === "/travel/checkout";
+  const shouldNoIndex = pathname === "/travel/checkout" || pathname === "/flights";
 
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -62,8 +62,8 @@ function MainLayout() {
 
       {shouldNoIndex ? (
         <Seo
-          title="Secure Travel Checkout | Rotavoy"
-          description="Rotavoy secure reservation checkout."
+          title={pathname === "/flights" ? "Flights | Rotavoy" : "Secure Travel Checkout | Rotavoy"}
+          description={pathname === "/flights" ? "Find and compare flights with Rotavoy." : "Rotavoy secure reservation checkout."}
           path={pathname}
           noIndex
         />
