@@ -333,6 +333,7 @@ function Travel() {
   const [hasMoreHotels, setHasMoreHotels] = useState(false);
   const [loadMoreState, setLoadMoreState] = useState("idle");
   const [loadMoreError, setLoadMoreError] = useState("");
+  const completedSearch = useRef(null);
   const [searchState, setSearchState] = useState("idle");
   const [searchError, setSearchError] = useState("");
   const [prebookState, setPrebookState] = useState("idle");
@@ -587,6 +588,8 @@ function Travel() {
       return;
     }
 
+    completedSearch.current = null;
+    setLoadMoreState("idle");
     setSearchState("loading");
     setSearchError("");
     setResults([]);
@@ -598,8 +601,7 @@ function Travel() {
 
     try {
       const catalog = await listHotels({
-        countryCode: "TR",
-        cityName: cityName.trim(),
+        destination: cityName.trim(),
         limit: 20,
         offset: 0,
       });
@@ -621,6 +623,7 @@ function Travel() {
         throw new Error(t("travelPage.runtime.noAvailability"));
       }
 
+      completedSearch.current = { ...catalog.location, checkin, checkout, adults };
       setResults(availableHotels);
       setCatalogOffset(hotelIds.length);
       setHasMoreHotels(hotelIds.length < Number(catalog?.total || 0));
@@ -648,18 +651,20 @@ function Travel() {
   async function handleLoadMore() {
     if (loadMoreState === "loading" || !hasMoreHotels) return;
 
+    const selection = completedSearch.current;
+    if (!selection) return;
     setLoadMoreState("loading");
     setLoadMoreError("");
 
     try {
       const catalog = await listHotels({
-        countryCode: "TR",
-        cityName: cityName.trim(),
+        ...selection,
         limit: 20,
         offset: catalogOffset,
       });
       const hotelIds = (catalog?.hotelIds || []).slice(0, 20);
       const nextOffset = catalogOffset + hotelIds.length;
+      if (completedSearch.current !== selection) return;
 
       if (!hotelIds.length) {
         setHasMoreHotels(false);
@@ -669,10 +674,11 @@ function Travel() {
 
       const rateResponse = await searchHotelRates({
         hotelIds,
-        checkin,
-        checkout,
-        adults,
+        checkin: selection.checkin,
+        checkout: selection.checkout,
+        adults: selection.adults,
       });
+      if (completedSearch.current !== selection) return;
       const nextHotels = buildResults(rateResponse);
 
       setResults((current) => {
@@ -686,6 +692,7 @@ function Travel() {
       setHasMoreHotels(nextOffset < Number(catalog?.total || 0));
       setLoadMoreState("success");
     } catch (error) {
+      if (completedSearch.current !== selection) return;
       setLoadMoreState("error");
       setLoadMoreError(customerHotelError(error, "travelPage.runtime.loadMoreFailed"));
     }

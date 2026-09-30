@@ -9,6 +9,7 @@ import {
   searchNuiteeRates,
 } from "../services/nuiteeApi.js";
 import { getLocalizedHotelDescription } from "../services/hotelTranslation.js";
+import { resolveHotelDestination } from "../services/hotelDestination.js";
 import {
   listIndexedShowcaseHotels,
   listIndexedVideoHotels,
@@ -329,19 +330,24 @@ hotelsRouter.get("/showcase-index", async (request, response, next) => {
 
 hotelsRouter.get("/", searchLimiter, async (request, response, next) => {
   try {
-    const countryCode = isoCode(request.query.countryCode, "countryCode", 2);
-    const cityName = requiredText(request.query.cityName, "cityName", 100);
+    const location = request.query.destination
+      ? await resolveHotelDestination(requiredText(request.query.destination, "destination", 100))
+      : request.query.placeId
+        ? { placeId: requiredText(request.query.placeId, "placeId", 300) }
+        : {
+            countryCode: isoCode(request.query.countryCode, "countryCode", 2),
+            cityName: optionalText(request.query.cityName, 100) || undefined,
+          };
 
     const result = await listNuiteeHotels({
-      countryCode,
-      cityName,
+      ...location,
       hotelName: optionalText(request.query.hotelName, 100),
       limit: boundedInteger(request.query.limit, 100, 1, 200),
       offset: boundedInteger(request.query.offset, 0, 0, 5000),
     });
 
     response.set("Cache-Control", "public, max-age=900");
-    response.json(result);
+    response.json({ ...result, location });
   } catch (error) {
     next(error);
   }

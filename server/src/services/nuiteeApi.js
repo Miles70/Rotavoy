@@ -150,6 +150,17 @@ export function listNuiteeHotels(query) {
   });
 }
 
+export function listNuiteeCountries() {
+  return requestNuitee(getSettings().dataBaseUrl, "/data/countries", { retries: 1 });
+}
+
+export function searchNuiteePlaces(textQuery) {
+  return requestNuitee(getSettings().dataBaseUrl, "/data/places", {
+    query: { textQuery, type: "locality,administrative_area_level_1,country", language: "en" },
+    retries: 1,
+  });
+}
+
 export function getNuiteeHotel(hotelId) {
   return requestNuitee(getSettings().dataBaseUrl, "/data/hotel", {
     query: { hotelId },
