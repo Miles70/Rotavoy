@@ -22,12 +22,17 @@ async function hotelRequest(path, options = {}) {
   return payload;
 }
 
-export function listHotels({ countryCode = "TR", cityName, destination, placeId, limit = 20, offset = 0 }) {
+export function listHotels({ countryCode = "TR", cityName, destination, placeId, latitude, longitude, radius = 10000, limit = 20, offset = 0 }) {
   const query = new URLSearchParams({
     limit: String(limit),
     offset: String(offset),
   });
-  if (destination) query.set("destination", destination);
+  if (latitude !== undefined && longitude !== undefined) {
+    query.set("latitude", String(latitude));
+    query.set("longitude", String(longitude));
+    query.set("radius", String(radius));
+  }
+  else if (destination) query.set("destination", destination);
   else if (placeId) query.set("placeId", placeId);
   else {
     query.set("countryCode", countryCode);

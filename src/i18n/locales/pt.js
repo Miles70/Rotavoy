@@ -2,6 +2,7 @@ const pt = {
   language: { current: "Português (Brasil)" },
   nav: { travel: "Viagens" },
   travelPage: {
+    nearby: {"button": "Encontrar hospedagens perto de mim", "locating": "Obtendo localização…", "title": "Hospedagens perto de mim", "radius": "Raio de busca", "denied": "Permissão de localização negada. Autorize no navegador ou busque uma cidade.", "unavailable": "Localização indisponível. Tente novamente ou busque uma cidade.", "timeout": "A solicitação de localização expirou. Tente novamente.", "unsupported": "Este navegador não suporta geolocalização. Busque uma cidade.", "insecure": "Abra o site via HTTPS para usar sua localização.", "empty": "Nenhuma hospedagem nesta área. Aumente o raio."},
     onlineTravelAgency: "AGÊNCIA DE VIAGENS ONLINE",
     pill: "Rotavoy Viagens",
     heroTitle: "Monte a rota das suas férias",

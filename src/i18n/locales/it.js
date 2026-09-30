@@ -2,6 +2,7 @@ const it = {
   language: { current: "Italiano" },
   nav: { travel: "Viaggi" },
   travelPage: {
+    nearby: {"button": "Trova alloggi vicino a me", "locating": "Rilevamento posizione…", "title": "Alloggi vicino a me", "radius": "Raggio di ricerca", "denied": "Accesso alla posizione negato. Consenti nel browser o cerca una città.", "unavailable": "Posizione non disponibile. Riprova o cerca una città.", "timeout": "Richiesta di posizione scaduta. Riprova.", "unsupported": "Questo browser non supporta la geolocalizzazione. Cerca una città.", "insecure": "Apri il sito tramite HTTPS per usare la posizione.", "empty": "Nessun alloggio in questa zona. Amplia il raggio."},
     onlineTravelAgency: "AGENZIA DI VIAGGI ONLINE",
     pill: "Rotavoy Viaggi",
     heroTitle: "Crea il tuo itinerario di vacanza",

@@ -1318,3 +1318,11 @@
 .travelHero::after { opacity: .08; }
 .travelHeroGlow { opacity: .35; }
 .travelSearchCard .travelSearchMessage--error { background: rgba(7, 27, 58, .75); color: #ffd8d2; border-radius: 12px; padding: 12px; }
+
+.travelNearbyControls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 0 0 18px; }
+.travelNearbyButton { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 16px; border: 1px solid rgba(25,198,216,.5); border-radius: 12px; color: white; background: linear-gradient(115deg,#0B63F6,#5B2A86); font: inherit; font-weight: 700; cursor: pointer; }
+.travelNearbyButton:disabled { opacity: .6; cursor: wait; }
+.travelNearbyButton:focus-visible, .travelNearbyControls select:focus-visible { outline: 3px solid #19C6D8; outline-offset: 3px; }
+.travelNearbyControls label { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; color: inherit; font-size: .85rem; }
+.travelNearbyControls select { min-height: 44px; border: 1px solid #19C6D8; border-radius: 10px; padding: 8px; background: #071B3A; color: white; font: inherit; }
+@media(max-width:620px) { .travelNearbyButton { width: 100%; } }

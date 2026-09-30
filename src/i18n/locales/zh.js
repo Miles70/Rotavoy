@@ -2,6 +2,7 @@ const zh = {
   language: { current: "中文" },
   nav: { travel: "旅行" },
   travelPage: {
+    nearby: {"button": "查找附近住宿", "locating": "正在获取位置…", "title": "附近住宿", "radius": "搜索半径", "denied": "位置权限被拒绝。请在浏览器中允许，或按城市搜索。", "unavailable": "无法获取位置。请重试或按城市搜索。", "timeout": "位置请求超时。请重试。", "unsupported": "此浏览器不支持定位。请按城市搜索。", "insecure": "请通过 HTTPS 打开网站以使用定位。", "empty": "附近没有找到住宿。请扩大搜索范围。"},
     "onlineTravelAgency": "在线旅行社",
     "pill": "Rotavoy Travel",
     "heroTitle": "在一个平台",

@@ -1,3 +1,4 @@
+import { getCurrentCoordinates } from "../services/geolocation.js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -334,6 +335,9 @@ function Travel() {
   const [loadMoreState, setLoadMoreState] = useState("idle");
   const [loadMoreError, setLoadMoreError] = useState("");
   const completedSearch = useRef(null);
+  const [nearbyCoordinates, setNearbyCoordinates] = useState(null);
+  const [nearbyRadius, setNearbyRadius] = useState(10000);
+  const [locating, setLocating] = useState(false);
   const [searchState, setSearchState] = useState("idle");
   const [searchError, setSearchError] = useState("");
   const [prebookState, setPrebookState] = useState("idle");
@@ -576,14 +580,17 @@ function Travel() {
     }
   }
 
-  async function runSearch() {
+  async function runSearch(locationOverride) {
+    const location = locationOverride || (nearbyCoordinates
+      ? { ...nearbyCoordinates, radius: nearbyRadius }
+      : { destination: cityName.trim() });
 
     if (activeService !== "hotels") {
       setSearchError(t("travelPage.runtime.comingSoon"));
       return;
     }
 
-    if (!cityName.trim() || !checkin || !checkout || checkout <= checkin) {
+    if ((location.latitude === undefined && !location.destination) || !checkin || !checkout || checkout <= checkin) {
       setSearchError(t("travelPage.runtime.invalidSearch"));
       return;
     }
@@ -601,14 +608,14 @@ function Travel() {
 
     try {
       const catalog = await listHotels({
-        destination: cityName.trim(),
+        ...location,
         limit: 20,
         offset: 0,
       });
       const hotelIds = (catalog?.hotelIds || []).slice(0, 20);
 
       if (!hotelIds.length) {
-        throw new Error(t("travelPage.runtime.cityNotFound"));
+        throw new Error(t(location.latitude !== undefined ? "travelPage.nearby.empty" : "travelPage.runtime.cityNotFound"));
       }
 
       const rateResponse = await searchHotelRates({
@@ -631,6 +638,34 @@ function Travel() {
     } catch (error) {
       setSearchState("error");
       setSearchError(customerHotelError(error));
+    }
+  }
+
+  async function handleNearbySearch() {
+    if (searchState === "loading" || locating) return;
+    if (!checkin || !checkout || checkout <= checkin) {
+      setSearchError(t("travelPage.runtime.invalidSearch"));
+      return;
+    }
+    if (!window.isSecureContext) {
+      setSearchError(t("travelPage.nearby.insecure"));
+      return;
+    }
+    if (!navigator.geolocation) {
+      setSearchError(t("travelPage.nearby.unsupported"));
+      return;
+    }
+    setLocating(true);
+    setSearchError("");
+    try {
+      const coordinates = await getCurrentCoordinates();
+      setNearbyCoordinates(coordinates);
+      await runSearch({ ...coordinates, radius: nearbyRadius });
+    } catch (error) {
+      const key = error.code === 1 ? "denied" : error.code === 3 ? "timeout" : "unavailable";
+      setSearchError(t(`travelPage.nearby.${key}`));
+    } finally {
+      setLocating(false);
     }
   }
 
@@ -826,6 +861,24 @@ function Travel() {
                 <h2>{t(`${activeServiceKey}.title`)}</h2>
               </div>
 
+              {activeService === "hotels" && (
+                <div className="travelNearbyControls">
+                  <button type="button" className="travelNearbyButton" onClick={handleNearbySearch}
+                    disabled={searchState === "loading" || locating}>
+                    {locating ? <LoaderCircle className="travelSpin" size={18} /> : <MapPinned size={18} />}
+                    {t(locating ? "travelPage.nearby.locating" : "travelPage.nearby.button")}
+                  </button>
+                  <label>
+                    <span>{t("travelPage.nearby.radius")}</span>
+                    <select value={nearbyRadius} disabled={searchState === "loading" || locating}
+                      onChange={(event) => setNearbyRadius(Number(event.target.value))}>
+                      {[5000, 10000, 25000, 50000].map((radius) => (
+                        <option key={radius} value={radius}>{radius / 1000} km</option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+              )}
               <div className="travelSearchGrid">
                 <label className="travelField travelField--wide">
                   <span>{t(`${activeServiceKey}.locationLabel`)}</span>
@@ -833,10 +886,10 @@ function Travel() {
                     <MapPin size={18} />
                     <input
                       type="text"
-                      value={cityName}
-                      onChange={(event) => setCityName(event.target.value)}
+                      value={nearbyCoordinates ? t("travelPage.nearby.title") : cityName}
+                      onChange={(event) => { setNearbyCoordinates(null); setCityName(event.target.value); }}
                       placeholder={t(`${activeServiceKey}.locationPlaceholder`)}
-                      disabled={searchState === "loading"}
+                      disabled={searchState === "loading" || locating}
                     />
                   </div>
                 </label>
@@ -854,7 +907,7 @@ function Travel() {
                         setCheckin(value);
                         if (checkout <= value) setCheckout("");
                       }}
-                      disabled={searchState === "loading"}
+                      disabled={searchState === "loading" || locating}
                     />
                   </div>
                 </label>
@@ -868,7 +921,7 @@ function Travel() {
                       value={checkout}
                       min={minimumCheckout}
                       onChange={(event) => setCheckout(event.target.value)}
-                      disabled={searchState === "loading"}
+                      disabled={searchState === "loading" || locating}
                     />
                   </div>
                 </label>
@@ -880,7 +933,7 @@ function Travel() {
                     <select
                       value={adults}
                       onChange={(event) => setAdults(Number(event.target.value))}
-                      disabled={searchState === "loading"}
+                      disabled={searchState === "loading" || locating}
                     >
                       <option value="1">{t("travelPage.search.people1")}</option>
                       <option value="2">{t("travelPage.search.people2")}</option>
@@ -894,7 +947,7 @@ function Travel() {
                 <button
                   className="travelSearchButton"
                   type="submit"
-                  disabled={searchState === "loading"}
+                  disabled={searchState === "loading" || locating}
                 >
                   {searchState === "loading" ? (
                     <LoaderCircle className="travelSpin" size={19} />
@@ -928,7 +981,7 @@ function Travel() {
             <div className="travelResultsHeading">
               <div>
                 <span>{t("travelPage.runtime.liveAvailability")}</span>
-                <h2>{cityName} {t("travelPage.runtime.hotels")}</h2>
+                <h2>{completedSearch.current?.latitude !== undefined ? `${t("travelPage.nearby.title")} · ${completedSearch.current.radius / 1000} km` : `${cityName} ${t("travelPage.runtime.hotels")}`}</h2>
               </div>
               <p>{results.length} {t("travelPage.runtime.resultsSuffix")}</p>
             </div>

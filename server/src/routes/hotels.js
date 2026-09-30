@@ -66,6 +66,17 @@ function optionalText(value, maxLength = 255) {
   return text ? text.slice(0, maxLength) : "";
 }
 
+function coordinate(value, name, min, max) {
+  if (value === undefined || value === null || String(value).trim() === "") {
+    throw requestError(`${name} is required.`);
+  }
+  const number = Number(value);
+  if (!Number.isFinite(number) || number < min || number > max) {
+    throw requestError(`${name} must be between ${min} and ${max}.`);
+  }
+  return number;
+}
+
 function isoCode(value, fieldName, length) {
   const text = requiredText(value, fieldName, length).toUpperCase();
 
@@ -330,7 +341,14 @@ hotelsRouter.get("/showcase-index", async (request, response, next) => {
 
 hotelsRouter.get("/", searchLimiter, async (request, response, next) => {
   try {
-    const location = request.query.destination
+    const nearby = request.query.latitude !== undefined || request.query.longitude !== undefined;
+    const location = nearby
+      ? {
+          latitude: coordinate(request.query.latitude, "latitude", -90, 90),
+          longitude: coordinate(request.query.longitude, "longitude", -180, 180),
+          radius: boundedInteger(request.query.radius, 10000, 1000, 50000),
+        }
+      : request.query.destination
       ? await resolveHotelDestination(requiredText(request.query.destination, "destination", 100))
       : request.query.placeId
         ? { placeId: requiredText(request.query.placeId, "placeId", 300) }
@@ -346,7 +364,7 @@ hotelsRouter.get("/", searchLimiter, async (request, response, next) => {
       offset: boundedInteger(request.query.offset, 0, 0, 5000),
     });
 
-    response.set("Cache-Control", "public, max-age=900");
+    response.set("Cache-Control", nearby ? "private, no-store" : "public, max-age=900");
     response.json({ ...result, location });
   } catch (error) {
     next(error);

@@ -43,6 +43,20 @@ test('global search resolves countries and cities and preserves pagination bound
     const missing = await realFetch(`${base}?destination=NotARealDestination`);
     assert.equal(missing.status, 400);
     assert.equal(upstream.filter((url) => url.pathname.endsWith('/hotels')).length, before);
+    const nearby = await realFetch(`${base}?latitude=36.9&longitude=30.7&radius=25000`);
+    assert.equal(nearby.status, 200);
+    assert.equal(nearby.headers.get('cache-control'), 'private, no-store');
+    assert.deepEqual((await nearby.json()).location, { latitude: 36.9, longitude: 30.7, radius: 25000 });
+    assert.equal(upstream.at(-1).searchParams.get('latitude'), '36.9');
+    assert.equal(upstream.at(-1).searchParams.get('longitude'), '30.7');
+    assert.equal(upstream.at(-1).searchParams.get('radius'), '25000');
+    assert.equal(upstream.at(-1).searchParams.has('countryCode'), false);
+    const equator = await realFetch(`${base}?latitude=0&longitude=0`);
+    assert.equal(equator.status, 200);
+    for (const query of ['latitude=91&longitude=0', 'latitude=0&longitude=-181', 'latitude=&longitude=0', 'latitude=36.9', 'latitude=NaN&longitude=0']) {
+      const invalid = await realFetch(`${base}?${query}`);
+      assert.equal(invalid.status, 400);
+    }
     const legacy = await realFetch(`${base}?countryCode=TR&cityName=Antalya`);
     assert.equal(legacy.status, 200);
     assert.equal(upstream.at(-1).searchParams.get('cityName'), 'Antalya');
