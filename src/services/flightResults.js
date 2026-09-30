@@ -24,3 +24,17 @@ export function flightLocalTime(value) {
 export function flightStops(segments) {
   return Math.max(0, segments.length - 1) + segments.reduce((sum, segment) => sum + (Number(segment.stopCount) || 0), 0);
 }
+
+export function verifiedFlightResult(payload, original) {
+  const entry = payload?.data?.[0];
+  const journey = entry?.journey;
+  const price = journey?.pricing?.display;
+  if (!Array.isArray(journey?.segments) || !journey.segments.length || price?.total == null || !Number.isFinite(Number(price.total)) || Number(price.total) <= 0 || !/^[A-Z]{3}$/.test(price.currency || '')) throw new Error('FLIGHT_UNAVAILABLE');
+  return {
+    ...journey,
+    offer: { ...journey, offerId: journey.offerId || original.offer.offerId },
+    total: Number(price.total), currency: price.currency,
+    priceChanged: Number(price.total) !== original.total || price.currency !== original.currency,
+    changes: entry.changes,
+  };
+}

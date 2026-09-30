@@ -3,7 +3,8 @@ import test from 'node:test';
 import { once } from 'node:events';
 import { createApp } from '../src/app.js';
 import { validateFlightSearch } from '../src/services/flightSearch.js';
-import { airportResults, flightResults, flightLocalTime, flightStops } from '../../src/services/flightResults.js';
+import { airportResults, flightResults, flightLocalTime, flightStops, verifiedFlightResult } from '../../src/services/flightResults.js';
+import flightSelectionTranslations from '../../src/i18n/flightSelectionTranslations.js';
 import flightTranslations from '../../src/i18n/flightTranslations.js';
 
 const search = { origin: 'AYT', destination: 'DXB', departure: '2099-10-01', returnDate: '2099-10-08', adults: 2, children: 1, infants: 1, currency: 'USD' };
@@ -34,8 +35,8 @@ test('provider batches preserve complete itineraries, total prices and baggage',
 test('airport response and all ten language dictionaries are complete', () => {
   assert.deepEqual(airportResults({ data: [{ airports: [{ iata: 'AYT', city: 'Antalya' }, { iata: null }] }] }), [{ iata: 'AYT', city: 'Antalya' }]);
   assert.equal(Object.keys(flightTranslations).length, 10);
-  for (const dictionary of Object.values(flightTranslations)) {
-    assert.deepEqual(Object.keys(dictionary), Object.keys(flightTranslations.en));
+  for (const dictionary of Object.values({ ...flightTranslations, ...Object.fromEntries(Object.entries(flightSelectionTranslations).map(([key, value]) => [`selection-${key}`, value])) })) {
+
     assert.ok(Object.values(dictionary).every((value) => typeof value === 'string' && value.length));
   }
 });
@@ -43,11 +44,13 @@ test('flight HTTP flow uses server credentials, validates before upstream and pr
   const realFetch = globalThis.fetch;
   const previousKey = process.env.NUITEE_API_KEY;
   process.env.NUITEE_API_KEY = 'sand_test_fixture_only';
-  let calls = []; let failure = false;
+  let calls = []; let failure = false; let expired = false;
   globalThis.fetch = async (input, options) => {
     const url = new URL(input);
     if (url.hostname !== 'api.liteapi.travel') return realFetch(input, options);
     calls.push({ url, options });
+    if (expired) return new Response(JSON.stringify({ error: { message: 'Offer expired' } }), { status: 404 });
+    if (url.pathname.endsWith('/verify')) return new Response(JSON.stringify({ data: [{ journey: { segments: [segment], pricing: { display: { total: 450, currency: 'USD' } } } }] }));
     if (failure) return new Response(JSON.stringify({ error: { message: 'No access' } }), { status: 403 });
     return new Response(JSON.stringify(url.pathname.endsWith('/airports') ? { data: [{ airports: [{ iata: 'AYT', city: 'Antalya' }] }] } : payload));
   };
@@ -66,10 +69,35 @@ test('flight HTTP flow uses server credentials, validates before upstream and pr
     assert.equal(JSON.parse(calls[1].options.body).legs.length, 2);
     const before = calls.length;
     assert.equal((await request({ ...search, adults: 0 })).status, 400); assert.equal(calls.length, before);
+    const verify = (offerId) => realFetch(`${base}/verify`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ offerId }) });
+    const verified = await verify('opaque+/offer==');
+    assert.equal(verified.status, 200);
+    assert.equal(verified.headers.get('cache-control'), 'private, no-store');
+    assert.deepEqual(JSON.parse(calls.at(-1).options.body), { offerId: 'opaque+/offer==' });
+    assert.equal((await verified.json()).data[0].journey.pricing.display.total, 450);
+    const verifyCount = calls.length;
+    assert.equal((await verify('')).status, 400); assert.equal(calls.length, verifyCount);
+    expired = true;
+    const expiredResponse = await verify('expired');
+    assert.equal(expiredResponse.status, 410); assert.deepEqual(await expiredResponse.json(), { code: 'OFFER_EXPIRED' });
+    expired = false;
     failure = true;
     assert.deepEqual(await (await request(search)).json(), { code: 'FLIGHT_UNAVAILABLE' });
   } finally {
     await new Promise((resolve) => server.close(resolve)); globalThis.fetch = realFetch;
     if (previousKey === undefined) delete process.env.NUITEE_API_KEY; else process.env.NUITEE_API_KEY = previousKey;
   }
+});
+
+test('verified offers use updated price, baggage and conditions without stale fallbacks', () => {
+  const original = flightResults(payload, 'USD')[0];
+  const journey = { segments: [segment], pricing: { display: { total: 450, currency: 'USD' } }, baggage: { included: [{ description: 'Updated baggage' }] }, terms: { refundable: false } };
+  const result = verifiedFlightResult({ data: [{ journey, changes: { messages: ['Fare changed'] } }] }, original);
+  assert.equal(result.total, 450); assert.equal(result.priceChanged, true);
+  assert.equal(result.offer.baggage.included[0].description, 'Updated baggage');
+  assert.equal(result.offer.terms.refundable, false);
+  assert.deepEqual(result.changes.messages, ['Fare changed']);
+  assert.throws(() => verifiedFlightResult({ data: [{ journey: { segments: [segment] } }] }, original));
+  assert.throws(() => verifiedFlightResult({ data: [] }, original));
+  assert.equal(verifiedFlightResult({ data: [{ journey: { ...journey, pricing: { display: { total: 400, currency: 'USD' } } } }] }, original).priceChanged, false);
 });

@@ -93,10 +93,12 @@ async function requestNuitee(
     }
 
     if (!response.ok) {
-      throw createNuiteeError(
+      const error = createNuiteeError(
         getUpstreamMessage(payload, response.status),
         mapStatus(response.status),
       );
+      error.upstreamStatus = response.status;
+      throw error;
     }
 
     return payload;
@@ -212,5 +214,11 @@ export function searchNuiteeAirports(q) {
 export function searchNuiteeFlights(body) {
   return requestNuitee(getSettings().dataBaseUrl, '/flights/rates', {
     method: 'POST', body, timeoutMs: 60000,
+  });
+}
+
+export function verifyNuiteeFlight(offerId) {
+  return requestNuitee(getSettings().dataBaseUrl, '/flights/verify', {
+    method: 'POST', body: { offerId }, timeoutMs: 60000,
   });
 }

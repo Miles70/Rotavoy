@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getNuiteeStatus, searchNuiteeAirports, searchNuiteeFlights } from '../services/nuiteeApi.js';
+import { getNuiteeStatus, searchNuiteeAirports, searchNuiteeFlights, verifyNuiteeFlight } from '../services/nuiteeApi.js';
 import { validateFlightSearch } from '../services/flightSearch.js';
 
 export const flightsRouter = Router();
@@ -19,6 +19,18 @@ flightsRouter.post('/search', async (req, res, next) => {
     if (payload?.error || !Array.isArray(payload?.data)) return res.status(502).json({ code: 'FLIGHT_UNAVAILABLE' });
     res.json({ ...payload, environment: getNuiteeStatus().environment });
   } catch (error) { next(error); }
+});
+flightsRouter.post('/verify', async (req, res, next) => {
+  try {
+    const offerId = req.body?.offerId;
+    if (typeof offerId !== 'string' || !offerId.trim() || offerId.length > 20000) return res.status(400).json({ code: 'INVALID_OFFER' });
+    const payload = await verifyNuiteeFlight(offerId);
+    if (payload?.error || !payload?.data?.[0]?.journey) return res.status(502).json({ code: 'FLIGHT_UNAVAILABLE' });
+    res.json(payload);
+  } catch (error) {
+    if (error.upstreamStatus === 404) return res.status(410).json({ code: 'OFFER_EXPIRED' });
+    next(error);
+  }
 });
 flightsRouter.use((error, _req, res, next) => {
   if (res.headersSent) return next(error);
