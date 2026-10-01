@@ -41,6 +41,9 @@
   },
   "overrides": {
     "axios": "^1.20.0",
+    "@firebase/firestore": {
+      "@grpc/grpc-js": "1.13.6"
+    },
     "uuid": "^11.1.1",
     "ws": "^8.20.2"
   }
