@@ -183,8 +183,6 @@ function normalizeRatesResult(result) {
     return result;
   }
 
-  const marginPercent = getMargin();
-
   const normalized = {
     ...result,
     data: result.data.map((hotel) => ({
@@ -196,9 +194,9 @@ function normalizeRatesResult(result) {
               return room;
             }
 
-            const sellingPrice = roundMoney(
-              basePrice * (1 + marginPercent / 100),
-            );
+            // Nuitee already applies the requested commission margin to
+            // offerRetailRate. Do not add the Rotavoy margin a second time.
+            const sellingPrice = roundMoney(basePrice);
 
             return {
               ...room,
@@ -233,7 +231,8 @@ function normalizePrebookResult(result) {
     return sanitized;
   }
 
-  const sellingPrice = roundMoney(basePrice * (1 + getMargin() / 100));
+  // The prebook total already includes the margin encoded in the offer.
+  const sellingPrice = roundMoney(basePrice);
 
   return {
     ...sanitized,
@@ -499,11 +498,9 @@ hotelsRouter.post("/checkout", bookingLimiter, async (request, response, next) =
     if (!Number.isFinite(providerTotal) || providerTotal <= 0) throw requestError("The hotel price could not be confirmed.");
     if (currency !== "USD") throw requestError("Hotel checkout currently requires a USD rate.");
 
-    // Keep the amount charged to the customer identical to the amount shown
-    // after prebook. Both paths use the same configured Rotavoy margin.
-    const customerTotal = roundMoney(
-      providerTotal * (1 + getMargin() / 100),
-    );
+    // The selected offer already contains the Nuitee commission margin.
+    // Charge exactly the confirmed prebook total; do not mark it up again.
+    const customerTotal = roundMoney(providerTotal);
 
     const payment = getPublicCryptoPaymentConfig();
     if (!payment.configured) {
