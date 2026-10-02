@@ -11,7 +11,7 @@ const paymentMethods = [
   { id: "jcb", label: "JCB", display: "JCB" },
   { id: "diners", label: "Diners Club", display: "DINERS CLUB" },
   { id: "unionpay", label: "UnionPay", display: "UnionPay" },
-  { id: "applepay", label: "Apple Pay", display: " Pay" },
+  { id: "applepay", label: "Apple Pay", display: "Apple Pay" },
   { id: "googlepay", label: "Google Pay", display: "G Pay" },
   { id: "3dsecure", label: "3D Secure", display: "3D Secure" },
   { id: "usdt", label: "USDT on BNB Chain", display: "₮ USDT" },
