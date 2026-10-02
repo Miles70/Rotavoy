@@ -25,12 +25,12 @@ function loadPaymentSdk() {
         resolve(window.LiteAPIPayment);
         return;
       }
-      reject(new Error("Nuitee payment SDK loaded without LiteAPIPayment."));
+      reject(new Error("Payment SDK loaded without LiteAPIPayment."));
     };
 
     const handleError = () => {
       paymentSdkPromise = undefined;
-      reject(new Error("Nuitee payment SDK could not be loaded."));
+      reject(new Error("Secure payment SDK could not be loaded."));
     };
 
     script.addEventListener("load", handleLoad, { once: true });
@@ -119,7 +119,7 @@ function NuiteeCardPayment({ session, returnUrl }) {
       <div className="nuiteeCardPanelHeader">
         <div className="nuiteeCardIcon"><CreditCard size={22} /></div>
         <div>
-          <span>Nuitee Secure Payment</span>
+          <span>Rotavoy Secure Payment</span>
           <h2>Kartla güvenli ödeme</h2>
         </div>
         {session?.environment === "sandbox" && (
@@ -128,7 +128,7 @@ function NuiteeCardPayment({ session, returnUrl }) {
       </div>
 
       <p className="nuiteeCardIntro">
-        Kart bilgilerin Rotavoy sunucusuna gönderilmez. Ödeme formu Nuitee Connect ödeme katmanı tarafından güvenli biçimde işlenir; gerekiyorsa 3D Secure doğrulaması açılır.
+        Kart bilgilerin Rotavoy sunucusuna gönderilmez. Güvenli ödeme altyapısı kart bilgilerini işler; gerekiyorsa 3D Secure doğrulaması açılır.
       </p>
 
       {status === "loading" && (
