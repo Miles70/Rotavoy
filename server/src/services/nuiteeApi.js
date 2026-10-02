@@ -24,15 +24,28 @@ function getSettings() {
 }
 
 function getUpstreamMessage(payload, status) {
-  const candidate =
-    payload?.error?.message ||
-    payload?.error?.description ||
-    payload?.message ||
-    payload?.error;
+  const message =
+    typeof payload?.error?.message === "string"
+      ? payload.error.message.trim()
+      : typeof payload?.message === "string"
+        ? payload.message.trim()
+        : "";
+  const description =
+    typeof payload?.error?.description === "string"
+      ? payload.error.description.trim()
+      : "";
+  const code = payload?.error?.code;
 
-  return typeof candidate === "string" && candidate.trim()
-    ? candidate.trim()
-    : `Nuitee Connect request failed with status ${status}.`;
+  if (description) {
+    const prefix = code !== undefined && code !== null ? `Nuitee ${code}: ` : "";
+    return `${prefix}${description}${message && message !== description ? ` — ${message}` : ""}`;
+  }
+
+  const fallback =
+    message ||
+    (typeof payload?.error === "string" ? payload.error.trim() : "");
+
+  return fallback || `Nuitee Connect request failed with status ${status}.`;
 }
 
 function mapStatus(status) {
@@ -134,6 +147,23 @@ async function requestNuitee(
   }
 }
 
+function bookingPerson(value, includeOccupancy = false) {
+  const person = {
+    firstName: String(value?.firstName || "").trim(),
+    lastName: String(value?.lastName || "").trim(),
+    email: String(value?.email || "").trim().toLowerCase(),
+  };
+
+  if (includeOccupancy) {
+    person.occupancyNumber = Number(value?.occupancyNumber);
+  }
+
+  const remarks = String(value?.remarks || "").trim();
+  if (remarks) person.remarks = remarks;
+
+  return person;
+}
+
 export function getNuiteeStatus() {
   const settings = getSettings();
 
@@ -193,14 +223,20 @@ export function bookNuiteeTransaction(body) {
     throw createNuiteeError("Nuitee transactionId is required to finalize card payment.", 400);
   }
 
-  const { transactionId: omittedTransactionId, ...bookingBody } = body || {};
-  void omittedTransactionId;
+  const guests = Array.isArray(body?.guests)
+    ? body.guests.map((guest) => bookingPerson(guest, true))
+    : [];
 
   return requestNuitee(getSettings().bookingBaseUrl, "/rates/book", {
     method: "POST",
     query: { timeout: 30 },
     body: {
-      ...bookingBody,
+      prebookId: String(body?.prebookId || "").trim(),
+      ...(body?.clientReference
+        ? { clientReference: String(body.clientReference).trim() }
+        : {}),
+      holder: bookingPerson(body?.holder),
+      guests,
       payment: {
         method: "TRANSACTION_ID",
         transactionId,
