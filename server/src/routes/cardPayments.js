@@ -78,11 +78,17 @@ function singleRoomGuests(value) {
     throw requestError("A primary guest is required for room 1.");
   }
 
-  // Rotavoy's current hotel search creates exactly one occupancy (one room).
-  // LiteAPI expects one primary guest per room, not one guest object per adult.
+  // Mongoose subdocuments do not reliably preserve schema fields when spread
+  // into a plain object. Read the required LiteAPI fields explicitly so the
+  // final /rates/book payload always contains the guest identity.
   return [{
-    ...primaryGuest,
     occupancyNumber: 1,
+    firstName: requiredText(primaryGuest?.firstName, "guests[0].firstName", 100),
+    lastName: requiredText(primaryGuest?.lastName, "guests[0].lastName", 100),
+    email: requiredText(primaryGuest?.email, "guests[0].email", 254).toLowerCase(),
+    ...(optionalText(primaryGuest?.remarks, 500)
+      ? { remarks: optionalText(primaryGuest?.remarks, 500) }
+      : {}),
   }];
 }
 
