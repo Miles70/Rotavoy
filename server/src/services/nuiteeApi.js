@@ -187,6 +187,28 @@ export function prebookNuiteeRate(body) {
   });
 }
 
+export function bookNuiteeTransaction(body) {
+  const transactionId = String(body?.transactionId || "").trim();
+  if (!transactionId) {
+    throw createNuiteeError("Nuitee transactionId is required to finalize card payment.", 400);
+  }
+
+  const { transactionId: omittedTransactionId, ...bookingBody } = body || {};
+  void omittedTransactionId;
+
+  return requestNuitee(getSettings().bookingBaseUrl, "/rates/book", {
+    method: "POST",
+    query: { timeout: 30 },
+    body: {
+      ...bookingBody,
+      payment: {
+        method: "TRANSACTION_ID",
+        transactionId,
+      },
+    },
+  });
+}
+
 export function bookNuiteeSandbox(body) {
   const status = getNuiteeStatus();
 

@@ -124,3 +124,16 @@ export function verifyTravelPayment(clientReference, { transactionHash, payerAdd
     body: JSON.stringify({ transactionHash, payerAddress }),
   }).then((payload) => payload.booking);
 }
+
+export function createCardPaymentSession({ offerId, holder, guests }) {
+  return hotelRequest("/card/session", {
+    method: "POST",
+    body: JSON.stringify({ offerId, holder, guests }),
+  });
+}
+
+export function finalizeCardPayment(clientReference) {
+  return hotelRequest(`/card/${encodeURIComponent(clientReference)}/finalize`, {
+    method: "POST",
+  }).then((payload) => payload.booking);
+}
