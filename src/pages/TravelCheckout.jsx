@@ -172,7 +172,7 @@ function TravelCheckout() {
         <main className="travelCheckoutState travelCheckoutState--success">
           <CheckCircle2 size={46} />
           <h1>Rezervasyon onaylandı</h1>
-          <p>Kart ödemesi ve Nuitee rezervasyonu başarıyla tamamlandı.</p>
+          <p>Kart ödemen ve Rotavoy rezervasyonun başarıyla tamamlandı.</p>
           <strong>Referans: {returnBooking?.clientReference || cardReturnReference}</strong>
           <Link to="/travel">Yeni otel ara</Link>
         </main>
@@ -202,7 +202,7 @@ function TravelCheckout() {
       <main className="travelCheckoutState">
         <LoaderCircle className="travelSpin" size={38} />
         <h1>{returnState === "processing" ? "Ödeme işleniyor" : "Rezervasyon tamamlanıyor"}</h1>
-        <p>Kart ödemesini doğrulayıp Nuitee rezervasyonunu oluşturuyoruz.</p>
+        <p>Kart ödemeni doğrulayıp Rotavoy rezervasyonunu tamamlıyoruz.</p>
         <strong>Referans: {cardReturnReference}</strong>
       </main>
     );
@@ -224,7 +224,7 @@ function TravelCheckout() {
       <main className="travelCheckoutState travelCheckoutState--success">
         <CheckCircle2 size={42} />
         <h1>Rezervasyon onaylandı</h1>
-        <p>{hotelName} için USDT ödemesi ve Nuitee rezervasyonu başarıyla onaylandı.</p>
+        <p>{hotelName} için USDT ödemen ve Rotavoy rezervasyonun başarıyla onaylandı.</p>
         <strong>Referans: {cryptoBooking.clientReference}</strong>
         <Link to="/travel">Yeni otel ara</Link>
       </main>
@@ -270,7 +270,7 @@ function TravelCheckout() {
                 <div className="travelGuestFields">
                   <h2>Oda ana misafiri</h2>
                   <p className="travelCheckoutSecurity">
-                    Nuitee rezervasyon adımında oda başına bir ana misafir ister. {adults} yetişkin bilgisi rezervasyonda korunur.
+                    Rezervasyon sistemi oda başına bir ana misafir ister. {adults} yetişkin bilgisi rezervasyonda korunur.
                   </p>
                   {form.guests.map((guest, index) => (
                     <div className="travelCheckoutFormGrid" key={index}>
@@ -288,7 +288,7 @@ function TravelCheckout() {
                     onClick={() => setPaymentMethod("card")}
                   >
                     <CreditCard size={21} />
-                    <span><strong>Kart / Cüzdan</strong><small>Nuitee · 3D Secure destekli</small></span>
+                    <span><strong>Kart / Cüzdan</strong><small>Rotavoy · 3D Secure destekli</small></span>
                   </button>
                   <button
                     type="button"
@@ -312,7 +312,7 @@ function TravelCheckout() {
                 <p className="travelCheckoutSecurity">
                   <ShieldCheck size={16} />
                   {paymentMethod === "card"
-                    ? "Kart bilgileri Rotavoy sunucusuna girmez; Nuitee Connect güvenli ödeme katmanında işlenir."
+                    ? "Kart bilgileri Rotavoy sunucusuna girmez; güvenli ödeme altyapısında işlenir."
                     : "Rezervasyon yalnızca USDT transferi zincirde doğrulandıktan sonra oluşturulur."}
                 </p>
               </form>
@@ -326,14 +326,14 @@ function TravelCheckout() {
               <div><dt>Giriş</dt><dd>{state.checkin}</dd></div>
               <div><dt>Çıkış</dt><dd>{state.checkout}</dd></div>
               <div><dt>Misafir</dt><dd>{adults} yetişkin</dd></div>
-              {cardSession && <div><dt>Ödeme</dt><dd>Kart · Nuitee</dd></div>}
+              {cardSession && <div><dt>Ödeme</dt><dd>Kart · Rotavoy</dd></div>}
             </dl>
             <div className="travelCheckoutTotal">
               <span>{cardSession ? "Kartla çekilecek toplam" : "Toplam konaklama"}</span>
               <strong>{money(price, currency)}</strong>
             </div>
             {cardSession && (
-              <p className="travelCheckoutPriceVerified">Fiyat Nuitee tarafından ödeme öncesi yeniden doğrulandı.</p>
+              <p className="travelCheckoutPriceVerified">Fiyat ödeme öncesi yeniden doğrulandı.</p>
             )}
           </aside>
         </div>
