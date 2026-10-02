@@ -3,6 +3,20 @@ import { FaFacebookF, FaInstagram, FaXTwitter, FaYoutube } from "react-icons/fa6
 import siteConfig from "../../config/site";
 import "./Footer.css";
 
+const paymentMethods = [
+  { id: "visa", label: "Visa", display: "VISA" },
+  { id: "mastercard", label: "Mastercard", display: "mastercard" },
+  { id: "amex", label: "American Express", display: "AMEX" },
+  { id: "discover", label: "Discover", display: "DISCOVER" },
+  { id: "jcb", label: "JCB", display: "JCB" },
+  { id: "diners", label: "Diners Club", display: "DINERS CLUB" },
+  { id: "unionpay", label: "UnionPay", display: "UnionPay" },
+  { id: "applepay", label: "Apple Pay", display: " Pay" },
+  { id: "googlepay", label: "Google Pay", display: "G Pay" },
+  { id: "3dsecure", label: "3D Secure", display: "3D Secure" },
+  { id: "usdt", label: "USDT on BNB Chain", display: "₮ USDT" },
+];
+
 function Footer() {
   const currentYear = new Date().getFullYear();
 
@@ -44,6 +58,30 @@ function Footer() {
           <Link to="/terms">Terms</Link>
           <Link to="/refund">Refund policy</Link>
         </div>
+      </div>
+
+      <div className="container footerPayments">
+        <div className="footerPaymentsIntro">
+          <strong>Güvenli ödeme</strong>
+          <span>Kart, dijital cüzdan ve USDT seçenekleri</span>
+        </div>
+        <div className="footerPaymentCards" aria-label="Rotavoy accepted payment methods">
+          {paymentMethods.map((method) => (
+            <span
+              key={method.id}
+              className={`footerPaymentCard footerPaymentCard--${method.id}`}
+              aria-label={method.label}
+              title={method.label}
+            >
+              {method.id === "mastercard" && <i className="mastercardMark" aria-hidden="true" />}
+              {method.id === "3dsecure" && <i className="secureMark" aria-hidden="true">✓</i>}
+              <b>{method.display}</b>
+            </span>
+          ))}
+        </div>
+        <p className="footerPaymentNote">
+          Kart ve cüzdan kullanılabilirliği ödeme oturumunun para birimi, bölgesi ve sağlayıcı uygunluğuna göre değişebilir.
+        </p>
       </div>
 
       <div className="container footerBottom">
