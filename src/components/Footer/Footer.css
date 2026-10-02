@@ -89,8 +89,207 @@
   color: #5be0eb;
 }
 
+.footerPayments {
+  margin-top: 42px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.footerPaymentsIntro {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.footerPaymentsIntro strong {
+  color: #ffffff;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+
+.footerPaymentsIntro span {
+  color: #9fb3d0;
+  font-size: 12px;
+}
+
+.footerPaymentCards {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.footerPaymentCard {
+  min-width: 68px;
+  height: 38px;
+  padding: 0 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid rgba(7, 27, 58, 0.12);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.12);
+  color: #071b3a;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.footerPaymentCard b {
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+
+.footerPaymentCard--visa b {
+  color: #1434cb;
+  font-size: 15px;
+  font-style: italic;
+  letter-spacing: -0.08em;
+}
+
+.footerPaymentCard--mastercard {
+  min-width: 96px;
+}
+
+.footerPaymentCard--mastercard b {
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.mastercardMark {
+  position: relative;
+  width: 27px;
+  height: 18px;
+  flex: 0 0 27px;
+}
+
+.mastercardMark::before,
+.mastercardMark::after {
+  content: "";
+  position: absolute;
+  top: 1px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+}
+
+.mastercardMark::before {
+  left: 0;
+  background: #eb001b;
+}
+
+.mastercardMark::after {
+  right: 0;
+  background: #f79e1b;
+  opacity: 0.9;
+}
+
+.footerPaymentCard--amex {
+  background: #2f77bc;
+  color: #ffffff;
+}
+
+.footerPaymentCard--amex b {
+  color: #ffffff;
+  font-size: 13px;
+  letter-spacing: 0.03em;
+}
+
+.footerPaymentCard--discover b {
+  color: #1d1d1b;
+}
+
+.footerPaymentCard--discover b::after {
+  content: "";
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  margin-left: 3px;
+  border-radius: 50%;
+  vertical-align: -2px;
+  background: #f58220;
+}
+
+.footerPaymentCard--jcb {
+  background: linear-gradient(90deg, #0b62a8 0 33%, #dc2134 33% 66%, #168349 66% 100%);
+}
+
+.footerPaymentCard--jcb b {
+  padding: 2px 4px;
+  border-radius: 3px;
+  background: #ffffff;
+  color: #071b3a;
+  font-size: 13px;
+}
+
+.footerPaymentCard--diners b {
+  color: #2477b5;
+  font-size: 9px;
+  letter-spacing: 0.02em;
+}
+
+.footerPaymentCard--unionpay b {
+  color: #0874b9;
+  font-size: 11px;
+}
+
+.footerPaymentCard--applepay b {
+  color: #111111;
+  font-size: 12px;
+}
+
+.footerPaymentCard--googlepay b {
+  color: #3c4043;
+  font-size: 12px;
+}
+
+.footerPaymentCard--3dsecure {
+  min-width: 102px;
+  background: #f4fbff;
+  border-color: rgba(11, 99, 246, 0.2);
+}
+
+.footerPaymentCard--3dsecure b {
+  color: #0b63f6;
+  font-size: 11px;
+}
+
+.secureMark {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #0b63f6;
+  border-radius: 7px 7px 9px 9px;
+  color: #0b63f6;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.footerPaymentCard--usdt {
+  background: #f2fffb;
+}
+
+.footerPaymentCard--usdt b {
+  color: #26a17b;
+  font-size: 12px;
+}
+
+.footerPaymentNote {
+  max-width: 760px;
+  margin: 12px 0 0;
+  color: #8299ba;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
 .footerBottom {
-  margin-top: 44px;
+  margin-top: 22px;
   padding-top: 22px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -122,5 +321,21 @@
 
   .footerBrand {
     grid-column: auto;
+  }
+
+  .footerPaymentsIntro {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .footerPaymentCards {
+    gap: 7px;
+  }
+
+  .footerPaymentCard {
+    min-width: 62px;
+    height: 36px;
+    padding: 0 9px;
   }
 }
