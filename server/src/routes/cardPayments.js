@@ -69,6 +69,23 @@ function normalizePerson(value, fieldName, includeOccupancy = false) {
   return person;
 }
 
+function singleRoomGuests(value) {
+  const guests = Array.isArray(value) ? value : [];
+  const primaryGuest =
+    guests.find((guest) => Number(guest?.occupancyNumber) === 1) || guests[0];
+
+  if (!primaryGuest) {
+    throw requestError("A primary guest is required for room 1.");
+  }
+
+  // Rotavoy's current hotel search creates exactly one occupancy (one room).
+  // LiteAPI expects one primary guest per room, not one guest object per adult.
+  return [{
+    ...primaryGuest,
+    occupancyNumber: 1,
+  }];
+}
+
 function sanitizeProviderResponse(value) {
   if (Array.isArray(value)) return value.map(sanitizeProviderResponse);
   if (!value || typeof value !== "object") return value;
@@ -134,6 +151,7 @@ cardPaymentsRouter.post("/session", cardPaymentLimiter, async (request, response
       throw requestError("guests must contain between 1 and 20 entries.");
     }
 
+    const bookingGuests = singleRoomGuests(guests);
     const offerId = requiredText(request.body?.offerId, "offerId", 5000);
     const prebook = await prebookNuiteeRate({ offerId, usePaymentSdk: true });
     const data = prebook?.data || {};
@@ -154,7 +172,7 @@ cardPaymentsRouter.post("/session", cardPaymentLimiter, async (request, response
       offerId,
       prebookId,
       holder,
-      guests,
+      guests: bookingGuests,
       total,
       currency,
       status: "awaiting_payment",
@@ -213,6 +231,7 @@ cardPaymentsRouter.post(
         "transactionId",
         500,
       );
+      const bookingGuests = singleRoomGuests(booking.guests);
 
       booking.status = "processing";
       booking.failureReason = "";
@@ -223,10 +242,11 @@ cardPaymentsRouter.post(
           prebookId: booking.prebookId,
           clientReference,
           holder: booking.holder,
-          guests: booking.guests,
+          guests: bookingGuests,
           transactionId,
         });
 
+        booking.guests = bookingGuests;
         booking.status = "confirmed";
         booking.paymentStatus = "paid";
         booking.providerBooking = sanitizeProviderResponse(result);
