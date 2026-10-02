@@ -90,7 +90,7 @@ function TravelCheckout() {
     lastName: "",
     email: "",
     phone: "",
-    guests: Array.from({ length: adults }, () => ({ firstName: "", lastName: "" })),
+    guests: [{ firstName: "", lastName: "" }],
   }));
   const [paymentMethod, setPaymentMethod] = useState("card");
   const [submitState, setSubmitState] = useState("idle");
@@ -139,11 +139,12 @@ function TravelCheckout() {
         email: form.email,
         phone: form.phone,
       };
-      const guests = form.guests.map((guest, index) => ({
-        ...guest,
+      const primaryGuest = form.guests[0];
+      const guests = [{
+        ...primaryGuest,
         email: form.email,
-        occupancyNumber: index + 1,
-      }));
+        occupancyNumber: 1,
+      }];
 
       if (paymentMethod === "card") {
         const result = await createCardPaymentSession({
@@ -267,10 +268,13 @@ function TravelCheckout() {
                 </div>
 
                 <div className="travelGuestFields">
-                  <h2>Konaklayacak misafirler</h2>
+                  <h2>Oda ana misafiri</h2>
+                  <p className="travelCheckoutSecurity">
+                    Nuitee rezervasyon adımında oda başına bir ana misafir ister. {adults} yetişkin bilgisi rezervasyonda korunur.
+                  </p>
                   {form.guests.map((guest, index) => (
                     <div className="travelCheckoutFormGrid" key={index}>
-                      <strong className="travelCheckoutWide">Misafir {index + 1}</strong>
+                      <strong className="travelCheckoutWide">Oda 1</strong>
                       <label>Ad<input required value={guest.firstName} onChange={(event) => updateGuest(index, "firstName", event.target.value)} /></label>
                       <label>Soyad<input required value={guest.lastName} onChange={(event) => updateGuest(index, "lastName", event.target.value)} /></label>
                     </div>
