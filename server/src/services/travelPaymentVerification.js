@@ -147,7 +147,9 @@ export async function verifyTravelCryptoPayment({
   }
 
   const paymentToken = booking.payment?.token || "USDT";
-  const config = getCryptoPaymentConfig(paymentToken);
+  const paymentNetwork =
+    booking.payment?.networkKey || booking.payment?.chainId || "";
+  const config = getCryptoPaymentConfig(paymentToken, paymentNetwork);
 
   if (
     !config.configured ||
@@ -276,6 +278,7 @@ export async function verifyTravelCryptoPayment({
   booking.payment = {
     ...booking.payment,
     provider: "onchain",
+    networkKey: config.networkKey,
     network: config.network,
     chainId: config.chainId,
     assetType: config.assetType,
