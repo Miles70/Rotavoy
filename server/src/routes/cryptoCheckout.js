@@ -4,6 +4,7 @@ import rateLimit from "express-rate-limit";
 import {
   getPublicCryptoPaymentConfig,
   normalizeCryptoAsset,
+  normalizeCryptoNetwork,
 } from "../config/cryptoPayment.js";
 import { TravelBooking } from "../models/TravelBooking.js";
 import { createCryptoPaymentQuote } from "../services/cryptoQuote.js";
@@ -145,6 +146,17 @@ cryptoCheckoutRouter.post(
         );
       }
 
+      const cryptoNetwork = normalizeCryptoNetwork(
+        request.body?.cryptoNetwork,
+        cryptoAsset
+      );
+
+      if (!cryptoNetwork) {
+        throw requestError(
+          "Selected crypto asset is not available on that network."
+        );
+      }
+
       const prebook = await prebookNuiteeRate({
         offerId,
         usePaymentSdk: false,
@@ -168,11 +180,14 @@ cryptoCheckoutRouter.post(
       }
 
       const customerTotal = roundMoney(providerTotal);
-      const payment = getPublicCryptoPaymentConfig(cryptoAsset);
+      const payment = getPublicCryptoPaymentConfig(
+        cryptoAsset,
+        cryptoNetwork
+      );
 
       if (!payment.configured) {
         const error = new Error(
-          `${cryptoAsset} payment is not configured on the server.`
+          `${cryptoAsset} payment on ${cryptoNetwork} is not configured on the server.`
         );
         error.statusCode = 503;
         throw error;
