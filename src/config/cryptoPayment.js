@@ -11,4 +11,8 @@ export const ERC20_TRANSFER_ABI = [
   },
 ];
 
-export const BSC_EXPLORER_TRANSACTION_URL = "https://bscscan.com/tx";
+export function getExplorerTransactionUrl(chainId) {
+  return Number(chainId) === 1
+    ? "https://etherscan.io/tx"
+    : "https://bscscan.com/tx";
+}

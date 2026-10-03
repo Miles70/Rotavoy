@@ -15,6 +15,9 @@ const paymentMethods = [
   { id: "googlepay", label: "Google Pay", display: "G Pay" },
   { id: "3dsecure", label: "3D Secure", display: "3D Secure" },
   { id: "usdt", label: "USDT on BNB Chain", display: "₮ USDT" },
+  { id: "usdc", label: "USDC on BNB Chain", display: "◎ USDC" },
+  { id: "bnb", label: "BNB on BNB Chain", display: "BNB" },
+  { id: "eth", label: "ETH on Ethereum", display: "◆ ETH" },
 ];
 
 function Footer() {
@@ -63,7 +66,7 @@ function Footer() {
       <div className="container footerPayments">
         <div className="footerPaymentsIntro">
           <strong>Güvenli ödeme</strong>
-          <span>Kart, dijital cüzdan ve USDT seçenekleri</span>
+          <span>Kart, dijital cüzdan ve kripto seçenekleri</span>
         </div>
         <div className="footerPaymentCards" aria-label="Rotavoy accepted payment methods">
           {paymentMethods.map((method) => (
@@ -80,7 +83,7 @@ function Footer() {
           ))}
         </div>
         <p className="footerPaymentNote">
-          Kart ve cüzdan kullanılabilirliği ödeme oturumunun para birimi, bölgesi ve sağlayıcı uygunluğuna göre değişebilir.
+          Kart ve cüzdan kullanılabilirliği ödeme oturumunun para birimi, bölgesi ve sağlayıcı uygunluğuna göre değişebilir. Kripto ödemelerinde seçilen ağ doğru olmalıdır.
         </p>
       </div>
 

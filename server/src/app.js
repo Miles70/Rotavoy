@@ -5,6 +5,7 @@ import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import { customerAuthRouter } from "./routes/customerAuth.js";
 import { cardPaymentsRouter } from "./routes/cardPayments.js";
+import { cryptoCheckoutRouter } from "./routes/cryptoCheckout.js";
 import { hotelsRouter } from "./routes/hotels.js";
 
 function getAllowedOrigins() {
@@ -59,6 +60,7 @@ export function createApp() {
 
   app.use("/api/customer-auth", customerAuthRouter);
   app.use("/api/hotels/card", cardPaymentsRouter);
+  app.use("/api/hotels", cryptoCheckoutRouter);
   app.use("/api/hotels", hotelsRouter);
   app.use("/api/flights", flightsRouter);
 

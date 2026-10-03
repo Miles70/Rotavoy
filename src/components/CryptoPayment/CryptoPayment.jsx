@@ -8,12 +8,17 @@ import {
   WalletCards,
 } from "lucide-react";
 import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
-import { usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
+import {
+  usePublicClient,
+  useSendTransaction,
+  useSwitchChain,
+  useWriteContract,
+} from "wagmi";
 import { isAddress, parseUnits } from "viem";
 import { useLanguage } from "../../i18n/LanguageContext";
 import {
-  BSC_EXPLORER_TRANSACTION_URL,
   ERC20_TRANSFER_ABI,
+  getExplorerTransactionUrl,
 } from "../../config/cryptoPayment";
 import "./CryptoPayment.css";
 
@@ -23,13 +28,18 @@ function shortenAddress(value) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
-function getPaymentErrorMessage(error, transactionWasSubmitted, text) {
+function getPaymentErrorMessage(
+  error,
+  transactionWasSubmitted,
+  text,
+  network
+) {
   const message = String(error?.shortMessage || error?.message || "");
 
   if (transactionWasSubmitted) {
     return text(
       "travelPayment.transactionSubmitted",
-      "The transaction was submitted. Use Verify Payment after it is confirmed on BNB Smart Chain."
+      `The transaction was submitted. Use Verify Payment after it is confirmed on ${network}.`
     );
   }
 
@@ -116,7 +126,12 @@ function getPaymentErrorMessage(error, transactionWasSubmitted, text) {
   );
 }
 
-function CryptoPayment({ booking, onBookingUpdated, verifyPaymentRequest, forceDisplay = false }) {
+function CryptoPayment({
+  booking,
+  onBookingUpdated,
+  verifyPaymentRequest,
+  forceDisplay = false,
+}) {
   const { t } = useLanguage();
   const [paymentStage, setPaymentStage] = useState("idle");
   const [paymentError, setPaymentError] = useState("");
@@ -131,6 +146,7 @@ function CryptoPayment({ booking, onBookingUpdated, verifyPaymentRequest, forceD
   const { address, isConnected } = useAppKitAccount();
   const switchChainMutation = useSwitchChain();
   const writeContractMutation = useWriteContract();
+  const sendTransactionMutation = useSendTransaction();
 
   const payment = booking?.payment || {};
   const paymentChainId = Number(payment.chainId || 56);
@@ -140,8 +156,9 @@ function CryptoPayment({ booking, onBookingUpdated, verifyPaymentRequest, forceD
     setTransactionHash(booking?.payment?.transactionHash || "");
   }, [booking?.payment?.transactionHash]);
 
-  // Travel checkout validates its payment payload visibly before payment.
-  if (!booking || (!forceDisplay && booking.paymentMethod !== "crypto")) return null;
+  if (!booking || (!forceDisplay && booking.paymentMethod !== "crypto")) {
+    return null;
+  }
 
   const text = (key, fallback) => {
     const value = t(key);
@@ -155,13 +172,22 @@ function CryptoPayment({ booking, onBookingUpdated, verifyPaymentRequest, forceD
     payment.expectedAmount || Number(booking.total || 0).toFixed(2)
   );
   const paymentToken = payment.token || "USDT";
+  const paymentNetwork = payment.network || "BNB Smart Chain";
+  const assetType = payment.assetType || "erc20";
+  const gasToken =
+    payment.gasToken || (paymentChainId === 1 ? "ETH" : "BNB");
+  const explorerTransactionUrl =
+    payment.explorerTransactionUrl ||
+    getExplorerTransactionUrl(paymentChainId);
   const pendingTransactionHash =
     transactionHash || payment.transactionHash || "";
+
   const paymentConfigured =
-    isAddress(tokenAddress) &&
     isAddress(recipientAddress) &&
     Number.isInteger(tokenDecimals) &&
-    tokenDecimals >= 0;
+    tokenDecimals >= 0 &&
+    (assetType === "native" || isAddress(tokenAddress));
+
   const isPaid = booking.paymentStatus === "paid";
   const isPaymentBusy = [
     "switching",
@@ -204,7 +230,9 @@ function CryptoPayment({ booking, onBookingUpdated, verifyPaymentRequest, forceD
         );
       } catch (error) {
         setPaymentStage("error");
-        setPaymentError(getPaymentErrorMessage(error, false, text));
+        setPaymentError(
+          getPaymentErrorMessage(error, false, text, paymentNetwork)
+        );
       }
       return;
     }
@@ -246,29 +274,52 @@ function CryptoPayment({ booking, onBookingUpdated, verifyPaymentRequest, forceD
       await switchChainAsync({ chainId: paymentChainId });
       setPaymentStage("signing");
 
-      const writeContractAsync =
-        writeContractMutation.writeContractAsync ||
-        writeContractMutation.mutateAsync;
+      let hash = "";
 
-      if (typeof writeContractAsync !== "function") {
-        throw new Error(
-          text(
-            "travelPayment.contractTransactionsUnavailable",
-            "Wallet contract transactions are unavailable."
-          )
-        );
+      if (assetType === "native") {
+        const sendTransactionAsync =
+          sendTransactionMutation.sendTransactionAsync ||
+          sendTransactionMutation.mutateAsync;
+
+        if (typeof sendTransactionAsync !== "function") {
+          throw new Error(
+            text(
+              "travelPayment.nativeTransactionsUnavailable",
+              "Wallet native-coin transactions are unavailable."
+            )
+          );
+        }
+
+        hash = await sendTransactionAsync({
+          to: recipientAddress,
+          value: parseUnits(paymentAmount, tokenDecimals),
+          chainId: paymentChainId,
+        });
+      } else {
+        const writeContractAsync =
+          writeContractMutation.writeContractAsync ||
+          writeContractMutation.mutateAsync;
+
+        if (typeof writeContractAsync !== "function") {
+          throw new Error(
+            text(
+              "travelPayment.contractTransactionsUnavailable",
+              "Wallet contract transactions are unavailable."
+            )
+          );
+        }
+
+        hash = await writeContractAsync({
+          address: tokenAddress,
+          abi: ERC20_TRANSFER_ABI,
+          functionName: "transfer",
+          args: [
+            recipientAddress,
+            parseUnits(paymentAmount, tokenDecimals),
+          ],
+          chainId: paymentChainId,
+        });
       }
-
-      const hash = await writeContractAsync({
-        address: tokenAddress,
-        abi: ERC20_TRANSFER_ABI,
-        functionName: "transfer",
-        args: [
-          recipientAddress,
-          parseUnits(paymentAmount, tokenDecimals),
-        ],
-        chainId: paymentChainId,
-      });
 
       submittedHash = hash;
 
@@ -288,8 +339,8 @@ function CryptoPayment({ booking, onBookingUpdated, verifyPaymentRequest, forceD
       if (!publicClient) {
         throw new Error(
           text(
-            "travelPayment.bscClientUnavailable",
-            "The BNB Smart Chain client is unavailable."
+            "travelPayment.blockchainClientUnavailable",
+            `${paymentNetwork} client is unavailable.`
           )
         );
       }
@@ -304,31 +355,42 @@ function CryptoPayment({ booking, onBookingUpdated, verifyPaymentRequest, forceD
     } catch (error) {
       setPaymentStage("error");
       setPaymentError(
-        getPaymentErrorMessage(error, Boolean(submittedHash), text)
+        getPaymentErrorMessage(
+          error,
+          Boolean(submittedHash),
+          text,
+          paymentNetwork
+        )
       );
     }
   };
 
   const copyRecipient = async () => {
     if (!recipientAddress) return;
+
     try {
       await navigator.clipboard.writeText(recipientAddress);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1800);
     } catch {
-      setPaymentError("Cüzdan adresi kopyalanamadı. Adresi seçip kendin kopyalayabilirsin.");
+      setPaymentError(
+        "Cüzdan adresi kopyalanamadı. Adresi seçip kendin kopyalayabilirsin."
+      );
     }
   };
 
   const verifyManualPayment = async (event) => {
     event.preventDefault();
     if (!manualHash.trim() || isPaymentBusy || isPaid) return;
+
     try {
       await verifyPayment(manualHash.trim());
       setManualOpen(false);
     } catch (error) {
       setPaymentStage("error");
-      setPaymentError(getPaymentErrorMessage(error, false, text));
+      setPaymentError(
+        getPaymentErrorMessage(error, false, text, paymentNetwork)
+      );
     }
   };
 
@@ -339,36 +401,46 @@ function CryptoPayment({ booking, onBookingUpdated, verifyPaymentRequest, forceD
         "Payment setup required"
       );
     }
+
     if (paymentStage === "switching") {
-      return text(
-        "travelPayment.switchingToBnb",
-        "Switching to BNB Chain..."
-      );
+      return `${paymentNetwork} ağına geçiliyor...`;
     }
+
     if (paymentStage === "signing") {
       return text(
         "travelPayment.confirmInWallet",
         "Confirm in wallet..."
       );
     }
+
     if (paymentStage === "confirming") {
       return text(
         "travelPayment.waitingForConfirmation",
         "Waiting for confirmation..."
       );
     }
+
     if (paymentStage === "verifying") {
       return text(
         "travelPayment.verifyingPayment",
         "Verifying payment..."
       );
     }
+
     if (pendingTransactionHash) {
-      return text("travelPayment.verifyPayment", "Verify Payment");
+      return text(
+        "travelPayment.verifyPayment",
+        "Verify Payment"
+      );
     }
+
     if (!isConnected) {
-      return text("travelPayment.connectWallet", "Connect Wallet");
+      return text(
+        "travelPayment.connectWallet",
+        "Connect Wallet"
+      );
     }
+
     return `${text("travelPayment.pay", "Pay")} ${paymentAmount} ${paymentToken}`;
   };
 
@@ -376,7 +448,7 @@ function CryptoPayment({ booking, onBookingUpdated, verifyPaymentRequest, forceD
     return (
       <a
         className="cryptoPaymentHash cryptoPaymentHashPaid"
-        href={`${BSC_EXPLORER_TRANSACTION_URL}/${payment.transactionHash}`}
+        href={`${explorerTransactionUrl}/${payment.transactionHash}`}
         target="_blank"
         rel="noreferrer"
       >
@@ -401,10 +473,8 @@ function CryptoPayment({ booking, onBookingUpdated, verifyPaymentRequest, forceD
             {text("travelPayment.payWith", "Pay with")} {paymentToken}
           </h2>
           <p>
-            {text(
-              "travelPayment.cryptoVerificationText",
-              "Send the exact booking total on BNB Smart Chain. The backend verifies the transaction before the booking moves to processing."
-            )}
+            {paymentNetwork} ağında tam tutarı gönder. Backend transferi
+            zincirde doğruladıktan sonra rezervasyonu işleme alır.
           </p>
         </div>
 
@@ -420,7 +490,7 @@ function CryptoPayment({ booking, onBookingUpdated, verifyPaymentRequest, forceD
         </div>
         <div>
           <small>{text("travelPayment.network", "Network")}</small>
-          <strong>{payment.network || "BNB Smart Chain"}</strong>
+          <strong>{paymentNetwork}</strong>
         </div>
         <div>
           <small>{text("travelPayment.recipient", "Recipient")}</small>
@@ -440,6 +510,17 @@ function CryptoPayment({ booking, onBookingUpdated, verifyPaymentRequest, forceD
         </div>
       </div>
 
+      {payment.quoteUsdPrice && !["USDT", "USDC"].includes(paymentToken) && (
+        <div className="cryptoPaymentStatus">
+          <span>20 dakikalık ödeme tutarı</span>
+          <strong>
+            1 {paymentToken} ≈ ${Number(payment.quoteUsdPrice).toLocaleString("en-US", {
+              maximumFractionDigits: 2,
+            })}
+          </strong>
+        </div>
+      )}
+
       {paymentStage !== "idle" && paymentStage !== "error" && (
         <div className="cryptoPaymentStatus">
           <LoaderCircle className="cryptoPaymentSpinner" size={18} />
@@ -454,7 +535,7 @@ function CryptoPayment({ booking, onBookingUpdated, verifyPaymentRequest, forceD
       {pendingTransactionHash && (
         <a
           className="cryptoPaymentHash"
-          href={`${BSC_EXPLORER_TRANSACTION_URL}/${pendingTransactionHash}`}
+          href={`${explorerTransactionUrl}/${pendingTransactionHash}`}
           target="_blank"
           rel="noreferrer"
         >
@@ -484,24 +565,36 @@ function CryptoPayment({ booking, onBookingUpdated, verifyPaymentRequest, forceD
         onClick={() => setManualOpen((open) => !open)}
         disabled={isPaymentBusy || !paymentConfigured}
       >
-        {manualOpen ? "Manuel ödeme alanını kapat" : "Cüzdan bağlamadan manuel gönder"}
+        {manualOpen
+          ? "Manuel ödeme alanını kapat"
+          : "Cüzdan bağlamadan manuel gönder"}
       </button>
 
       {manualOpen && (
-        <form className="cryptoPaymentManual" onSubmit={verifyManualPayment}>
-          <strong>Manuel USDT gönderimi</strong>
-          <p>BNB Smart Chain ağında tam olarak <b>{paymentAmount} {paymentToken}</b> gönder. Ağ seçimi yanlış olursa sistem transferi bulamaz.</p>
+        <form
+          className="cryptoPaymentManual"
+          onSubmit={verifyManualPayment}
+        >
+          <strong>Manuel {paymentToken} gönderimi</strong>
+          <p>
+            {paymentNetwork} ağında tam olarak{" "}
+            <b>
+              {paymentAmount} {paymentToken}
+            </b>{" "}
+            gönder. Yanlış ağdaki transfer sistem tarafından kabul edilmez.
+          </p>
           <label>
             Alıcı cüzdan adresi
             <span className="cryptoPaymentAddress">
               <code>{recipientAddress}</code>
               <button type="button" onClick={copyRecipient}>
-                {copied ? <Check size={16} /> : <Copy size={16} />} {copied ? "Kopyalandı" : "Kopyala"}
+                {copied ? <Check size={16} /> : <Copy size={16} />} {" "}
+                {copied ? "Kopyalandı" : "Kopyala"}
               </button>
             </span>
           </label>
           <label>
-            İşlem hash'i (TxID)
+            İşlem hash&apos;i (TxID)
             <input
               required
               value={manualHash}
@@ -510,18 +603,26 @@ function CryptoPayment({ booking, onBookingUpdated, verifyPaymentRequest, forceD
               autoComplete="off"
             />
           </label>
-          <button type="submit" className="cryptoPaymentManualVerify" disabled={isPaymentBusy}>
-            {isPaymentBusy ? <LoaderCircle className="cryptoPaymentSpinner" size={17} /> : <ShieldCheck size={17} />}
+          <button
+            type="submit"
+            className="cryptoPaymentManualVerify"
+            disabled={isPaymentBusy}
+          >
+            {isPaymentBusy ? (
+              <LoaderCircle
+                className="cryptoPaymentSpinner"
+                size={17}
+              />
+            ) : (
+              <ShieldCheck size={17} />
+            )}
             Gönderimi doğrula ve devam et
           </button>
         </form>
       )}
 
       <small className="cryptoPaymentGasNote">
-        {text(
-          "travelPayment.gasNote",
-          "A small amount of BNB is required in the connected wallet for gas."
-        )}
+        İşlem ücreti için cüzdanda küçük bir miktar {gasToken} gerekir.
       </small>
     </section>
   );

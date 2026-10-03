@@ -22,6 +22,38 @@
 
 .travelPaymentChoice{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:22px 0 18px;padding-top:20px;border-top:1px solid var(--color-border)}.travelPaymentOption{border:1px solid var(--color-border-strong);border-radius:16px;background:#f9fbff;color:var(--color-navy);padding:14px;display:flex;align-items:center;gap:11px;text-align:left;cursor:pointer;transition:.18s ease}.travelPaymentOption span{display:grid;gap:3px}.travelPaymentOption strong{font-size:.9rem}.travelPaymentOption small{font-size:.72rem;color:var(--color-text-muted);font-weight:700}.travelPaymentOption:hover{border-color:rgba(11,99,246,.42);transform:translateY(-1px)}.travelPaymentOption--active{border-color:var(--color-blue);background:linear-gradient(135deg,rgba(11,99,246,.08),rgba(201,42,109,.06));box-shadow:0 0 0 3px rgba(11,99,246,.07)}.travelPaymentOption--active svg{color:var(--color-blue)}.travelCheckoutPriceVerified{margin:12px 0 0;padding:10px 12px;border-radius:11px;background:rgba(25,198,216,.08);color:var(--color-text-secondary);font-size:.76rem;line-height:1.4}.travelCheckoutRetry{border:0;border-radius:10px;background:var(--sunset-action);color:#fff;padding:12px 17px;font-weight:800;cursor:pointer;box-shadow:0 12px 27px rgba(91,42,134,.2)}.travelCheckoutRetry:hover{filter:brightness(1.08);transform:translateY(-1px)}
 
+.travelCryptoAssetChoice{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:9px;
+  margin:-4px 0 18px;
+}
+.travelCryptoAsset{
+  min-width:0;
+  padding:11px 10px;
+  display:grid;
+  gap:3px;
+  border:1px solid var(--color-border-strong);
+  border-radius:13px;
+  background:#fff;
+  color:var(--color-navy);
+  text-align:center;
+  cursor:pointer;
+  transition:.18s ease;
+}
+.travelCryptoAsset strong{font-size:.9rem}
+.travelCryptoAsset small{font-size:.67rem;color:var(--color-text-muted);font-weight:750}
+.travelCryptoAsset:hover{border-color:rgba(11,99,246,.42);transform:translateY(-1px)}
+.travelCryptoAsset--active{
+  border-color:var(--color-blue);
+  background:linear-gradient(135deg,rgba(11,99,246,.1),rgba(201,42,109,.07));
+  box-shadow:0 0 0 3px rgba(11,99,246,.06);
+}
+.travelCryptoAsset--active strong{color:var(--color-blue)}
+
 @keyframes travelCheckoutSpin{to{transform:rotate(360deg)}}.travelSpin{animation:travelCheckoutSpin .8s linear infinite}
 
-@media(max-width:760px){.travelPaymentChoice{grid-template-columns:1fr}}
+@media(max-width:760px){
+  .travelPaymentChoice{grid-template-columns:1fr}
+  .travelCryptoAssetChoice{grid-template-columns:1fr 1fr}
+}
