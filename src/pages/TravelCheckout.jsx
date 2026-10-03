@@ -4,6 +4,7 @@ import {
   AlertCircle,
   ArrowLeft,
   CheckCircle2,
+  ChevronDown,
   CreditCard,
   LoaderCircle,
   LockKeyhole,
@@ -21,13 +22,16 @@ import {
 } from "../services/hotelsApi";
 import "./TravelCheckout.css";
 
-const CRYPTO_OPTIONS = [
-  { id: "USDT_BSC", symbol: "USDT", network: "BNB Chain", networkKey: "BSC" },
-  { id: "USDT_ETH", symbol: "USDT", network: "Ethereum", networkKey: "ETH" },
-  { id: "USDC_BSC", symbol: "USDC", network: "BNB Chain", networkKey: "BSC" },
-  { id: "USDC_ETH", symbol: "USDC", network: "Ethereum", networkKey: "ETH" },
-  { id: "BNB_BSC", symbol: "BNB", network: "BNB Chain", networkKey: "BSC" },
-  { id: "ETH_ETH", symbol: "ETH", network: "Ethereum", networkKey: "ETH" },
+const NETWORK_LABELS = {
+  BSC: "BNB Chain",
+  ETH: "Ethereum",
+};
+
+const CRYPTO_ASSETS = [
+  { symbol: "USDT", networks: ["BSC", "ETH"] },
+  { symbol: "USDC", networks: ["BSC", "ETH"] },
+  { symbol: "BNB", networks: ["BSC"] },
+  { symbol: "ETH", networks: ["ETH"] },
 ];
 
 function money(amount, currency = "EUR") {
@@ -107,16 +111,21 @@ function TravelCheckout() {
     guests: [{ firstName: "", lastName: "" }],
   }));
   const [paymentMethod, setPaymentMethod] = useState("card");
-  const [cryptoOptionId, setCryptoOptionId] = useState("USDT_BSC");
+  const [cryptoAsset, setCryptoAsset] = useState("USDT");
+  const [cryptoNetwork, setCryptoNetwork] = useState("BSC");
+  const [networkPickerOpen, setNetworkPickerOpen] = useState(null);
   const [submitState, setSubmitState] = useState("idle");
   const [error, setError] = useState("");
   const [cryptoBooking, setCryptoBooking] = useState(null);
   const [cardSession, setCardSession] = useState(null);
 
-  const selectedCryptoOption =
-    CRYPTO_OPTIONS.find((option) => option.id === cryptoOptionId) ||
-    CRYPTO_OPTIONS[0];
-  const cryptoAsset = selectedCryptoOption.symbol;
+  const selectedCryptoAsset =
+    CRYPTO_ASSETS.find((asset) => asset.symbol === cryptoAsset) ||
+    CRYPTO_ASSETS[0];
+  const selectedNetworkKey = selectedCryptoAsset.networks.includes(cryptoNetwork)
+    ? cryptoNetwork
+    : selectedCryptoAsset.networks[0];
+  const selectedNetwork = NETWORK_LABELS[selectedNetworkKey];
 
   const hotelName = hotel?.name || hotel?.hotelName || "Seçilen otel";
   const price = Number(
@@ -143,6 +152,29 @@ function TravelCheckout() {
         guestIndex === index ? { ...guest, [field]: value } : guest
       ),
     }));
+  }
+
+  function selectCryptoAsset(asset) {
+    setCryptoAsset(asset.symbol);
+
+    if (asset.networks.length === 1) {
+      setCryptoNetwork(asset.networks[0]);
+      setNetworkPickerOpen(null);
+      return;
+    }
+
+    if (!asset.networks.includes(cryptoNetwork)) {
+      setCryptoNetwork(asset.networks[0]);
+    }
+
+    setNetworkPickerOpen((current) =>
+      current === asset.symbol ? null : asset.symbol
+    );
+  }
+
+  function selectCryptoNetwork(networkKey) {
+    setCryptoNetwork(networkKey);
+    setNetworkPickerOpen(null);
   }
 
   async function submit(event) {
@@ -183,8 +215,8 @@ function TravelCheckout() {
         offerId: offer.offerId,
         holder,
         guests,
-        cryptoAsset: selectedCryptoOption.symbol,
-        cryptoNetwork: selectedCryptoOption.networkKey,
+        cryptoAsset,
+        cryptoNetwork: selectedNetworkKey,
       });
       setCryptoBooking(result);
       setSubmitState("success");
@@ -205,12 +237,9 @@ function TravelCheckout() {
         <main className="travelCheckoutState travelCheckoutState--success">
           <CheckCircle2 size={46} />
           <h1>Rezervasyon onaylandı</h1>
-          <p>
-            Kart ödemen ve Rotavoy rezervasyonun başarıyla tamamlandı.
-          </p>
+          <p>Kart ödemen ve Rotavoy rezervasyonun başarıyla tamamlandı.</p>
           <strong>
-            Referans:{" "}
-            {returnBooking?.clientReference || cardReturnReference}
+            Referans: {returnBooking?.clientReference || cardReturnReference}
           </strong>
           <Link to="/travel">Yeni otel ara</Link>
         </main>
@@ -244,9 +273,7 @@ function TravelCheckout() {
             ? "Ödeme işleniyor"
             : "Rezervasyon tamamlanıyor"}
         </h1>
-        <p>
-          Kart ödemeni doğrulayıp Rotavoy rezervasyonunu tamamlıyoruz.
-        </p>
+        <p>Kart ödemeni doğrulayıp Rotavoy rezervasyonunu tamamlıyoruz.</p>
         <strong>Referans: {cardReturnReference}</strong>
       </main>
     );
@@ -265,7 +292,8 @@ function TravelCheckout() {
 
   if (cryptoBooking?.status === "confirmed") {
     const paidToken = cryptoBooking.payment?.token || cryptoAsset;
-    const paidNetwork = cryptoBooking.payment?.network || selectedCryptoOption.network;
+    const paidNetwork = cryptoBooking.payment?.network || selectedNetwork;
+
     return (
       <main className="travelCheckoutState travelCheckoutState--success">
         <CheckCircle2 size={42} />
@@ -298,14 +326,11 @@ function TravelCheckout() {
 
         <div className="travelCheckoutGrid">
           <section>
-            <span className="travelCheckoutEyebrow">
-              GÜVENLİ REZERVASYON
-            </span>
+            <span className="travelCheckoutEyebrow">GÜVENLİ REZERVASYON</span>
             <h1>Misafir bilgileri</h1>
             <p className="travelCheckoutLead">
-              Bilgileri kontrol et. Oda ve toplam fiyat yeniden
-              doğrulanır; ardından kart veya kripto ile güvenli ödeme
-              adımına geçersin.
+              Bilgileri kontrol et. Oda ve toplam fiyat yeniden doğrulanır;
+              ardından kart veya kripto ile güvenli ödeme adımına geçersin.
             </p>
 
             {cardSession ? (
@@ -379,13 +404,8 @@ function TravelCheckout() {
                   </p>
 
                   {form.guests.map((guest, index) => (
-                    <div
-                      className="travelCheckoutFormGrid"
-                      key={index}
-                    >
-                      <strong className="travelCheckoutWide">
-                        Oda 1
-                      </strong>
+                    <div className="travelCheckoutFormGrid" key={index}>
+                      <strong className="travelCheckoutWide">Oda 1</strong>
                       <label>
                         Ad
                         <input
@@ -449,26 +469,89 @@ function TravelCheckout() {
                 </div>
 
                 {paymentMethod === "crypto" && (
-                  <div
-                    className="travelCryptoAssetChoice"
-                    role="group"
-                    aria-label="Kripto ödeme birimi ve ağı"
-                  >
-                    {CRYPTO_OPTIONS.map((option) => (
-                      <button
-                        key={option.id}
-                        type="button"
-                        className={
-                          cryptoOptionId === option.id
-                            ? "travelCryptoAsset travelCryptoAsset--active"
-                            : "travelCryptoAsset"
-                        }
-                        onClick={() => setCryptoOptionId(option.id)}
-                      >
-                        <strong>{option.symbol}</strong>
-                        <small>{option.network}</small>
-                      </button>
-                    ))}
+                  <div className="travelCryptoPicker">
+                    <div
+                      className="travelCryptoAssetChoice"
+                      role="group"
+                      aria-label="Kripto ödeme birimi"
+                    >
+                      {CRYPTO_ASSETS.map((asset) => {
+                        const isSelected = cryptoAsset === asset.symbol;
+                        const hasNetworkChoice = asset.networks.length > 1;
+                        const assetNetworkKey = isSelected
+                          ? selectedNetworkKey
+                          : asset.networks[0];
+
+                        return (
+                          <button
+                            key={asset.symbol}
+                            type="button"
+                            className={
+                              isSelected
+                                ? "travelCryptoAsset travelCryptoAsset--active"
+                                : "travelCryptoAsset"
+                            }
+                            onClick={() => selectCryptoAsset(asset)}
+                            aria-expanded={
+                              hasNetworkChoice
+                                ? networkPickerOpen === asset.symbol
+                                : undefined
+                            }
+                          >
+                            <span className="travelCryptoAssetText">
+                              <strong>{asset.symbol}</strong>
+                              <small>{NETWORK_LABELS[assetNetworkKey]}</small>
+                            </span>
+                            {hasNetworkChoice && (
+                              <ChevronDown
+                                className={
+                                  networkPickerOpen === asset.symbol
+                                    ? "travelCryptoChevron travelCryptoChevron--open"
+                                    : "travelCryptoChevron"
+                                }
+                                size={17}
+                              />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {networkPickerOpen &&
+                      ["USDT", "USDC"].includes(networkPickerOpen) && (
+                        <div className="travelCryptoNetworkPicker">
+                          <span>{networkPickerOpen} için ağ seç</span>
+                          <div
+                            className="travelCryptoNetworkOptions"
+                            role="group"
+                            aria-label={`${networkPickerOpen} ağı`}
+                          >
+                            {["BSC", "ETH"].map((networkKey) => (
+                              <button
+                                key={networkKey}
+                                type="button"
+                                className={
+                                  cryptoAsset === networkPickerOpen &&
+                                  selectedNetworkKey === networkKey
+                                    ? "travelCryptoNetwork travelCryptoNetwork--active"
+                                    : "travelCryptoNetwork"
+                                }
+                                onClick={() => {
+                                  setCryptoAsset(networkPickerOpen);
+                                  selectCryptoNetwork(networkKey);
+                                }}
+                              >
+                                <strong>{NETWORK_LABELS[networkKey]}</strong>
+                                <small>
+                                  {networkKey === "BSC"
+                                    ? "BNB ile gas"
+                                    : "ETH ile gas"}
+                                </small>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                   </div>
                 )}
 
@@ -492,14 +575,14 @@ function TravelCheckout() {
                     ? "Fiyat ve oda doğrulanıyor"
                     : paymentMethod === "card"
                       ? "Güvenli kart ödeme formunu aç"
-                      : `${selectedCryptoOption.symbol} · ${selectedCryptoOption.network} ödeme adımına geç`}
+                      : `${cryptoAsset} · ${selectedNetwork} ödeme adımına geç`}
                 </button>
 
                 <p className="travelCheckoutSecurity">
                   <ShieldCheck size={16} />
                   {paymentMethod === "card"
                     ? "Kart bilgileri Rotavoy sunucusuna girmez; güvenli ödeme altyapısında işlenir."
-                    : `Rezervasyon yalnızca ${selectedCryptoOption.symbol} transferi ${selectedCryptoOption.network} ağında zincirde doğrulandıktan sonra oluşturulur.`}
+                    : `Rezervasyon yalnızca ${cryptoAsset} transferi ${selectedNetwork} ağında zincirde doğrulandıktan sonra oluşturulur.`}
                 </p>
               </form>
             )}
@@ -527,14 +610,16 @@ function TravelCheckout() {
                   <dd>Kart · Rotavoy</dd>
                 </div>
               )}
-              {!cardSession && !cryptoBooking && paymentMethod === "crypto" && (
-                <div>
-                  <dt>Kripto</dt>
-                  <dd>
-                    {selectedCryptoOption.symbol} · {selectedCryptoOption.network}
-                  </dd>
-                </div>
-              )}
+              {!cardSession &&
+                !cryptoBooking &&
+                paymentMethod === "crypto" && (
+                  <div>
+                    <dt>Kripto</dt>
+                    <dd>
+                      {cryptoAsset} · {selectedNetwork}
+                    </dd>
+                  </div>
+                )}
               {cryptoBooking && (
                 <div>
                   <dt>Ödeme</dt>
