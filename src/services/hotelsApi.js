@@ -111,10 +111,22 @@ export function bookSandboxHotel({ prebookId, clientReference, holder, guests })
   });
 }
 
-export function createTravelCheckout({ offerId, holder, guests, cryptoAsset = "USDT" }) {
+export function createTravelCheckout({
+  offerId,
+  holder,
+  guests,
+  cryptoAsset = "USDT",
+  cryptoNetwork = "BSC",
+}) {
   return hotelRequest("/crypto-checkout", {
     method: "POST",
-    body: JSON.stringify({ offerId, holder, guests, cryptoAsset }),
+    body: JSON.stringify({
+      offerId,
+      holder,
+      guests,
+      cryptoAsset,
+      cryptoNetwork,
+    }),
   }).then((payload) => payload.booking);
 }
 
