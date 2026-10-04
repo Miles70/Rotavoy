@@ -204,7 +204,7 @@ export async function verifyTravelCryptoPayment({
     config.tokenDecimals
   );
 
-  let receivedUnits = 0n;
+  let receivedUnits;
 
   if (config.assetType === "erc20") {
     if (
