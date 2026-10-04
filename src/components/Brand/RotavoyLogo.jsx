@@ -129,22 +129,54 @@ function drawHorizontalLogo(canvas, source) {
   );
 }
 
+function canvasClassForImage(image) {
+  if (image.closest(".travelBrandBlock")) return "heroRotavoyLogo";
+  if (image.closest(".footerLogo")) return "footerRotavoyLogo";
+  return "headerRotavoyLogo";
+}
+
+function upgradeApprovedLogoImages(source) {
+  document.querySelectorAll("img.approvedLogo").forEach((image) => {
+    if (image.dataset.rotavoyUpgraded === "true") return;
+
+    const canvas = document.createElement("canvas");
+    canvas.className = `rotavoyLogoCanvas ${canvasClassForImage(image)}`;
+    canvas.width = OUTPUT.width;
+    canvas.height = OUTPUT.height;
+    canvas.setAttribute("role", "img");
+    canvas.setAttribute("aria-label", image.alt || "Rotavoy");
+    drawHorizontalLogo(canvas, source);
+
+    image.dataset.rotavoyUpgraded = "true";
+    image.style.display = "none";
+    image.insertAdjacentElement("afterend", canvas);
+  });
+}
+
 function RotavoyLogo({ className = "", alt = "Rotavoy" }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
+    let observer;
 
     getProcessedSource()
       .then((source) => {
-        if (!cancelled && canvasRef.current) {
+        if (cancelled) return;
+
+        if (canvasRef.current) {
           drawHorizontalLogo(canvasRef.current, source);
         }
+
+        upgradeApprovedLogoImages(source);
+        observer = new MutationObserver(() => upgradeApprovedLogoImages(source));
+        observer.observe(document.body, { childList: true, subtree: true });
       })
       .catch(() => {});
 
     return () => {
       cancelled = true;
+      observer?.disconnect();
     };
   }, []);
 
