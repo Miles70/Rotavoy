@@ -14,12 +14,12 @@ import { useLanguage } from "../../i18n/LanguageContext";
 import { useCustomerAuth } from "../../context/CustomerAuthContext";
 import CustomerAvatar from "../CustomerAvatar/CustomerAvatar";
 import LanguageSwitcher from "../LanguageSwitcher";
+import RotavoyLogo from "../Brand/RotavoyLogo";
 import siteConfig from "../../config/site";
 
 import "./Header.css";
 import "./AuthHeader.css";
 import "./LoginPreview.css";
-import "./Logo.css";
 
 function Header() {
   const location = useLocation();
@@ -107,7 +107,10 @@ function Header() {
             className="logo"
             aria-label={`${siteConfig.brandName} Travel home`}
           >
-            <img className="approvedLogo" src="/rotavoy-approved-logo.png" alt="" aria-hidden="true" />
+            <RotavoyLogo
+              className="headerRotavoyLogo"
+              alt={`${siteConfig.brandName} Travel`}
+            />
           </Link>
 
           <nav className="navLinks" aria-label="Travel navigation">
