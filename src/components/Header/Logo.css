@@ -1,6 +1,8 @@
 .logo {
-  gap: 7px;
+  gap: 8px;
   isolation: isolate;
+  display: inline-flex;
+  align-items: center;
   transition: transform var(--transition-fast), filter var(--transition-fast);
 }
 
@@ -9,10 +11,11 @@
   filter: saturate(1.08);
 }
 
+/* Legacy classes kept for any older markup still using them. */
 .logoMark {
-  width: 53px;
-  height: 48px;
-  flex: 0 0 53px;
+  width: 56px;
+  height: 35px;
+  flex: 0 0 56px;
   display: grid;
   place-items: center;
   border: 0;
@@ -29,27 +32,15 @@
 }
 
 .logoWordmark {
-  width: 157px;
+  width: 150px;
   height: auto;
   display: block;
 }
 
-@media (max-width: 620px) {
-  .logoMark {
-    width: 43px;
-    height: 40px;
-    flex-basis: 43px;
-  }
-
-  .logoWordmark {
-    width: 125px;
-  }
-}
-
 /*
- * The approved logo source is a vertical lockup. The site header, hero and
- * footer need a horizontal lockup, so the two pieces are cropped from the
- * same approved PNG and placed side-by-side without distorting the artwork.
+ * Do not crop the old vertical approved-logo asset. The repository already
+ * contains the real mark and wordmark as separate assets, so the horizontal
+ * lockup is composed from those two files without cutting either image.
  */
 .logo .approvedLogo,
 .footerLogo .approvedLogo,
@@ -63,7 +54,6 @@
   white-space: nowrap;
 }
 
-.logo,
 .footerLogo,
 .travelBrandBlock > div {
   display: inline-flex;
@@ -79,79 +69,113 @@
   content: "";
   display: block;
   flex: 0 0 auto;
-  background-image: url("/rotavoy-approved-logo.png");
   background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
 }
 
-/* R travel mark: crop only the upper symbol from the vertical source. */
+/* Full R travel mark. */
+.logo::before,
+.footerLogo::before,
+.travelBrandBlock > div::before {
+  background-image: url("/rotavoy-mark-new.png");
+}
+
+/* Full Rotavoy wordmark. */
+.logo::after,
+.footerLogo::after,
+.travelBrandBlock > div::after {
+  background-image: url("/rotavoy-wordmark.png");
+}
+
+/* Header: R on the left, Rotavoy on the right. */
 .logo::before {
-  width: 62px;
-  height: 58px;
-  background-size: 72px auto;
-  background-position: center top;
+  width: 56px;
+  height: 35px;
 }
 
-/* Rotavoy lettering: crop only the lower wordmark from the same source. */
 .logo::after {
-  width: 143px;
-  height: 35px;
-  margin-left: 4px;
-  background-size: 150px auto;
-  background-position: center bottom;
+  width: 150px;
+  height: 24px;
+}
+
+/* Footer lockup. */
+.footerLogo {
+  gap: 8px;
 }
 
 .footerLogo::before {
-  width: 58px;
-  height: 54px;
-  background-size: 68px auto;
-  background-position: center top;
+  width: 62px;
+  height: 39px;
 }
 
 .footerLogo::after {
-  width: 132px;
-  height: 33px;
-  margin-left: 4px;
-  background-size: 139px auto;
-  background-position: center bottom;
+  width: 150px;
+  height: 24px;
+}
+
+/* Travel hero lockup. The agency label stays after the complete logo. */
+.travelBrandBlock > div {
+  gap: 8px;
 }
 
 .travelBrandBlock > div::before {
-  width: 66px;
-  height: 62px;
-  background-size: 77px auto;
-  background-position: center top;
+  width: 68px;
+  height: 42px;
+  order: 0;
 }
 
 .travelBrandBlock > div::after {
-  width: 154px;
-  height: 38px;
-  margin-left: 5px;
-  background-size: 162px auto;
-  background-position: center bottom;
+  width: 170px;
+  height: 26px;
+  order: 1;
+}
+
+.travelBrandBlock > div > small {
+  order: 2;
+  margin-left: 4px;
 }
 
 @media (max-width: 620px) {
+  .logo {
+    gap: 6px;
+  }
+
+  .logoMark {
+    width: 46px;
+    height: 29px;
+    flex-basis: 46px;
+  }
+
+  .logoWordmark {
+    width: 118px;
+  }
+
   .logo::before {
-    width: 52px;
-    height: 49px;
-    background-size: 61px auto;
+    width: 46px;
+    height: 29px;
   }
 
   .logo::after {
-    width: 119px;
-    height: 29px;
-    background-size: 125px auto;
+    width: 118px;
+    height: 19px;
+  }
+
+  .travelBrandBlock > div {
+    gap: 6px;
   }
 
   .travelBrandBlock > div::before {
-    width: 58px;
-    height: 54px;
-    background-size: 68px auto;
+    width: 56px;
+    height: 35px;
   }
 
   .travelBrandBlock > div::after {
-    width: 136px;
-    height: 33px;
-    background-size: 143px auto;
+    width: 138px;
+    height: 21px;
+  }
+
+  .travelBrandBlock > div > small {
+    margin-left: 2px;
   }
 }
