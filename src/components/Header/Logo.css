@@ -1,8 +1,7 @@
 .logo {
-  gap: 8px;
-  isolation: isolate;
   display: inline-flex;
   align-items: center;
+  isolation: isolate;
   transition: transform var(--transition-fast), filter var(--transition-fast);
 }
 
@@ -11,171 +10,50 @@
   filter: saturate(1.08);
 }
 
-/* Legacy classes kept for any older markup still using them. */
-.logoMark {
-  width: 56px;
-  height: 35px;
-  flex: 0 0 56px;
-  display: grid;
-  place-items: center;
-  border: 0;
-  border-radius: 0;
-  background: none;
-  box-shadow: none;
-}
-
-.logoMark img {
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: contain;
-}
-
-.logoWordmark {
-  width: 150px;
-  height: auto;
-  display: block;
-}
-
-/*
- * Do not crop the old vertical approved-logo asset. The repository already
- * contains the real mark and wordmark as separate assets, so the horizontal
- * lockup is composed from those two files without cutting either image.
- */
+/* Final Rotavoy lockup: one horizontal image, no cropping or pseudo-elements. */
 .logo .approvedLogo,
 .footerLogo .approvedLogo,
 .travelBrandBlock .approvedLogo {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  clip-path: inset(50%);
-  white-space: nowrap;
+  display: block;
+  height: auto;
+  object-fit: contain;
 }
 
-.footerLogo,
-.travelBrandBlock > div {
+.logo .approvedLogo {
+  width: 220px;
+  max-width: min(32vw, 220px);
+}
+
+.footerLogo {
   display: inline-flex;
   align-items: center;
 }
 
-.logo::before,
-.footerLogo::before,
-.travelBrandBlock > div::before,
-.logo::after,
-.footerLogo::after,
-.travelBrandBlock > div::after {
-  content: "";
-  display: block;
-  flex: 0 0 auto;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
+.footerLogo .approvedLogo {
+  width: 220px;
+  max-width: 100%;
 }
 
-/* Full R travel mark. */
-.logo::before,
-.footerLogo::before,
-.travelBrandBlock > div::before {
-  background-image: url("/rotavoy-mark-new.png");
-}
-
-/* Full Rotavoy wordmark. */
-.logo::after,
-.footerLogo::after,
-.travelBrandBlock > div::after {
-  background-image: url("/rotavoy-wordmark.png");
-}
-
-/* Header: R on the left, Rotavoy on the right. */
-.logo::before {
-  width: 56px;
-  height: 35px;
-}
-
-.logo::after {
-  width: 150px;
-  height: 24px;
-}
-
-/* Footer lockup. */
-.footerLogo {
-  gap: 8px;
-}
-
-.footerLogo::before {
-  width: 62px;
-  height: 39px;
-}
-
-.footerLogo::after {
-  width: 150px;
-  height: 24px;
-}
-
-/* Travel hero lockup. The agency label stays after the complete logo. */
 .travelBrandBlock > div {
-  gap: 8px;
+  display: block;
 }
 
-.travelBrandBlock > div::before {
-  width: 68px;
-  height: 42px;
-  order: 0;
-}
-
-.travelBrandBlock > div::after {
-  width: 170px;
-  height: 26px;
-  order: 1;
-}
-
-.travelBrandBlock > div > small {
-  order: 2;
-  margin-left: 4px;
+.travelBrandBlock .approvedLogo {
+  width: 270px;
+  max-width: 100%;
 }
 
 @media (max-width: 620px) {
-  .logo {
-    gap: 6px;
+  .logo .approvedLogo {
+    width: 170px;
+    max-width: 44vw;
   }
 
-  .logoMark {
-    width: 46px;
-    height: 29px;
-    flex-basis: 46px;
+  .footerLogo .approvedLogo {
+    width: 195px;
   }
 
-  .logoWordmark {
-    width: 118px;
-  }
-
-  .logo::before {
-    width: 46px;
-    height: 29px;
-  }
-
-  .logo::after {
-    width: 118px;
-    height: 19px;
-  }
-
-  .travelBrandBlock > div {
-    gap: 6px;
-  }
-
-  .travelBrandBlock > div::before {
-    width: 56px;
-    height: 35px;
-  }
-
-  .travelBrandBlock > div::after {
-    width: 138px;
-    height: 21px;
-  }
-
-  .travelBrandBlock > div > small {
-    margin-left: 2px;
+  .travelBrandBlock .approvedLogo {
+    width: 220px;
   }
 }
