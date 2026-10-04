@@ -11,23 +11,20 @@
 }
 
 /*
- * Final Rotavoy lockup: one horizontal image, no cropping or pseudo-elements.
- * `content` intentionally carries a version query so browsers cannot keep
- * serving the older broken logo from cache after a git pull/hot reload.
+ * Rotavoy uses one real horizontal PNG. No CSS image replacement, cropping,
+ * pseudo-elements, fixed image height, or runtime canvas rendering.
  */
 .logo .approvedLogo,
 .footerLogo .approvedLogo,
 .travelBrandBlock .approvedLogo {
-  content: url("/rotavoy-approved-logo.png?v=20261004-final2");
   display: block;
-  width: auto;
-  max-width: none;
+  height: auto !important;
   object-fit: contain;
-  object-position: center;
 }
 
 .logo .approvedLogo {
-  height: 42px;
+  width: 190px !important;
+  max-width: 32vw;
 }
 
 .footerLogo {
@@ -36,7 +33,7 @@
 }
 
 .footerLogo .approvedLogo {
-  height: 50px;
+  width: 205px !important;
   max-width: 100%;
 }
 
@@ -46,21 +43,21 @@
 }
 
 .travelBrandBlock .approvedLogo {
-  height: 64px;
+  width: 250px !important;
   max-width: 100%;
 }
 
 @media (max-width: 620px) {
   .logo .approvedLogo {
-    height: 36px;
-    max-width: 42vw;
+    width: 155px !important;
+    max-width: 43vw;
   }
 
   .footerLogo .approvedLogo {
-    height: 44px;
+    width: 180px !important;
   }
 
   .travelBrandBlock .approvedLogo {
-    height: 54px;
+    width: 210px !important;
   }
 }
