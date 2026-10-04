@@ -1,0 +1,36 @@
+.rotavoyLogoCanvas {
+  display: block;
+  height: auto;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.headerRotavoyLogo {
+  width: 220px;
+  max-width: min(32vw, 220px);
+}
+
+.heroRotavoyLogo {
+  width: 290px;
+  max-width: 100%;
+}
+
+.footerRotavoyLogo {
+  width: 230px;
+  max-width: 100%;
+}
+
+@media (max-width: 620px) {
+  .headerRotavoyLogo {
+    width: 172px;
+    max-width: 44vw;
+  }
+
+  .heroRotavoyLogo {
+    width: 235px;
+  }
+
+  .footerRotavoyLogo {
+    width: 205px;
+  }
+}
