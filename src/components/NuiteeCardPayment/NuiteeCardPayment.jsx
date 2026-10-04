@@ -1,3 +1,4 @@
+import { isProductionDeployment } from "../../config/environment";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CreditCard, LoaderCircle, ShieldCheck } from "lucide-react";
 
@@ -61,6 +62,11 @@ function NuiteeCardPayment({ session, returnUrl }) {
   useEffect(() => {
     if (!session?.secretKey || !returnUrl || startedRef.current) return undefined;
 
+    if (isProductionDeployment && session.environment !== "live") {
+      setStatus("error");
+      setError("Kart ödemesi şu anda kullanılamıyor.");
+      return undefined;
+    }
     let cancelled = false;
     startedRef.current = true;
     setStatus("loading");
@@ -122,7 +128,7 @@ function NuiteeCardPayment({ session, returnUrl }) {
           <span>Rotavoy Secure Payment</span>
           <h2>Kartla güvenli ödeme</h2>
         </div>
-        {session?.environment === "sandbox" && (
+        {!isProductionDeployment && session?.environment === "sandbox" && (
           <strong className="nuiteeSandboxBadge">SANDBOX</strong>
         )}
       </div>
@@ -140,7 +146,7 @@ function NuiteeCardPayment({ session, returnUrl }) {
       {error && <p className="nuiteeCardError">{error}</p>}
       <div id={targetId} className="nuiteeCardTarget" />
 
-      {session?.environment === "sandbox" && (
+      {!isProductionDeployment && session?.environment === "sandbox" && (
         <div className="nuiteeSandboxHelp">
           <strong>Sandbox test kartları</strong>
           <span><code>4242 4242 4242 4242</code> — normal başarılı ödeme</span>

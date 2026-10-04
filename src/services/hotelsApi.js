@@ -104,12 +104,6 @@ export function prebookHotel(offerId) {
   });
 }
 
-export function bookSandboxHotel({ prebookId, clientReference, holder, guests }) {
-  return hotelRequest("/book-sandbox", {
-    method: "POST",
-    body: JSON.stringify({ prebookId, clientReference, holder, guests }),
-  });
-}
 
 export function createTravelCheckout({
   offerId,

@@ -1,3 +1,4 @@
+import { useBookingAvailability } from "../../services/useBookingAvailability";
 import { Link } from "react-router-dom";
 import { FaFacebookF, FaInstagram, FaXTwitter, FaYoutube } from "react-icons/fa6";
 import siteConfig from "../../config/site";
@@ -43,6 +44,7 @@ function PaymentCard({ method }) {
 }
 
 function Footer() {
+  const availability = useBookingAvailability();
   const currentYear = new Date().getFullYear();
 
   return (
@@ -87,7 +89,7 @@ function Footer() {
 
       <div className="container footerPayments">
         <div className="footerPaymentSections">
-          <section className="footerPaymentSection" aria-labelledby="footer-card-payments-title">
+          {availability?.card && (<section className="footerPaymentSection" aria-labelledby="footer-card-payments-title">
             <div className="footerPaymentsIntro">
               <strong id="footer-card-payments-title">Payment Methods</strong>
               <span>Kart ve dijital cüzdan</span>
@@ -97,9 +99,9 @@ function Footer() {
                 <PaymentCard key={method.id} method={method} />
               ))}
             </div>
-          </section>
+          </section>)}
 
-          <section className="footerPaymentSection footerCryptoPayments" aria-labelledby="footer-crypto-payments-title">
+          {availability?.crypto && (<section className="footerPaymentSection footerCryptoPayments" aria-labelledby="footer-crypto-payments-title">
             <div className="footerPaymentsIntro">
               <strong id="footer-crypto-payments-title">Crypto Payments</strong>
               <span>BNB Chain & Ethereum</span>
@@ -109,7 +111,7 @@ function Footer() {
                 <PaymentCard key={method.id} method={method} />
               ))}
             </div>
-          </section>
+          </section>)}
         </div>
 
         <p className="footerPaymentNote">

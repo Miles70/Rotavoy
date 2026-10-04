@@ -1,3 +1,5 @@
+import { assertProviderAvailable, assertBookingAvailable, getBookingAvailability } from "../config/bookingAvailability.js";
+
 const DATA_BASE_URL = "https://api.liteapi.travel/v3.0";
 const BOOKING_BASE_URL = "https://book.liteapi.travel/v3.0";
 
@@ -71,6 +73,7 @@ async function requestNuitee(
     throw createNuiteeError("Nuitee Connect API key is not configured.", 503);
   }
 
+  assertProviderAvailable();
   const url = new URL(`${baseUrl}${path}`);
 
   for (const [key, value] of Object.entries(query || {})) {
@@ -168,6 +171,7 @@ export function getNuiteeStatus() {
   const settings = getSettings();
 
   return {
+    ...getBookingAvailability(),
     configured: Boolean(settings.apiKey),
     environment: settings.environment,
     sandboxBookingEnabled:
@@ -218,6 +222,7 @@ export function prebookNuiteeRate(body) {
 }
 
 export function bookNuiteeTransaction(body) {
+  assertBookingAvailable("card");
   const transactionId = String(body?.transactionId || "").trim();
   if (!transactionId) {
     throw createNuiteeError("Nuitee transactionId is required to finalize card payment.", 400);

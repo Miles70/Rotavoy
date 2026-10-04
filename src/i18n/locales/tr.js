@@ -7,7 +7,7 @@ const tr = {
     "pill": "Rotavoy Travel",
     "heroTitle": "Tatil rotanı tek yerde",
     "heroAccent": "oluştur.",
-    "heroText": "Otelini bul, uçuşunu planla, aracını kirala ve deneyimlerini yolculuğuna ekle. Yakında kart veya kripto ile her şeyi tek platformdan yönet.",
+    "heroText": "Otelleri keşfet, oda seçeneklerini karşılaştır ve bir sonraki konaklamanı planla.",
     "trustSecure": "Güvenli rezervasyon altyapısı",
     "trustPayment": "Kart ve Web3 ödeme vizyonu",
     "servicesLabel": "Seyahat hizmetleri",

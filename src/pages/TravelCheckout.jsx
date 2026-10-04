@@ -12,6 +12,7 @@ import {
   WalletCards,
 } from "lucide-react";
 
+import { useBookingAvailability } from "../services/useBookingAvailability";
 import CryptoPayment from "../components/CryptoPayment/CryptoPayment";
 import NuiteeCardPayment from "../components/NuiteeCardPayment/NuiteeCardPayment";
 import {
@@ -43,6 +44,7 @@ function money(amount, currency = "EUR") {
 }
 
 function TravelCheckout() {
+  const availability = useBookingAvailability();
   const location = useLocation();
   const { state } = location;
   const returnParams = new URLSearchParams(location.search);
@@ -63,12 +65,6 @@ function TravelCheckout() {
       setReturnError(
         "Kart ödemesi tamamlanmadı. Yeni bir ödeme oturumu başlatman gerekiyor."
       );
-      return undefined;
-    }
-
-    if (redirectStatus === "processing") {
-      setReturnState("processing");
-      setReturnError("");
       return undefined;
     }
 
@@ -179,7 +175,7 @@ function TravelCheckout() {
 
   async function submit(event) {
     event.preventDefault();
-    if (!offer?.offerId || submitState === "loading") return;
+    if (!offer?.offerId || submitState === "loading" || !availability?.[paymentMethod]) return;
 
     setSubmitState("loading");
     setError("");
@@ -273,7 +269,11 @@ function TravelCheckout() {
             ? "Ödeme işleniyor"
             : "Rezervasyon tamamlanıyor"}
         </h1>
-        <p>Kart ödemeni doğrulayıp Rotavoy rezervasyonunu tamamlıyoruz.</p>
+        <p>Rezervasyon onayı kontrol ediliyor. Yeniden ödeme yapma; referansınla desteğe ulaşabilirsin.</p>
+        {returnState === "processing" && <>
+          <button className="travelCheckoutRetry" type="button" onClick={() => setReturnAttempt((value) => value + 1)}>Tekrar kontrol et</button>
+          <Link to="/support">Rezervasyon desteği</Link>
+        </>}
         <strong>Referans: {cardReturnReference}</strong>
       </main>
     );
@@ -442,6 +442,7 @@ function TravelCheckout() {
                         ? "travelPaymentOption travelPaymentOption--active"
                         : "travelPaymentOption"
                     }
+                    disabled={!availability?.card}
                     onClick={() => setPaymentMethod("card")}
                   >
                     <CreditCard size={21} />
@@ -458,6 +459,7 @@ function TravelCheckout() {
                         ? "travelPaymentOption travelPaymentOption--active"
                         : "travelPaymentOption"
                     }
+                    disabled={!availability?.crypto}
                     onClick={() => setPaymentMethod("crypto")}
                   >
                     <WalletCards size={21} />
@@ -555,6 +557,11 @@ function TravelCheckout() {
                   </div>
                 )}
 
+                {!availability?.[paymentMethod] && (
+                  <p role="status" className="travelCheckoutError">
+                    {availability ? "Bu ödeme yöntemi şu anda kullanılamıyor. Rezervasyon desteği için bizimle iletişime geç." : "Ödeme seçenekleri kontrol ediliyor…"}
+                  </p>
+                )}
                 {error && (
                   <p className="travelCheckoutError">
                     <AlertCircle size={17} /> {error}
@@ -563,7 +570,7 @@ function TravelCheckout() {
 
                 <button
                   className="travelCheckoutSubmit"
-                  disabled={submitState === "loading"}
+                  disabled={submitState === "loading" || !availability?.[paymentMethod]}
                   type="submit"
                 >
                   {submitState === "loading" ? (

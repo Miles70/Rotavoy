@@ -7,7 +7,7 @@ const de = {
     pill: "Rotavoy Reisen",
     heroTitle: "Plane deine Urlaubsroute",
     heroAccent: "an einem Ort.",
-    heroText: "Finde dein Hotel, plane deinen Flug, miete ein Auto und ergänze Erlebnisse. Bald verwaltest du alles auf einer Plattform mit Karte oder Kryptowährungen.",
+    heroText: "Entdecke Hotels, vergleiche Zimmerangebote und plane deinen nächsten Aufenthalt.",
     trustSecure: "Sichere Buchungsinfrastruktur",
     trustPayment: "Vision für Karten- und Web3-Zahlungen",
     servicesLabel: "Reiseservices",

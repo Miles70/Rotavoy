@@ -7,7 +7,7 @@ const zh = {
     "pill": "Rotavoy Travel",
     "heroTitle": "在一个平台",
     "heroAccent": "规划整段旅程。",
-    "heroText": "查找酒店、规划航班、租赁汽车并添加旅行体验。未来可在同一平台使用银行卡或加密货币完成全部安排。",
+    "heroText": "探索酒店，比较客房，规划下一次住宿。",
     "trustSecure": "安全预订基础设施",
     "trustPayment": "银行卡与 Web3 支付愿景",
     "servicesLabel": "旅行服务",

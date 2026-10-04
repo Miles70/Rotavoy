@@ -1,3 +1,4 @@
+import { assertBookingAvailable } from "../config/bookingAvailability.js";
 import crypto from "node:crypto";
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
@@ -118,6 +119,7 @@ cryptoCheckoutRouter.post(
   bookingLimiter,
   async (request, response, next) => {
     try {
+      assertBookingAvailable("crypto");
       const guests = Array.isArray(request.body?.guests)
         ? request.body.guests.map((guest, index) =>
             normalizePerson(guest, `guests[${index}]`, true)

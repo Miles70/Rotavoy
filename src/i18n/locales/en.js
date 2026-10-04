@@ -7,7 +7,7 @@ const en = {
     "pill": "Rotavoy Travel",
     "heroTitle": "Build your holiday route",
     "heroAccent": "in one place.",
-    "heroText": "Find your hotel, plan your flight, rent a car and add experiences to your journey. Soon, manage everything on one platform with card or crypto payments.",
+    "heroText": "Discover hotels, compare room options and plan your next stay.",
     "trustSecure": "Secure booking infrastructure",
     "trustPayment": "Card and Web3 payment vision",
     "servicesLabel": "Travel services",

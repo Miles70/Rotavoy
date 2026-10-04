@@ -7,7 +7,7 @@ const pt = {
     pill: "Rotavoy Viagens",
     heroTitle: "Monte a rota das suas férias",
     heroAccent: "em um só lugar.",
-    heroText: "Encontre seu hotel, planeje seu voo, alugue um carro e adicione experiências à viagem. Em breve, gerencie tudo em uma única plataforma com cartão ou criptomoedas.",
+    heroText: "Descubra hotéis, compare quartos e planeje sua próxima estadia.",
     trustSecure: "Infraestrutura segura de reservas",
     trustPayment: "Visão de pagamentos com cartão e Web3",
     servicesLabel: "Serviços de viagem",

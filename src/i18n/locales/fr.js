@@ -7,7 +7,7 @@ const fr = {
     pill: "Rotavoy Voyages",
     heroTitle: "Créez votre itinéraire de vacances",
     heroAccent: "au même endroit.",
-    heroText: "Trouvez votre hôtel, planifiez votre vol, louez une voiture et ajoutez des expériences à votre voyage. Bientôt, gérez tout sur une seule plateforme avec une carte ou des cryptomonnaies.",
+    heroText: "Découvrez des hôtels, comparez les chambres et préparez votre prochain séjour.",
     trustSecure: "Infrastructure de réservation sécurisée",
     trustPayment: "Vision des paiements par carte et Web3",
     servicesLabel: "Services de voyage",

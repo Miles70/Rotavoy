@@ -1,3 +1,4 @@
+import { assertBookingAvailable } from "../config/bookingAvailability.js";
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import {
@@ -290,6 +291,7 @@ function travelReference() {
 }
 
 hotelsRouter.get("/status", (request, response) => {
+  response.set("Cache-Control", "no-store");
   response.json(getNuiteeStatus());
 });
 
@@ -478,6 +480,7 @@ hotelsRouter.post("/prebook", bookingLimiter, async (request, response, next) =>
 
 hotelsRouter.post("/checkout", bookingLimiter, async (request, response, next) => {
   try {
+    assertBookingAvailable("crypto");
     const guests = Array.isArray(request.body?.guests)
       ? request.body.guests.map((guest, index) =>
           normalizePerson(guest, `guests[${index}]`, true),
@@ -527,6 +530,7 @@ hotelsRouter.post("/:clientReference/verify-payment", bookingLimiter, async (req
     const clientReference = requiredText(request.params.clientReference, "clientReference", 100);
     const booking = await TravelBooking.findOne({ clientReference });
     if (!booking) return response.status(404).json({ message: "Travel booking not found." });
+    assertBookingAvailable("crypto");
     const paidBooking = await verifyTravelCryptoPayment({ booking, transactionHash: request.body?.transactionHash, payerAddress: request.body?.payerAddress });
     if (paidBooking.status === "confirmed") return response.json({ booking: travelBookingPayload(paidBooking) });
     try {

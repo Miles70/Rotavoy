@@ -7,7 +7,7 @@ const es = {
     pill: "Rotavoy Viajes",
     heroTitle: "Crea la ruta de tus vacaciones",
     heroAccent: "en un solo lugar.",
-    heroText: "Encuentra tu hotel, planifica tu vuelo, alquila un coche y añade experiencias a tu viaje. Muy pronto podrás gestionarlo todo en una sola plataforma con tarjeta o criptomonedas.",
+    heroText: "Descubre hoteles, compara habitaciones y planifica tu próxima estancia.",
     trustSecure: "Infraestructura de reservas segura",
     trustPayment: "Visión de pagos con tarjeta y Web3",
     servicesLabel: "Servicios de viaje",

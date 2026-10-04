@@ -1,3 +1,5 @@
+import { assertBookingAvailable } from "../config/bookingAvailability.js";
+import { assertConfirmedBooking } from "../services/bookingConfirmation.js";
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import crypto from "node:crypto";
@@ -116,7 +118,7 @@ function sanitizeProviderResponse(value) {
 }
 
 function travelReference() {
-  return `TRV-CARD-${new Date().toISOString().slice(0, 10).replaceAll("-", "")}-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
+  return `TRV-CARD-${new Date().toISOString().slice(0, 10).replaceAll("-", "")}-${crypto.randomBytes(16).toString("hex").toUpperCase()}`;
 }
 
 function publicBooking(booking) {
@@ -141,6 +143,7 @@ function publicBooking(booking) {
 
 cardPaymentsRouter.post("/session", cardPaymentLimiter, async (request, response, next) => {
   try {
+    assertBookingAvailable("card");
     const status = getNuiteeStatus();
     if (!status.configured || status.environment === "unconfigured") {
       throw requestError("Nuitee Connect is not configured.", 503);
@@ -217,7 +220,7 @@ cardPaymentsRouter.post(
         "clientReference",
         120,
       );
-      const booking = await TravelBooking.findOne({ clientReference });
+      let booking = await TravelBooking.findOne({ clientReference });
 
       if (!booking) {
         return response.status(404).json({ message: "Card booking session not found." });
@@ -239,9 +242,19 @@ cardPaymentsRouter.post(
       );
       const bookingGuests = singleRoomGuests(booking.guests);
 
-      booking.status = "processing";
-      booking.failureReason = "";
-      await booking.save();
+      assertBookingAvailable("card");
+      // Claim once in MongoDB: concurrent callbacks must not submit /rates/book twice.
+      booking = await TravelBooking.findOneAndUpdate(
+        { _id: booking._id, status: "awaiting_payment" },
+        { $set: { status: "processing", failureReason: "" } },
+        { returnDocument: "after" },
+      );
+      if (!booking) {
+        response.set("Cache-Control", "no-store");
+        return response.status(202).json({ booking: {
+          clientReference, status: "processing", paymentStatus: "pending",
+        } });
+      }
 
       try {
         const result = await bookNuiteeTransaction({
@@ -252,6 +265,7 @@ cardPaymentsRouter.post(
           transactionId,
         });
 
+        assertConfirmedBooking(result);
         booking.guests = bookingGuests;
         booking.status = "confirmed";
         booking.paymentStatus = "paid";
@@ -267,7 +281,9 @@ cardPaymentsRouter.post(
         response.set("Cache-Control", "no-store");
         return response.json({ booking: publicBooking(booking) });
       } catch (error) {
-        booking.status = "awaiting_payment";
+        // A timeout can happen AFTER supplier confirmation. Never blindly rebook
+        // or tell the customer to pay again; reconciliation must resolve this.
+        booking.status = "processing";
         booking.paymentStatus = "pending";
         booking.failureReason = String(
           error.message || "Card payment was received but booking finalization failed.",

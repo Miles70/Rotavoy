@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { assertProviderAvailable } from "./config/bookingAvailability.js";
 import { createApp } from "./app.js";
 import { connectDatabase, disconnectDatabase } from "./config/database.js";
 
@@ -7,6 +8,7 @@ const app = createApp();
 let server;
 
 async function startServer() {
+  if (process.env.NODE_ENV === "production") assertProviderAvailable();
   await connectDatabase();
 
   server = app.listen(port, () => {

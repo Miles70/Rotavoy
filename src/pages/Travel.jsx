@@ -1,3 +1,4 @@
+import { isProductionDeployment } from "../config/environment";
 import { withHotelDistances } from "../services/hotelDistance.js";
 import { getCurrentCoordinates } from "../services/geolocation.js";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -838,7 +839,7 @@ function Travel() {
               role="tablist"
               aria-label={t("travelPage.servicesLabel")}
             >
-              {services.map(({ key, icon: Icon }) => (
+              {services.filter(({ key }) => !isProductionDeployment || key === "hotels" || key === "flights").map(({ key, icon: Icon }) => (
                 <button
                   type="button"
                   key={key}

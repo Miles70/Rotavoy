@@ -20,7 +20,7 @@ export const networks = [mainnet, bsc, polygon, arbitrum, base];
 
 const metadata = {
   name: "Rotavoy",
-  description: "Shop, travel and discover with Web3.",
+  description: "Discover hotels and plan your next stay with Rotavoy.",
   url: window.location.origin,
   icons: [],
 };
