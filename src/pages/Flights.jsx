@@ -2,7 +2,7 @@ import FlightCard from '../components/Flights/FlightCard';
 import FlightSelection from '../components/Flights/FlightSelection';
 import flightSelectionTranslations from '../i18n/flightSelectionTranslations';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Hotel, Plane, Search, LoaderCircle } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import flightTranslations from '../i18n/flightTranslations';
@@ -16,20 +16,25 @@ function localDate(days = 0) {
   const date = new Date(); date.setDate(date.getDate() + days);
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
-export default function Flights() {
+export default function Flights({ embedded = false }) {
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const formRef = useRef(null);
+  const [initial] = useState(() => embedded ? new URLSearchParams() : new URLSearchParams(params));
+  const airport = (key) => /^[A-Z]{3}$/.test(initial.get(key) || "") ? { iata: initial.get(key), name: initial.get(`${key}Name`) || initial.get(key) } : null;
   const { language } = useLanguage();
   const copy = { ...(flightTranslations[language] || flightTranslations.en), ...(flightSelectionTranslations[language] || flightSelectionTranslations.en) };
-  const [origin, setOrigin] = useState(null);
-  const [destination, setDestination] = useState(null);
-  const [roundTrip, setRoundTrip] = useState(true);
-  const [departure, setDeparture] = useState(() => localDate(7));
-  const [returnDate, setReturnDate] = useState(() => localDate(14));
-  const [adults, setAdults] = useState(1);
-  const [children, setChildren] = useState(0);
-  const [infants, setInfants] = useState(0);
-  const [cabinClass, setCabinClass] = useState('ECONOMY');
-  const [currency, setCurrency] = useState('USD');
-  const [country, setCountry] = useState('TR');
+  const [origin, setOrigin] = useState(() => airport("origin"));
+  const [destination, setDestination] = useState(() => airport("destination"));
+  const [roundTrip, setRoundTrip] = useState(() => initial.get("oneWay") !== "1");
+  const [departure, setDeparture] = useState(() => initial.get("departure") || localDate(7));
+  const [returnDate, setReturnDate] = useState(() => initial.get("returnDate") || localDate(14));
+  const [adults, setAdults] = useState(() => Math.max(1, Math.min(9, Number(initial.get("adults") || 1) || 1)));
+  const [children, setChildren] = useState(() => Math.max(0, Math.min(9, Number(initial.get("children") || 0) || 0)));
+  const [infants, setInfants] = useState(() => Math.max(0, Math.min(9, Number(initial.get("infants") || 0) || 0)));
+  const [cabinClass, setCabinClass] = useState(() => ['ECONOMY', 'PREMIUM_ECONOMY', 'BUSINESS', 'FIRST'].includes(initial.get('cabinClass')) ? initial.get('cabinClass') : 'ECONOMY');
+  const [currency, setCurrency] = useState(() => ['USD', 'EUR', 'TRY', 'GBP'].includes(initial.get('currency')) ? initial.get('currency') : 'USD');
+  const [country, setCountry] = useState(() => regionCodes.includes(initial.get('country')) ? initial.get('country') : 'TR');
   const [environment, setEnvironment] = useState(null);
   const [state, setState] = useState('idle');
   const [error, setError] = useState('');
@@ -45,16 +50,27 @@ export default function Flights() {
     return regionCodes.map((code) => ({ code, name: names.of(code) })).sort((a, b) => a.name.localeCompare(b.name, language));
   }, [language]);
   useEffect(() => {
+    if (embedded) return undefined;
     const controller = new AbortController();
     flightRequest('/status', { signal: controller.signal }).then((data) => { if (!controller.signal.aborted) setEnvironment(data.environment); }).catch(() => {});
     return () => { controller.abort(); searchController.current?.abort(); searchController.current = null; };
-  }, []);
+  }, [embedded]);
+  useEffect(() => {
+    if (embedded || initial.get("auto") !== "1") return undefined;
+    const timer = setTimeout(() => formRef.current?.requestSubmit(), 0);
+    return () => clearTimeout(timer);
+  }, [embedded, initial]);
   async function submit(event) {
     event.preventDefault();
     if (loading) return;
     setError(''); setResults([]); setVisible(20); setFocusedFlight(null); setChosenOfferId(null);
     if (!origin || !destination) { setError('selectAirport'); setState('error'); return; }
     if (origin.iata === destination.iata || departure < localDate() || (roundTrip && returnDate < departure) || infants > adults || adults + children + infants > 9) { setError('invalid'); setState('error'); return; }
+    if (embedded) {
+      const query = new URLSearchParams({ origin: origin.iata, originName: origin.name || origin.iata, destination: destination.iata, destinationName: destination.name || destination.iata, departure, oneWay: roundTrip ? '0' : '1', ...(roundTrip ? { returnDate } : {}), adults: String(adults), children: String(children), infants: String(infants), cabinClass, currency, country, auto: '1' });
+      navigate(`/flights?${query}`);
+      return;
+    }
     searchController.current?.abort();
     const controller = new AbortController(); searchController.current = controller;
     setState('loading');
@@ -69,11 +85,14 @@ export default function Flights() {
       setState('error'); setError(err.name === 'AbortError' || err.message === 'TIMEOUT' ? 'timeout' : err.message === 'INVALID_SEARCH' ? 'invalid' : err.message === 'RATE_LIMIT' ? 'rateLimit' : 'error');
     } finally { clearTimeout(timeout); }
   }
-  return <main className="flightsPage">
+  const Container = embedded ? "div" : "main";
+  return <Container className={embedded ? "flightsPage flightsPage--embedded" : "flightsPage"}>
     <section className="flightsHero">
-      <nav className="flightTabs" aria-label="Travel"><Link to="/travel"><Hotel size={18} />{copy.hotels}</Link><Link to="/flights" aria-current="page"><Plane size={18} />{copy.flights}</Link></nav>
-      <h1>{copy.title}</h1><p>{copy.intro}</p>
-      <form className="flightSearchForm" onSubmit={submit}>
+      {!embedded && <>
+      <nav className="flightTabs" aria-label="Travel"><Link to="/hotels"><Hotel size={18} />{copy.hotels}</Link><Link to="/flights" aria-current="page"><Plane size={18} />{copy.flights}</Link></nav>
+      <h1>{copy.title}</h1><p>{copy.intro}</p></>}
+      {embedded && <h2 className="embeddedFlightHeading">{copy.title}</h2>}
+      <form ref={formRef} className="flightSearchForm" onSubmit={submit}>
         <fieldset disabled={loading}>
           <div className="flightTripType"><label><input type="radio" name="trip" checked={!roundTrip} onChange={() => setRoundTrip(false)} />{copy.oneWay}</label><label><input type="radio" name="trip" checked={roundTrip} onChange={() => setRoundTrip(true)} />{copy.roundTrip}</label></div>
           <div className="flightFields">
@@ -95,12 +114,12 @@ export default function Flights() {
         {environment === 'sandbox' && <p className="flightSandbox">{copy.sandbox}</p>}
       </form>
     </section>
-    <section ref={resultsRef} className="flightResults" aria-live="polite" aria-busy={loading}>
+    {!embedded && <section ref={resultsRef} className="flightResults" aria-live="polite" aria-busy={loading}>
       {loading && <p className="flightStatus">{copy.searching}</p>}
       {state === 'done' && <><h2>{copy.results} · {results.length}</h2><p>{copy.localTimes}</p>{environment === 'sandbox' && <p className="flightSandbox">{copy.sandbox}</p>}{results.length === 0 && <p className="flightStatus">{copy.empty}</p>}</>}
       {results.slice(0, visible).map((result) => <FlightCard key={result.offer.offerId} result={result} copy={copy} language={language} onSelect={setFocusedFlight} selected={chosenOfferId === result.offer.offerId} />)}
       {visible < results.length && <button className="flightSearchButton" onClick={() => setVisible((count) => count + 20)}>{copy.more}</button>}
-    </section>
+    </section>}
     {focusedFlight && <FlightSelection key={focusedFlight.offer.offerId} result={focusedFlight} copy={copy} language={language} environment={environment} onVerified={setChosenOfferId} onClose={() => setFocusedFlight(null)} />}
-  </main>;
+  </Container>;
 }

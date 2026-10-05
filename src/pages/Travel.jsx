@@ -1,3 +1,5 @@
+import Flights from "./Flights";
+import CategoryPage from "./CategoryPage";
 import RotavoyLogo from "../components/Brand/RotavoyLogo";
 import { withHotelDistances } from "../services/hotelDistance.js";
 import { getCurrentCoordinates } from "../services/geolocation.js";
@@ -309,7 +311,7 @@ function ShowcaseHotelMedia({ hotel, to, ariaLabel, starLabel, language }) {
   );
 }
 
-function Travel() {
+function Travel({ hotelsOnly = false }) {
   const [homeSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const autoSearchStarted = useRef(false);
@@ -347,7 +349,7 @@ function Travel() {
   const [selectedHotel, setSelectedHotel] = useState(null);
   const [prebook, setPrebook] = useState(null);
   const { t, language } = useLanguage();
-  const activeServiceKey = `travelPage.services.${activeService}`;
+  const activeServiceKey = "travelPage.services.hotels";
 
   function customerHotelError(error, fallbackKey = "travelPage.runtime.noAvailability") {
     const message = String(error?.message || "");
@@ -673,6 +675,11 @@ function Travel() {
 
   function handleSearch(event) {
     event.preventDefault();
+    if (!hotelsOnly && !nearbyCoordinates) {
+      if (!cityName.trim() || !checkin || !checkout || checkout <= checkin) { runSearch(); return; }
+      navigate(`/hotels?${new URLSearchParams({ cityName: cityName.trim(), checkin, checkout, adults: String(adults), auto: "1" })}`);
+      return;
+    }
     runSearch();
   }
 
@@ -818,7 +825,7 @@ function Travel() {
             </span>
 
             <h1>
-              {t("travelPage.heroTitle")} <span>{t("travelPage.heroAccent")}</span>
+              {hotelsOnly ? t("travelPage.services.hotels.title") : <>{t("travelPage.heroTitle")} <span>{t("travelPage.heroAccent")}</span></>}
             </h1>
 
             <p>{t("travelPage.heroText")}</p>
@@ -834,7 +841,7 @@ function Travel() {
           </div>
 
           <div className="travelSearchShell">
-            <div
+            {!hotelsOnly && <div
               className="travelServiceTabs"
               role="tablist"
               aria-label={t("travelPage.servicesLabel")}
@@ -844,10 +851,19 @@ function Travel() {
                   type="button"
                   key={key}
                   role="tab"
+                  id={`service-tab-${key}`}
+                  aria-controls={`service-panel-${key}`}
+                  tabIndex={activeService === key ? 0 : -1}
+                  onKeyDown={(event) => {
+                    const index = services.findIndex((service) => service.key === key);
+                    const next = event.key === "ArrowRight" ? (index + 1) % services.length : event.key === "ArrowLeft" ? (index + services.length - 1) % services.length : event.key === "Home" ? 0 : event.key === "End" ? services.length - 1 : null;
+                    if (next === null) return;
+                    event.preventDefault(); setActiveService(services[next].key);
+                    document.getElementById(`service-tab-${services[next].key}`)?.focus();
+                  }}
                   aria-selected={activeService === key}
                   className={activeService === key ? "active" : ""}
                   onClick={() => {
-                    if (key === "flights") { navigate("/flights"); return; }
                     setActiveService(key);
                     setSearchError("");
                   }}
@@ -856,8 +872,9 @@ function Travel() {
                   <span>{t(`travelPage.services.${key}.label`)}</span>
                 </button>
               ))}
-            </div>
+            </div>}
 
+            <div role={hotelsOnly ? undefined : "tabpanel"} id="service-panel-hotels" aria-labelledby={hotelsOnly ? undefined : "service-tab-hotels"} hidden={activeService !== "hotels"}>
             <form className="travelSearchCard" onSubmit={handleSearch}>
               <div className="travelSearchHeading">
                 <span>{t(`${activeServiceKey}.eyebrow`)}</span>
@@ -974,6 +991,11 @@ function Travel() {
                 {t("travelPage.runtime.liveNote")}
               </p>
             </form>
+            </div>
+            {!hotelsOnly && <>
+              <div role="tabpanel" id="service-panel-flights" aria-labelledby="service-tab-flights" hidden={activeService !== "flights"}><Flights embedded /></div>
+              { ["cars", "activities"].map((category) => <div key={category} role="tabpanel" id={`service-panel-${category}`} aria-labelledby={`service-tab-${category}`} hidden={activeService !== category}><CategoryPage category={category} embedded /></div>) }
+            </>}
           </div>
         </div>
       </section>

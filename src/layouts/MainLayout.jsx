@@ -5,6 +5,9 @@ import Footer from "../components/Footer/Footer";
 import Seo from "../components/Seo/Seo";
 
 const STATIC_SEO = {
+  "/hotels": { title: "Hotels | Rotavoy", description: "Find hotels and compare live room offers with Rotavoy." },
+  "/cars": { title: "Car Rental | Rotavoy", description: "Plan your car rental with Rotavoy." },
+  "/activities": { title: "Activities | Rotavoy", description: "Plan tours and activities with Rotavoy." },
   "/": {
     title: "Rotavoy Travel | Hotels & Global Stays",
     description: "Search hotels, compare live room offers and book global stays with Rotavoy Travel.",

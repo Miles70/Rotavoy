@@ -1,3 +1,4 @@
+import TravelCategoryMenu from "./TravelCategoryMenu";
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import {
@@ -102,6 +103,7 @@ function Header() {
     <header className="headerWrapper">
       <div className="mainHeader">
         <div className="siteHeader">
+          <div className="headerBrandNav">
           <Link
             to="/"
             className="logo"
@@ -112,6 +114,8 @@ function Header() {
               alt={`${siteConfig.brandName} Travel`}
             />
           </Link>
+          <TravelCategoryMenu key={location.pathname} />
+          </div>
 
           <nav className="navLinks" aria-label="Travel navigation">
             <NavLink
