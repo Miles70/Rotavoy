@@ -60,7 +60,13 @@ function addDays(days) {
   return date.toISOString().slice(0, 10);
 }
 
-function money() { return "Fiyat için talep gönder"; }
+function money(amount, currency = "EUR") {
+  return new Intl.NumberFormat("tr-TR", {
+    style: "currency",
+    currency,
+    maximumFractionDigits: 2,
+  }).format(Number(amount || 0));
+}
 
 function stayNights(checkin, checkout) {
   if (!checkin || !checkout) return 0;
@@ -94,7 +100,7 @@ function stayMetaText({ adults, checkin, checkout, t }) {
 
 function stayPriceLabel({ adults, checkin, checkout, t }) {
   const stay = stayMetaText({ adults, checkin, checkout, t });
-  return `${stay.nights} · ${stay.guests} · ${t("travelPage.runtime.viewDetails")}`;
+  return `${stay.nights} · ${stay.guests} · ${t("travelPage.runtime.totalSalePrice")}`;
 }
 
 function findVideoUrl(value) {
@@ -740,7 +746,6 @@ function Travel({ hotelsOnly = false }) {
   }
 
   async function handlePrebook(hotel) {
-    if (hotel) { navigate("/request", {state:{hotel,checkin,checkout,adults}}); return; }
     trackTravel('hotel_select', { hotelId: hotel.hotelId, hotelName: hotel.name, checkin, checkout, adults });
     setSelectedHotel(hotel);
     setPrebook(null);
@@ -988,7 +993,7 @@ function Travel({ hotelsOnly = false }) {
               )}
 
               <p className="travelPrototypeNote">
-                {language === "tr" ? "Fiyat ve müsaitlik talebin üzerine ayrıca kontrol edilir." : "Price and availability are checked separately for your request."}
+                {t("travelPage.runtime.liveNote")}
               </p>
             </form>
             </div>
@@ -1005,7 +1010,7 @@ function Travel({ hotelsOnly = false }) {
           <div className="travelContainer">
             <div className="travelResultsHeading">
               <div>
-                <span>{language === "tr" ? "Otel keşfi" : "Hotel discovery"}</span>
+                <span>{t("travelPage.runtime.liveAvailability")}</span>
                 <h2>{completedSearch.current?.latitude !== undefined ? `${t("travelPage.nearby.title")} · ${completedSearch.current.radius / 1000} km` : `${cityName} ${t("travelPage.runtime.hotels")}`}</h2>
               </div>
               <p>{results.length} {t("travelPage.runtime.resultsSuffix")}</p>
@@ -1053,7 +1058,7 @@ function Travel({ hotelsOnly = false }) {
                     )}
                     <div className="travelRoomLine">
                       <BedDouble size={17} />
-                      <span>{language === "tr" ? "Konaklama seçeneklerini birlikte planlayalım" : "Plan your stay with us"}</span>
+                      <span>{hotel.offer?.rates?.[0]?.name || t("travelPage.runtime.roomFallback")}</span>
                     </div>
                     <div className="travelStayMeta">
                       <span>
@@ -1097,7 +1102,7 @@ function Travel({ hotelsOnly = false }) {
                         </>
                       ) : (
                         <>
-                          {language === "tr" ? "Rezervasyon talebi gönder" : "Request a reservation"} <ArrowRight size={17} />
+                          {t("travelPage.runtime.book")} <ArrowRight size={17} />
                         </>
                       )}
                     </button>
@@ -1190,7 +1195,7 @@ function Travel({ hotelsOnly = false }) {
         <div className="travelContainer">
           <div className="travelSectionHeading">
             <div>
-              <span>{language === "tr" ? "Otel keşfi" : "Hotel discovery"} · 5★</span>
+              <span>{t("travelPage.runtime.liveAvailability")} · 5★</span>
               <h2>5★ {t("travelPage.runtime.hotels")}</h2>
             </div>
             <p>

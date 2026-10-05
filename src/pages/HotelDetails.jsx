@@ -1,4 +1,3 @@
-const onlineBookingEnabled = false;
 import HotelFavorite from "../components/HotelFavorite";
 import { trackTravel } from '../services/analytics';
 import { useEffect, useRef, useMemo, useState } from "react";
@@ -71,7 +70,13 @@ const facilityKeys = new Map([
   ["languages spoken", "languages"],
 ]);
 
-function money() { return "Fiyat için talep gönder"; }
+function money(amount, currency = "EUR") {
+  return new Intl.NumberFormat("tr-TR", {
+    style: "currency",
+    currency,
+    maximumFractionDigits: 2,
+  }).format(Number(amount || 0));
+}
 
 function unwrapHotel(payload) {
   return payload?.data?.hotel || payload?.data || payload?.hotel || payload || {};
@@ -351,7 +356,7 @@ function HotelDetails() {
 
       const detailsPromise = getHotelDetails(hotelId);
       const ratesPromise =
-        onlineBookingEnabled && checkin && checkout
+        checkin && checkout
           ? searchHotelRates({
               hotelIds: [hotelId],
               checkin,
@@ -520,7 +525,6 @@ function HotelDetails() {
     );
 
   async function handlePrebook(offer) {
-    if (offer) { navigate("/request", {state:{hotel,checkin,checkout,adults}}); return; }
     setBookingState("loading");
     setBookingError("");
     setPrebook(null);
@@ -705,7 +709,7 @@ function HotelDetails() {
 
           <aside className="hotelDetailBooking">
             <div className="hotelDetailCard">
-              <span className="hotelDetailEyebrow">{language === "tr" ? "Seyahat planın" : "Your travel plan"}</span>
+              <span className="hotelDetailEyebrow">{t("hotelDetail.availableRooms")}</span>
               <h2>{t("hotelDetail.chooseStay")}</h2>
               {nights > 0 && (
                 <p className="hotelMuted">
@@ -716,9 +720,7 @@ function HotelDetails() {
                 </p>
               )}
 
-              <Link className="hotelCheckoutLink" to="/request" state={{hotel,checkin,checkout,adults}}>Rezervasyon talebi gönder</Link>
-              <p className="hotelMuted">Fiyat ve müsaitlik talebin üzerine kontrol edilir. Şimdi ödeme alınmaz.</p>
-              {onlineBookingEnabled && (!checkin || !checkout ? (
+              {!checkin || !checkout ? (
                 <p className="hotelMuted">
                   {t("hotelDetail.selectDates")}
                 </p>
@@ -789,7 +791,7 @@ function HotelDetails() {
                 <p className="hotelMuted">
                   {t("hotelDetail.noRooms")}
                 </p>
-              ))}
+              )}
 
               {bookingState === "error" && (
                 <p className="hotelBookingMessage hotelBookingMessage--error">
@@ -827,7 +829,7 @@ function HotelDetails() {
               )}
 
               <p className="hotelSecureNote">
-                <ShieldCheck size={16} /> {language === "tr" ? "Rezervasyon onayı teklif kabulünden sonra ayrıca paylaşılır." : "Booking confirmation is provided separately after accepting a quote."}
+                <ShieldCheck size={16} /> {t("hotelDetail.priceRecheck")}
               </p>
             </div>
           </aside>

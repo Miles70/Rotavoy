@@ -16,7 +16,7 @@ function safeJson(data) {
 
 export default function Seo({
   title = "Rotavoy Travel | Hotels & Global Stays",
-  description = "Discover hotels and destinations and request a personalised travel quote with Rotavoy.",
+  description = "Search hotels, compare live room offers and book global stays with Rotavoy Travel.",
   path = "/",
   image = "",
   type = "website",

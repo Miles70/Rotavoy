@@ -1,4 +1,3 @@
-import { inquiriesRouter } from './routes/inquiries.js';
 import { flightBookingsRouter } from "./routes/flightBookings.js";
 import { reservationsRouter } from "./routes/reservations.js";
 import { accountRouter } from "./routes/account.js";
@@ -22,7 +21,7 @@ function getAllowedOrigins() {
     .filter(Boolean);
 }
 
-export function createApp({ bookingEnabled = false } = {}) {
+export function createApp() {
   const app = express();
   const allowedOrigins = getAllowedOrigins();
 
@@ -65,11 +64,6 @@ export function createApp({ bookingEnabled = false } = {}) {
     });
   });
 
-  app.use('/api/inquiries', inquiriesRouter);
-  app.use('/api', (req, res, next) => {
-    if (!bookingEnabled && req.method === 'POST' && /^\/(hotels\/(card(?:\/|$)|prebook$|checkout$|crypto|[^/]+\/verify-payment)|flights\/(checkout$|[^/]+\/finalize$))/.test(req.path)) return res.status(409).json({message: 'Online ödeme kapalı. Rezervasyon talebi gönderebilirsin.'});
-    next();
-  });
   app.use("/api/visits", analyticsRouter);
   app.use("/api/analytics", analyticsRouter);
   app.use("/api/admin-auth", adminAuthRouter);

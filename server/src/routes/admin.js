@@ -1,4 +1,3 @@
-import { TravelInquiry, inquiryStatuses } from '../models/TravelInquiry.js';
 import { reservationSummary } from '../services/bookingState.js';
 import { TravelAnalytics } from '../models/TravelAnalytics.js';
 import { analyticsTypes } from './analytics.js';
@@ -34,20 +33,7 @@ export function adminBooking(booking) {
     payment: { method: payment.method, networkKey: payment.networkKey, chainId: payment.chainId, token: payment.token, transactionHash: payment.transactionHash, expectedAmount: payment.expectedAmount },
     providerReference: text(booking.providerBooking?.data?.bookingId || booking.providerBooking?.bookingId || '', 120) };
 }
-adminRouter.get('/inquiries', async (req,res) => {
- const {page,limit} = pagination(req.query); const filter = {};
- if (inquiryStatuses.includes(req.query.status)) filter.status = req.query.status;
- if (req.query.q) { const regex = new RegExp(literal(req.query.q),'i'); filter.$or = ['reference','name','email','destination'].map(key => ({[key]:regex})); }
- const [items,total] = await Promise.all([TravelInquiry.find(filter).sort({createdAt:-1}).skip((page-1)*limit).limit(limit).lean(),TravelInquiry.countDocuments(filter)]);
- res.json({items,total,page,limit});
-});
-adminRouter.put('/inquiries/:reference', async (req,res) => {
- if (!inquiryStatuses.includes(req.body.status)) throw bad('Geçersiz talep durumu.');
- const item = await TravelInquiry.findOneAndUpdate({reference:text(req.params.reference,100)}, {status:req.body.status}, {new:true,runValidators:true}).lean();
- if (!item) return res.status(404).json({message:'Talep bulunamadı.'});
- await audit(req,'inquiry.status',item.reference); res.json({item});
-});
-adminRouter.get('/session' , (request, response) => response.json({ admin: { displayName: request.customer.displayName, identity: actor(request) } }));
+adminRouter.get('/session', (request, response) => response.json({ admin: { displayName: request.customer.displayName, identity: actor(request) } }));
 adminRouter.get('/overview', async (request, response) => {
   const [bookingStatus, totals, customers, tickets, content, hotels] = await Promise.all([
     TravelBooking.aggregate([{ $group: { _id: { status: '$status', paymentStatus: '$paymentStatus' }, count: { $sum: 1 } } }]),
@@ -97,9 +83,8 @@ adminRouter.get('/providers', async (request, response) => response.json({
   cardPublishableKeyConfigured: Boolean(process.env.NUITEE_STRIPE_PUBLISHABLE_KEY),
   cryptoWalletConfigured: Boolean(process.env.ROTAVOY_PAYMENT_WALLET),
   firebaseConfigured: Boolean(process.env.FIREBASE_PROJECT_ID),
-  liveBookingEnabled: false,
-  launchMode: "inquiries",
-  services: [{ key: 'hotels', search: true, booking: false }, { key: 'flights', search: true, booking: false }, { key: 'cars', search: false, booking: false }, { key: 'activities', search: false, booking: false }],
+  liveBookingEnabled: getNuiteeStatus().liveBookingEnabled,
+  services: [{ key: 'hotels', search: true, booking: true }, { key: 'flights', search: true, booking: true }, { key: 'cars', search: false, booking: false }, { key: 'activities', search: false, booking: false }],
 }));
 adminRouter.get('/settings', async (request, response) => { const settings = await TravelAdminSettings.findOne({ key: 'travel' }).lean() || { supportEmail: '', supportPhone: '', announcement: '' }; response.json({ settings: { ...settings, marginPercent: resolveTravelMargin(settings) } }); });
 adminRouter.put('/settings', async (request, response) => {
