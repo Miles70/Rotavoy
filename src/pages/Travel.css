@@ -1331,3 +1331,75 @@
 .travelHotelDistance > svg { flex-shrink: 0; color: #0B63F6; }
 .travelHotelDistance strong { color: #0B63F6; }
 .travelHotelDistance small { display: block; margin-top: 2px; font-size: .7rem; color: #526581; }
+
+/* Match the header container and stretch the two hero panels together. */
+.travelHeroContent {
+  align-items: stretch;
+  gap: 32px;
+}
+.travelHeroContent > .travelIntro,
+.travelHeroContent > .travelSearchShell {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+}
+.travelHeroContent > .travelIntro {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.travelHeroContent > .travelIntro .travelPill {
+  align-self: flex-start;
+}
+.travelHeroContent {
+  width: min(var(--container-width), calc(100% - 48px));
+}
+@media (max-width: 620px) {
+  .travelHeroContent { width: calc(100% - 24px); gap: 24px; }
+}
+
+/* Every homepage category shares the existing sea-video glass shell. */
+.travelSearchShell .categoryPage--embedded,
+.travelSearchShell .categoryPage--embedded .categoryForm,
+.travelSearchShell .flightsPage--embedded,
+.travelSearchShell .flightsPage--embedded .flightsHero,
+.travelSearchShell .flightsPage--embedded .flightSearchForm {
+  background: transparent;
+  color: #fff;
+  box-shadow: none;
+}
+.travelSearchShell .categoryPage--embedded,
+.travelSearchShell .flightsPage--embedded .flightsHero {
+  padding: 30px;
+}
+.travelSearchShell .categoryHeading,
+.travelSearchShell .embeddedFlightHeading,
+.travelSearchShell .flightFields label,
+.travelSearchShell .flightAirport > label,
+.travelSearchShell .flightTripType label,
+.travelSearchShell .categoryForm label {
+  color: #fff;
+  text-shadow: 0 1px 8px rgba(7, 27, 58, .8);
+}
+.travelSearchShell .categoryHeading > svg { color: #8ceaf3; }
+.travelSearchShell .categoryForm input,
+.travelSearchShell .flightFields input,
+.travelSearchShell .flightFields select {
+  color-scheme: dark;
+  background: rgba(7, 27, 58, .34);
+  border-color: rgba(255, 255, 255, .3);
+  color: #fff;
+}
+.travelSearchShell .categoryForm input::placeholder,
+.travelSearchShell .flightFields input::placeholder { color: #c5d5e8; opacity: 1; }
+.travelSearchShell .flightFields select option { background: #071b3a; color: #fff; }
+.travelSearchShell .flightTripType input { width: auto; accent-color: #19c6d8; }
+.travelSearchShell .flightNotice,
+.travelSearchShell .categoryNotice { color: #edf5ff; text-shadow: 0 1px 8px rgba(7, 27, 58, .8); }
+.travelSearchShell .flightSearchButton,
+.travelSearchShell .categoryForm button { background: var(--sunset-gradient); color: #fff; }
+.travelSearchShell .flightError { background: rgba(7, 27, 58, .75); color: #ffd8d2; }
+@media (max-width: 640px) {
+  .travelSearchShell .categoryPage--embedded,
+  .travelSearchShell .flightsPage--embedded .flightsHero { padding: 24px 20px; }
+}
