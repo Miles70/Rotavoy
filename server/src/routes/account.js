@@ -1,3 +1,4 @@
+import { reservationSummary } from '../services/bookingState.js';
 import { Router } from 'express';
 import mongoose from 'mongoose';
 import { requireCustomer } from '../middleware/customerAuth.js';
@@ -11,7 +12,7 @@ const clean = (v, n = 120) => String(v || '').trim().slice(0, n);
 const bad = message => Object.assign(new Error(message), { statusCode: 400 });
 const owner = req => ({ customerId: req.customer._id });
 export function publicBooking(b) {
-  return { clientReference: b.clientReference, status: b.status, paymentStatus: b.paymentStatus, total: b.total, currency: b.currency, stay: b.stay, createdAt: b.createdAt, holder: b.holder, guests: b.guests };
+  return { kind: b.kind || "hotel", flight: b.flight || {}, reservation: reservationSummary(b.providerBooking, b.kind), clientReference: b.clientReference, status: b.status, paymentStatus: b.paymentStatus, total: b.total, currency: b.currency, stay: b.stay, createdAt: b.createdAt, holder: b.holder, guests: b.guests };
 }
 accountRouter.get('/', async (req, res) => {
   const [account, bookings, tickets] = await Promise.all([

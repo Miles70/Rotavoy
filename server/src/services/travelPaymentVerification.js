@@ -17,6 +17,7 @@ async function rpc(url, method, params) {
   const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    signal: AbortSignal.timeout(15000),
     body: JSON.stringify({
       jsonrpc: "2.0",
       id: Date.now(),
@@ -120,18 +121,8 @@ export async function verifyTravelCryptoPayment({
     throw httpError("This travel booking is already paid.", 409);
   }
 
-  if (
-    booking.status !== "awaiting_payment" ||
-    new Date(booking.paymentExpiresAt).getTime() <= Date.now()
-  ) {
-    if (booking.status === "awaiting_payment") {
-      booking.status = "expired";
-      await booking.save();
-    }
-    throw httpError(
-      "The payment window expired. Start the reservation again.",
-      409
-    );
+  if (!['awaiting_payment', 'expired'].includes(booking.status) || !booking.paymentExpiresAt) {
+    throw httpError("This reservation is not awaiting a crypto payment.", 409);
   }
 
   const duplicate = await TravelBooking.findOne({
@@ -172,10 +163,13 @@ export async function verifyTravelCryptoPayment({
     );
   }
 
-  const [transaction, receipt] = await Promise.all([
+  const [transaction, receipt, chainId] = await Promise.all([
     rpc(config.rpcUrl, "eth_getTransactionByHash", [hash]),
     rpc(config.rpcUrl, "eth_getTransactionReceipt", [hash]),
+    rpc(config.rpcUrl, "eth_chainId", []),
   ]);
+
+  if (hexNumber(chainId) !== config.chainId) throw httpError("Blockchain RPC network does not match the payment network.", 503);
 
   if (!transaction || !receipt) {
     throw httpError(
@@ -225,7 +219,11 @@ export async function verifyTravelCryptoPayment({
       );
     }
 
-    receivedUnits = transfer.amountUnits;
+    const transferTopic = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
+    const recipientTopic = `0x${config.recipientAddress.slice(2).padStart(64, "0")}`;
+    const matching = (receipt.logs || []).filter(log => normalizeEvmAddress(log.address) === config.tokenAddress && log.topics?.[0]?.toLowerCase() === transferTopic && log.topics?.[2]?.toLowerCase() === recipientTopic && normalizeEvmAddress(`0x${log.topics?.[1]?.slice(-40)}`) === payer);
+    receivedUnits = matching.reduce((sum, log) => sum + hexBigInt(log.data), 0n);
+    if (!matching.length) throw httpError("Token transfer receipt could not be verified.", 409);
   } else {
     if (
       normalizeEvmAddress(transaction.to) !== config.recipientAddress
@@ -272,6 +270,10 @@ export async function verifyTravelCryptoPayment({
       409
     );
   }
+
+  const block = await rpc(config.rpcUrl, "eth_getBlockByNumber", [receipt.blockNumber, false]);
+  const paidAt = hexNumber(block?.timestamp) * 1000;
+  if (!Number.isFinite(paidAt) || paidAt < new Date(booking.createdAt).getTime() - 60000 || paidAt > new Date(booking.paymentExpiresAt).getTime()) throw httpError("Transaction is outside this reservation's payment window.", 409);
 
   booking.status = "processing";
   booking.paymentStatus = "paid";

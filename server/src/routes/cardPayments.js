@@ -1,3 +1,5 @@
+import { createBookingAccess, requireBookingAccess } from "../services/bookingAccess.js";
+import { finalizeBooking, bookingPayload } from "../services/finalizeBooking.js";
 import { optionalCustomer } from "../middleware/customerAuth.js";
 import { bookingStay } from "../services/bookingStay.js";
 import { Router } from "express";
@@ -6,8 +8,7 @@ import crypto from "node:crypto";
 
 import { TravelBooking } from "../models/TravelBooking.js";
 import {
-  bookNuiteeTransaction,
-  getNuiteeStatus,
+  assertBookingReady,
   prebookNuiteeRate,
 } from "../services/nuiteeApi.js";
 
@@ -94,56 +95,15 @@ function singleRoomGuests(value) {
   }];
 }
 
-function sanitizeProviderResponse(value) {
-  if (Array.isArray(value)) return value.map(sanitizeProviderResponse);
-  if (!value || typeof value !== "object") return value;
-
-  return Object.fromEntries(
-    Object.entries(value)
-      .filter(
-        ([key]) =>
-          ![
-            "secretKey",
-            "transactionId",
-            "paymentIntent",
-            "clientSecret",
-            "commission",
-            "providerCommission",
-            "supplier",
-            "supplierId",
-          ].includes(key),
-      )
-      .map(([key, nestedValue]) => [key, sanitizeProviderResponse(nestedValue)]),
-  );
-}
-
 function travelReference() {
-  return `TRV-CARD-${new Date().toISOString().slice(0, 10).replaceAll("-", "")}-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
+  return `TRV-CARD-${new Date().toISOString().slice(0, 10).replaceAll("-", "")}-${crypto.randomBytes(12).toString("hex").toUpperCase()}`;
 }
 
-function publicBooking(booking) {
-  return {
-    id: booking.clientReference,
-    clientReference: booking.clientReference,
-    status: booking.status,
-    paymentStatus: booking.paymentStatus,
-    payment: {
-      method: "card",
-      provider: "nuitee",
-    },
-    total: booking.total,
-    currency: booking.currency,
-    customer: {
-      fullName: `${booking.holder?.firstName || ""} ${booking.holder?.lastName || ""}`.trim(),
-      email: booking.holder?.email || "",
-    },
-    reservation: sanitizeProviderResponse(booking.providerBooking || {}),
-  };
-}
+const publicBooking = bookingPayload;
 
 cardPaymentsRouter.post("/session", cardPaymentLimiter, optionalCustomer, async (request, response, next) => {
   try {
-    const status = getNuiteeStatus();
+    const status = assertBookingReady();
     if (!status.configured || status.environment === "unconfigured") {
       throw requestError("Nuitee Connect is not configured.", 503);
     }
@@ -175,7 +135,9 @@ cardPaymentsRouter.post("/session", cardPaymentLimiter, optionalCustomer, async 
     }
 
     const clientReference = travelReference();
+    const access = createBookingAccess();
     const booking = await TravelBooking.create({
+      accessTokenHash: access.hash,
       customerId: request.customer?._id || null,
       stay: bookingStay(request.body?.stay),
       clientReference,
@@ -197,6 +159,7 @@ cardPaymentsRouter.post("/session", cardPaymentLimiter, optionalCustomer, async 
 
     response.set("Cache-Control", "no-store");
     return response.status(201).json({
+      accessToken: access.token,
       booking: publicBooking(booking),
       paymentSession: {
         secretKey,
@@ -214,6 +177,7 @@ cardPaymentsRouter.post("/session", cardPaymentLimiter, optionalCustomer, async 
 cardPaymentsRouter.post(
   "/:clientReference/finalize",
   cardPaymentLimiter,
+  optionalCustomer,
   async (request, response, next) => {
     try {
       const clientReference = requiredText(
@@ -227,58 +191,11 @@ cardPaymentsRouter.post(
         return response.status(404).json({ message: "Card booking session not found." });
       }
 
-      if (booking.payment?.method !== "card") {
-        throw requestError("This booking is not a card payment session.");
-      }
-
-      if (booking.status === "confirmed") {
-        response.set("Cache-Control", "no-store");
-        return response.json({ booking: publicBooking(booking) });
-      }
-
-      const transactionId = requiredText(
-        booking.payment?.transactionId,
-        "transactionId",
-        500,
-      );
-      const bookingGuests = singleRoomGuests(booking.guests);
-
-      booking.status = "processing";
-      booking.failureReason = "";
-      await booking.save();
-
-      try {
-        const result = await bookNuiteeTransaction({
-          prebookId: booking.prebookId,
-          clientReference,
-          holder: booking.holder,
-          guests: bookingGuests,
-          transactionId,
-        });
-
-        booking.guests = bookingGuests;
-        booking.status = "confirmed";
-        booking.paymentStatus = "paid";
-        booking.providerBooking = sanitizeProviderResponse(result);
-        booking.paymentExpiresAt = null;
-        booking.failureReason = "";
-        booking.payment = {
-          ...booking.payment,
-          completedAt: new Date().toISOString(),
-        };
-        await booking.save();
-
-        response.set("Cache-Control", "no-store");
-        return response.json({ booking: publicBooking(booking) });
-      } catch (error) {
-        booking.status = "awaiting_payment";
-        booking.paymentStatus = "pending";
-        booking.failureReason = String(
-          error.message || "Card payment was received but booking finalization failed.",
-        ).slice(0, 500);
-        await booking.save();
-        throw error;
-      }
+      requireBookingAccess(request, booking);
+      if (booking.payment?.method !== 'card' || booking.kind === 'flight') throw requestError('Bu oturum otel kart ödemesi değil.');
+      const current = await finalizeBooking(booking);
+      response.set('Cache-Control', 'no-store');
+      return response.json({ booking: publicBooking(current) });
     } catch (error) {
       next(error);
     }

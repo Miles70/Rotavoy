@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
 import AuthModal from "./components/AuthModal/AuthModal";
 
+const FlightCheckout = lazy(() => import("./pages/FlightCheckout"));
 const TravelAccount = lazy(() => import("./pages/TravelAccount"));
 const TravelAdmin = lazy(() => import("./pages/TravelAdmin"));
 const CategoryPage = lazy(() => import("./pages/CategoryPage"));
@@ -35,6 +36,7 @@ function App() {
             <Route path="/hotels" element={<Travel key="hotels" hotelsOnly />} />
             <Route path="/cars" element={<CategoryPage key="cars" category="cars" />} />
             <Route path="/activities" element={<CategoryPage key="activities" category="activities" />} />
+            <Route path="/flights/checkout" element={<FlightCheckout />} />
             <Route path="/flights" element={<Flights />} />
             <Route path="/travel/hotels/:hotelId" element={<HotelDetails />} />
             <Route path="/travel/checkout" element={<TravelCheckout />} />

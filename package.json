@@ -13,7 +13,8 @@
     "server:start": "npm --prefix server start",
     "server:test": "npm --prefix server test",
     "check": "npm run lint && npm run build && npm run server:test",
-    "security:check": "node scripts/audit-high.mjs"
+    "security:check": "node scripts/audit-high.mjs",
+    "check:readiness": "npm --prefix server run check:readiness"
   },
   "dependencies": {
     "@reown/appkit": "^1.8.23",

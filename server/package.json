@@ -8,7 +8,8 @@
     "start": "node src/index.js",
     "test": "node --test",
     "test:nuitee-payment-sdk": "node src/scripts/testNuiteePaymentSdk.js",
-    "index:hotel-videos": "node src/scripts/indexHotelVideos.js"
+    "index:hotel-videos": "node src/scripts/indexHotelVideos.js",
+    "check:readiness": "node src/scripts/checkTravelReadiness.js"
   },
   "dependencies": {
     "cors": "^2.8.6",

@@ -71,6 +71,9 @@ async function requestNuitee(
     throw createNuiteeError("Nuitee Connect API key is not configured.", 503);
   }
 
+  if (process.env.NODE_ENV === 'production' && settings.environment === 'sandbox') {
+    throw createNuiteeError('Canlı ortamda Nuitee production API anahtarı gerekiyor.', 503);
+  }
   const url = new URL(`${baseUrl}${path}`);
 
   for (const [key, value] of Object.entries(query || {})) {
@@ -105,7 +108,7 @@ async function requestNuitee(
       }
     }
 
-    if (!response.ok) {
+    if (!response.ok || payload?.error) {
       const error = createNuiteeError(
         getUpstreamMessage(payload, response.status),
         mapStatus(response.status),
@@ -170,6 +173,7 @@ export function getNuiteeStatus() {
   return {
     configured: Boolean(settings.apiKey),
     environment: settings.environment,
+    liveBookingEnabled: settings.environment === "production" && String(process.env.NUITEE_ENABLE_LIVE_BOOKING || "true").toLowerCase() === "true",
     sandboxBookingEnabled:
       settings.environment === "sandbox" &&
       String(process.env.NUITEE_ENABLE_SANDBOX_BOOKING || "").toLowerCase() === "true",
@@ -212,12 +216,14 @@ export function searchNuiteeRates(body) {
 export function prebookNuiteeRate(body) {
   return requestNuitee(getSettings().bookingBaseUrl, "/rates/prebook", {
     method: "POST",
-    query: { timeout: 30 },
+    query: { timeout: 120 },
+    timeoutMs: 125000,
     body,
   });
 }
 
 export function bookNuiteeTransaction(body) {
+  assertBookingReady();
   const transactionId = String(body?.transactionId || "").trim();
   if (!transactionId) {
     throw createNuiteeError("Nuitee transactionId is required to finalize card payment.", 400);
@@ -229,7 +235,8 @@ export function bookNuiteeTransaction(body) {
 
   return requestNuitee(getSettings().bookingBaseUrl, "/rates/book", {
     method: "POST",
-    query: { timeout: 30 },
+    query: { timeout: 120 },
+    timeoutMs: 125000,
     body: {
       prebookId: String(body?.prebookId || "").trim(),
       ...(body?.clientReference
@@ -257,7 +264,8 @@ export function bookNuiteeSandbox(body) {
 
   return requestNuitee(getSettings().bookingBaseUrl, "/rates/book", {
     method: "POST",
-    query: { timeout: 30 },
+    query: { timeout: 120 },
+    timeoutMs: 125000,
     body: {
       ...body,
       payment: { method: "ACC_CREDIT_CARD" },
@@ -279,4 +287,32 @@ export function verifyNuiteeFlight(offerId) {
   return requestNuitee(getSettings().dataBaseUrl, '/flights/verify', {
     method: 'POST', body: { offerId }, timeoutMs: 60000,
   });
+}
+
+export function assertBookingReady(method = 'card') {
+  const status = getNuiteeStatus();
+  if (!status.configured || (status.environment === 'production' && !status.liveBookingEnabled)) throw createNuiteeError('Rezervasyon servisi şu an kullanılamıyor.', 503);
+  if (process.env.NODE_ENV === 'production' && status.environment !== 'production') throw createNuiteeError('Canlı rezervasyon için production anahtarı gerekiyor.', 503);
+  if (method === 'account' && status.environment !== 'production') throw createNuiteeError('Kripto otel rezervasyonu için canlı sağlayıcı hesabı gerekiyor.', 503);
+  return status;
+}
+export function bookNuiteeAccount(body) {
+  assertBookingReady('account');
+  const method = String(process.env.NUITEE_ACCOUNT_PAYMENT_METHOD || 'ACC_CREDIT_CARD');
+  if (!['ACC_CREDIT_CARD', 'WALLET', 'CREDIT'].includes(method)) throw createNuiteeError('Sağlayıcı hesap ödeme yöntemi geçersiz.', 503);
+  return requestNuitee(getSettings().bookingBaseUrl, '/rates/book', { method: 'POST', timeoutMs: 125000, query: { timeout: 120 }, body: { prebookId: body.prebookId, clientReference: body.clientReference, holder: bookingPerson(body.holder), guests: body.guests.map(g => bookingPerson(g, true)), customTags: { CHANNEL: 'ROTAVOY' }, payment: { method } } });
+}
+export function findNuiteeBooking(clientReference) {
+  return requestNuitee(getSettings().bookingBaseUrl, '/bookings', { query: { clientReference, timeout: 30 }, timeoutMs: 35000 });
+}
+export function prebookNuiteeFlight(body) {
+  assertBookingReady();
+  return requestNuitee(getSettings().dataBaseUrl, '/flights/prebooks', { method: 'POST', body: { ...body, usePaymentSdk: true }, timeoutMs: 125000 });
+}
+export function bookNuiteeFlight(prebookId, transactionId) {
+  assertBookingReady();
+  return requestNuitee(getSettings().dataBaseUrl, '/flights/bookings', { method: 'POST', body: { prebookId, payment: { method: 'TRANSACTION_ID', transactionId }, customTags: { CHANNEL: 'ROTAVOY' } }, timeoutMs: 125000 });
+}
+export function getNuiteeFlightBooking(bookingId) {
+  return requestNuitee(getSettings().dataBaseUrl, `/flights/bookings/${encodeURIComponent(bookingId)}`, { timeoutMs: 35000 });
 }

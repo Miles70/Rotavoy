@@ -13,6 +13,10 @@ const personSchema = new mongoose.Schema(
 
 const travelBookingSchema = new mongoose.Schema(
   {
+    kind: { type: String, enum: ["hotel", "flight"], default: "hotel", index: true },
+    flight: { type: mongoose.Schema.Types.Mixed, default: {} },
+    accessTokenHash: { type: String, default: "" },
+    bookingAttemptAt: { type: Date, default: null },
     customerId: { type: mongoose.Schema.Types.ObjectId, ref: "Customer", default: null, index: true },
     clientReference: { type: String, required: true, unique: true, index: true },
     offerId: { type: String, required: true, trim: true },

@@ -1,6 +1,13 @@
 import { getCustomerAccessToken } from "./customerApi";
 const apiBaseUrl = String(import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
 
+export function storeBookingAccess(reference, token) {
+  if (reference && token) sessionStorage.setItem(`rotavoy_booking_access:${reference}`, token);
+}
+export function bookingHeaders(reference) {
+  const token = sessionStorage.getItem(`rotavoy_booking_access:${reference}`);
+  return token ? { 'X-Booking-Token': token } : {};
+}
 async function hotelRequest(path, options = {}) {
   const response = await fetch(`${apiBaseUrl}/api/hotels${path}`, {
     ...options,
@@ -21,6 +28,8 @@ async function hotelRequest(path, options = {}) {
     );
   }
 
+  const reference = payload.booking?.clientReference;
+  storeBookingAccess(reference, payload.accessToken);
   return payload;
 }
 
@@ -136,6 +145,7 @@ export function createTravelCheckout({
 
 export function verifyTravelPayment(clientReference, { transactionHash, payerAddress }) {
   return hotelRequest(`/${encodeURIComponent(clientReference)}/verify-payment`, {
+    headers: bookingHeaders(clientReference),
     method: "POST",
     body: JSON.stringify({ transactionHash, payerAddress }),
   }).then((payload) => payload.booking);
@@ -150,6 +160,14 @@ export function createCardPaymentSession({ offerId, holder, guests, stay }) {
 
 export function finalizeCardPayment(clientReference) {
   return hotelRequest(`/card/${encodeURIComponent(clientReference)}/finalize`, {
+    headers: bookingHeaders(clientReference),
     method: "POST",
   }).then((payload) => payload.booking);
+}
+
+export async function getTravelReservation(reference, signal) {
+  const response = await fetch(`${apiBaseUrl}/api/reservations/${encodeURIComponent(reference)}`, { signal, headers: { ...bookingHeaders(reference), ...(getCustomerAccessToken() ? { Authorization: `Bearer ${getCustomerAccessToken()}` } : {}) } });
+  const payload = await response.json();
+  if (!response.ok) throw new Error(payload.message || 'Rezervasyon yüklenemedi.');
+  return payload.booking;
 }

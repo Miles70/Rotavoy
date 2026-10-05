@@ -1,3 +1,5 @@
+import { createBookingAccess, requireBookingAccess } from "../services/bookingAccess.js";
+import { finalizeBooking, bookingPayload } from "../services/finalizeBooking.js";
 import { optionalCustomer } from "../middleware/customerAuth.js";
 import { bookingStay } from "../services/bookingStay.js";
 import { readTravelMargin } from "../services/travelAdminSettings.js";
@@ -5,7 +7,7 @@ import { HotelVideoIndex } from "../models/HotelVideoIndex.js";
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import {
-  bookNuiteeSandbox,
+  assertBookingReady,
   getNuiteeHotel,
   getNuiteeStatus,
   listNuiteeHotels,
@@ -286,7 +288,7 @@ function travelBookingPayload(booking) {
 }
 
 function travelReference() {
-  return `TRV-${new Date().toISOString().slice(0, 10).replaceAll("-", "")}-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
+  return `TRV-${new Date().toISOString().slice(0, 10).replaceAll("-", "")}-${crypto.randomBytes(12).toString("hex").toUpperCase()}`;
 }
 
 hotelsRouter.get("/status", (request, response) => {
@@ -480,6 +482,7 @@ hotelsRouter.post("/prebook", bookingLimiter, async (request, response, next) =>
 
 hotelsRouter.post("/checkout", bookingLimiter, optionalCustomer, async (request, response, next) => {
   try {
+    assertBookingReady("account");
     const guests = Array.isArray(request.body?.guests)
       ? request.body.guests.map((guest, index) =>
           normalizePerson(guest, `guests[${index}]`, true),
@@ -510,7 +513,9 @@ hotelsRouter.post("/checkout", bookingLimiter, optionalCustomer, async (request,
       error.statusCode = 503;
       throw error;
     }
+    const access = createBookingAccess();
     const booking = await TravelBooking.create({
+      accessTokenHash: access.hash,
       customerId: request.customer?._id || null,
       stay: bookingStay(request.body?.stay),
       clientReference: travelReference(), offerId, prebookId, holder, guests,
@@ -520,32 +525,22 @@ hotelsRouter.post("/checkout", bookingLimiter, optionalCustomer, async (request,
       paymentExpiresAt: new Date(Date.now() + 20 * 60 * 1000),
     });
     response.set("Cache-Control", "no-store");
-    return response.status(201).json({ booking: travelBookingPayload(booking) });
+    return response.status(201).json({ accessToken: access.token, booking: travelBookingPayload(booking) });
   } catch (error) {
     next(error);
   }
 });
 
-hotelsRouter.post("/:clientReference/verify-payment", bookingLimiter, async (request, response, next) => {
+hotelsRouter.post("/:clientReference/verify-payment", bookingLimiter, optionalCustomer, async (request, response, next) => {
   try {
     const clientReference = requiredText(request.params.clientReference, "clientReference", 100);
     const booking = await TravelBooking.findOne({ clientReference });
     if (!booking) return response.status(404).json({ message: "Travel booking not found." });
+    requireBookingAccess(request, booking);
     const paidBooking = await verifyTravelCryptoPayment({ booking, transactionHash: request.body?.transactionHash, payerAddress: request.body?.payerAddress });
     if (paidBooking.status === "confirmed") return response.json({ booking: travelBookingPayload(paidBooking) });
-    try {
-      const result = await bookNuiteeSandbox({ prebookId: paidBooking.prebookId, clientReference, holder: paidBooking.holder, guests: paidBooking.guests, customTags: { CHANNEL: "ROTAVOY_SANDBOX" } });
-      paidBooking.status = "confirmed";
-      paidBooking.providerBooking = sanitizeProviderResponse(result);
-      paidBooking.failureReason = "";
-      await paidBooking.save();
-      response.set("Cache-Control", "no-store");
-      return response.json({ booking: travelBookingPayload(paidBooking) });
-    } catch (error) {
-      paidBooking.status = "failed";
-      paidBooking.failureReason = String(error.message || "Booking failed after payment.").slice(0, 500);
-      await paidBooking.save();
-      throw error;
-    }
+    const current = await finalizeBooking(paidBooking);
+    response.set('Cache-Control', 'no-store');
+    return response.json({ booking: bookingPayload(current) });
   } catch (error) { next(error); }
 });

@@ -1,3 +1,4 @@
+import { reservationSummary } from '../services/bookingState.js';
 import { TravelAnalytics } from '../models/TravelAnalytics.js';
 import { analyticsTypes } from './analytics.js';
 import { readTravelMargin, resolveTravelMargin } from "../services/travelAdminSettings.js";
@@ -28,7 +29,7 @@ export function bookingFilters(query) {
 }
 export function adminBooking(booking) {
   const payment = booking.payment || {};
-  return { clientReference: booking.clientReference, status: booking.status, paymentStatus: booking.paymentStatus, total: booking.total, currency: booking.currency, stay: booking.stay || {}, holder: booking.holder, guests: booking.guests, createdAt: booking.createdAt, updatedAt: booking.updatedAt, paymentExpiresAt: booking.paymentExpiresAt, failureReason: booking.failureReason,
+  return { kind: booking.kind || "hotel", flight: booking.flight || {}, reservation: reservationSummary(booking.providerBooking, booking.kind), clientReference: booking.clientReference, status: booking.status, paymentStatus: booking.paymentStatus, total: booking.total, currency: booking.currency, stay: booking.stay || {}, holder: booking.holder, guests: booking.guests, createdAt: booking.createdAt, updatedAt: booking.updatedAt, paymentExpiresAt: booking.paymentExpiresAt, failureReason: booking.failureReason,
     payment: { method: payment.method, networkKey: payment.networkKey, chainId: payment.chainId, token: payment.token, transactionHash: payment.transactionHash, expectedAmount: payment.expectedAmount },
     providerReference: text(booking.providerBooking?.data?.bookingId || booking.providerBooking?.bookingId || '', 120) };
 }
@@ -82,8 +83,8 @@ adminRouter.get('/providers', async (request, response) => response.json({
   cardPublishableKeyConfigured: Boolean(process.env.NUITEE_STRIPE_PUBLISHABLE_KEY),
   cryptoWalletConfigured: Boolean(process.env.ROTAVOY_PAYMENT_WALLET),
   firebaseConfigured: Boolean(process.env.FIREBASE_PROJECT_ID),
-  liveBookingEnabled: String(process.env.NUITEE_ENABLE_LIVE_BOOKING).toLowerCase() === 'true',
-  services: [{ key: 'hotels', search: true, booking: true }, { key: 'flights', search: true, booking: false }, { key: 'cars', search: false, booking: false }, { key: 'activities', search: false, booking: false }],
+  liveBookingEnabled: getNuiteeStatus().liveBookingEnabled,
+  services: [{ key: 'hotels', search: true, booking: true }, { key: 'flights', search: true, booking: true }, { key: 'cars', search: false, booking: false }, { key: 'activities', search: false, booking: false }],
 }));
 adminRouter.get('/settings', async (request, response) => { const settings = await TravelAdminSettings.findOne({ key: 'travel' }).lean() || { supportEmail: '', supportPhone: '', announcement: '' }; response.json({ settings: { ...settings, marginPercent: resolveTravelMargin(settings) } }); });
 adminRouter.put('/settings', async (request, response) => {

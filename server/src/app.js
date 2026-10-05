@@ -1,3 +1,5 @@
+import { flightBookingsRouter } from "./routes/flightBookings.js";
+import { reservationsRouter } from "./routes/reservations.js";
 import { accountRouter } from "./routes/account.js";
 import { adminAuthRouter } from "./routes/adminAuth.js";
 import { analyticsRouter } from "./routes/analytics.js";
@@ -71,6 +73,8 @@ export function createApp() {
   app.use("/api/hotels/card", cardPaymentsRouter);
   app.use("/api/hotels", cryptoCheckoutRouter);
   app.use("/api/hotels", hotelsRouter);
+  app.use("/api/reservations", reservationsRouter);
+  app.use("/api/flights", flightBookingsRouter);
   app.use("/api/flights", flightsRouter);
 
   app.use((request, response) => {

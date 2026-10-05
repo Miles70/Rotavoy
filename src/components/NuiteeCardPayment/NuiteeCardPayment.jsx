@@ -20,15 +20,19 @@ function loadPaymentSdk() {
     const existing = document.querySelector(`script[src="${PAYMENT_SDK_SRC}"]`);
     const script = existing || document.createElement("script");
 
+    const timeout = setTimeout(() => handleError(), 20000);
     const handleLoad = () => {
+      clearTimeout(timeout);
       if (window.LiteAPIPayment) {
         resolve(window.LiteAPIPayment);
         return;
       }
+      paymentSdkPromise = undefined; script.remove();
       reject(new Error("Payment SDK loaded without LiteAPIPayment."));
     };
 
     const handleError = () => {
+      clearTimeout(timeout); script.remove();
       paymentSdkPromise = undefined;
       reject(new Error("Secure payment SDK could not be loaded."));
     };
@@ -122,9 +126,7 @@ function NuiteeCardPayment({ session, returnUrl }) {
           <span>Rotavoy Secure Payment</span>
           <h2>Kartla güvenli ödeme</h2>
         </div>
-        {session?.environment === "sandbox" && (
-          <strong className="nuiteeSandboxBadge">SANDBOX</strong>
-        )}
+
       </div>
 
       <p className="nuiteeCardIntro">
@@ -140,14 +142,6 @@ function NuiteeCardPayment({ session, returnUrl }) {
       {error && <p className="nuiteeCardError">{error}</p>}
       <div id={targetId} className="nuiteeCardTarget" />
 
-      {session?.environment === "sandbox" && (
-        <div className="nuiteeSandboxHelp">
-          <strong>Sandbox test kartları</strong>
-          <span><code>4242 4242 4242 4242</code> — normal başarılı ödeme</span>
-          <span><code>4000 0027 6000 3184</code> — 3D Secure testi</span>
-          <span>Herhangi bir gelecek tarih ve 3 haneli CVC kullanılabilir.</span>
-        </div>
-      )}
 
       <p className="nuiteeCardSecurity">
         <ShieldCheck size={17} /> Ödeme başarılı olduğunda Rotavoy&apos;a dönüp rezervasyonu otomatik olarak tamamlayacağız.

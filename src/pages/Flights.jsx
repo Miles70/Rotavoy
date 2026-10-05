@@ -2,7 +2,7 @@ import { trackTravel } from '../services/analytics';
 import FlightCard from '../components/Flights/FlightCard';
 import FlightSelection from '../components/Flights/FlightSelection';
 import flightSelectionTranslations from '../i18n/flightSelectionTranslations';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Hotel, Plane, Search, LoaderCircle } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -36,7 +36,7 @@ export default function Flights({ embedded = false }) {
   const [cabinClass, setCabinClass] = useState(() => ['ECONOMY', 'PREMIUM_ECONOMY', 'BUSINESS', 'FIRST'].includes(initial.get('cabinClass')) ? initial.get('cabinClass') : 'ECONOMY');
   const [currency, setCurrency] = useState(() => ['USD', 'EUR', 'TRY', 'GBP'].includes(initial.get('currency')) ? initial.get('currency') : 'USD');
   const [country, setCountry] = useState(() => regionCodes.includes(initial.get('country')) ? initial.get('country') : 'TR');
-  const [environment, setEnvironment] = useState(null);
+  
   const [state, setState] = useState('idle');
   const [error, setError] = useState('');
   const [results, setResults] = useState([]);
@@ -53,7 +53,7 @@ export default function Flights({ embedded = false }) {
   useEffect(() => {
     if (embedded) return undefined;
     const controller = new AbortController();
-    flightRequest('/status', { signal: controller.signal }).then((data) => { if (!controller.signal.aborted) setEnvironment(data.environment); }).catch(() => {});
+    
     return () => { controller.abort(); searchController.current?.abort(); searchController.current = null; };
   }, [embedded]);
   useEffect(() => {
@@ -61,6 +61,7 @@ export default function Flights({ embedded = false }) {
     const timer = setTimeout(() => formRef.current?.requestSubmit(), 0);
     return () => clearTimeout(timer);
   }, [embedded, initial]);
+  const handleVerified = useCallback(offerId => { if (offerId) trackTravel('flight_select', { offerId }); setChosenOfferId(offerId); }, []);
   async function submit(event) {
     event.preventDefault();
     if (loading) return;
@@ -80,7 +81,7 @@ export default function Flights({ embedded = false }) {
     try {
       const payload = await flightRequest('/search', { signal: controller.signal, body: { origin: origin.iata, destination: destination.iata, departure, ...(roundTrip ? { returnDate } : {}), adults, children, infants, cabinClass, currency, country } });
       if (searchController.current !== controller || controller.signal.aborted) return;
-      setEnvironment(payload.environment); setResults(flightResults(payload, currency)); setState('done');
+      setResults(flightResults(payload, currency)); setState('done');
       resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (err) {
       if (searchController.current !== controller) return;
@@ -112,16 +113,15 @@ export default function Flights({ embedded = false }) {
           <button className="flightSearchButton" type="submit" disabled={loading}>{loading ? <LoaderCircle className="flightSpin" size={20} /> : <Search size={20} />}{loading ? copy.searching : copy.search}</button>
         </fieldset>
         {error && <p className="flightError" role="alert">{copy[error]}</p>}
-        <p className="flightNotice">{copy.preview}</p>
-        {environment === 'sandbox' && <p className="flightSandbox">{copy.sandbox}</p>}
+        
       </form>
     </section>
     {!embedded && <section ref={resultsRef} className="flightResults" aria-live="polite" aria-busy={loading}>
       {loading && <p className="flightStatus">{copy.searching}</p>}
-      {state === 'done' && <><h2>{copy.results} · {results.length}</h2><p>{copy.localTimes}</p>{environment === 'sandbox' && <p className="flightSandbox">{copy.sandbox}</p>}{results.length === 0 && <p className="flightStatus">{copy.empty}</p>}</>}
-      {results.slice(0, visible).map((result) => <FlightCard key={result.offer.offerId} result={result} copy={copy} language={language} onSelect={result => { trackTravel('flight_view', { offerId: result.offer.offerId, origin: origin?.iata, destination: destination?.iata }); setFocusedFlight(result); }} selected={chosenOfferId === result.offer.offerId} />)}
+      {state === 'done' && <><h2>{copy.results} · {results.length}</h2><p>{copy.localTimes}</p>{results.length === 0 && <p className="flightStatus">{copy.empty}</p>}</>}
+      {results.slice(0, visible).map((result) => <FlightCard key={result.offer.offerId} result={result} copy={copy} language={language} onSelect={result => { trackTravel('flight_view', { offerId: result.offer.offerId, origin: origin?.iata, destination: destination?.iata }); setFocusedFlight({ ...result, passengers: { adults, children, infants } }); }} selected={chosenOfferId === result.offer.offerId} />)}
       {visible < results.length && <button className="flightSearchButton" onClick={() => setVisible((count) => count + 20)}>{copy.more}</button>}
     </section>}
-    {focusedFlight && <FlightSelection key={focusedFlight.offer.offerId} result={focusedFlight} copy={copy} language={language} environment={environment} onVerified={offerId => { trackTravel('flight_select', { offerId, origin: origin?.iata, destination: destination?.iata, departure }); setChosenOfferId(offerId); }} onClose={() => setFocusedFlight(null)} />}
+    {focusedFlight && <FlightSelection key={focusedFlight.offer.offerId} result={focusedFlight} copy={copy} language={language} passengers={focusedFlight.passengers} onVerified={handleVerified} onClose={() => setFocusedFlight(null)} />}
   </Container>;
 }

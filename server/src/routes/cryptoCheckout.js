@@ -1,3 +1,4 @@
+import { createBookingAccess } from "../services/bookingAccess.js";
 import { optionalCustomer } from "../middleware/customerAuth.js";
 import { bookingStay } from "../services/bookingStay.js";
 import crypto from "node:crypto";
@@ -10,7 +11,7 @@ import {
 } from "../config/cryptoPayment.js";
 import { TravelBooking } from "../models/TravelBooking.js";
 import { createCryptoPaymentQuote } from "../services/cryptoQuote.js";
-import { prebookNuiteeRate } from "../services/nuiteeApi.js";
+import { prebookNuiteeRate, assertBookingReady } from "../services/nuiteeApi.js";
 
 export const cryptoCheckoutRouter = Router();
 
@@ -93,7 +94,7 @@ function travelReference() {
   return `TRV-${new Date()
     .toISOString()
     .slice(0, 10)
-    .replaceAll("-", "")}-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
+    .replaceAll("-", "")}-${crypto.randomBytes(12).toString("hex").toUpperCase()}`;
 }
 
 function travelBookingPayload(booking) {
@@ -121,6 +122,7 @@ cryptoCheckoutRouter.post(
   optionalCustomer,
   async (request, response, next) => {
     try {
+      assertBookingReady('account');
       const guests = Array.isArray(request.body?.guests)
         ? request.body.guests.map((guest, index) =>
             normalizePerson(guest, `guests[${index}]`, true)
@@ -202,7 +204,9 @@ cryptoCheckoutRouter.post(
       });
       const paymentExpiresAt = new Date(Date.now() + 20 * 60 * 1000);
 
+      const access = createBookingAccess();
       const booking = await TravelBooking.create({
+        accessTokenHash: access.hash,
       customerId: request.customer?._id || null,
       stay: bookingStay(request.body?.stay),
         clientReference: travelReference(),
@@ -226,6 +230,7 @@ cryptoCheckoutRouter.post(
 
       response.set("Cache-Control", "no-store");
       response.status(201).json({
+        accessToken: access.token,
         booking: travelBookingPayload(booking),
       });
     } catch (error) {

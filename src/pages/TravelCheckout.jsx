@@ -5,7 +5,6 @@ import { Link, useLocation } from "react-router-dom";
 import {
   AlertCircle,
   ArrowLeft,
-  CheckCircle2,
   ChevronDown,
   CreditCard,
   LoaderCircle,
@@ -14,12 +13,14 @@ import {
   WalletCards,
 } from "lucide-react";
 
+import ReservationResult from "../components/ReservationResult";
 import CryptoPayment from "../components/CryptoPayment/CryptoPayment";
 import NuiteeCardPayment from "../components/NuiteeCardPayment/NuiteeCardPayment";
 import {
   createCardPaymentSession,
   createTravelCheckout,
   finalizeCardPayment,
+  getTravelReservation,
   verifyTravelPayment,
 } from "../services/hotelsApi";
 import "./TravelCheckout.css";
@@ -57,9 +58,9 @@ function TravelCheckout() {
   const location = useLocation();
   const { state } = location;
   const returnParams = new URLSearchParams(location.search);
-  const cardReturnReference = returnParams.get("cardRef") || "";
-  const redirectStatus = returnParams.get("redirect_status") || "";
+  const cardReturnReference = returnParams.get("cardRef") || returnParams.get("bookingRef") || "";
   const isCardReturn = Boolean(cardReturnReference);
+  const isCardPaymentReturn = Boolean(returnParams.get("cardRef"));
 
   const [returnState, setReturnState] = useState("idle");
   const [returnError, setReturnError] = useState("");
@@ -69,45 +70,22 @@ function TravelCheckout() {
   useEffect(() => {
     if (!cardReturnReference) return undefined;
 
-    if (redirectStatus === "failed") {
-      setReturnState("error");
-      setReturnError(
-        "Kart ödemesi tamamlanmadı. Yeni bir ödeme oturumu başlatman gerekiyor."
-      );
-      return undefined;
-    }
-
-    if (redirectStatus === "processing") {
-      setReturnState("processing");
-      setReturnError("");
-      return undefined;
-    }
-
-    let active = true;
-    setReturnState("loading");
-    setReturnError("");
-
-    finalizeCardPayment(cardReturnReference)
-      .then((booking) => {
+    let active = true, timer, polls = 0;
+    setReturnState("loading"); setReturnError("");
+    async function check(initial = false) {
+      try {
+        const booking = initial && isCardPaymentReturn
+          ? await finalizeCardPayment(cardReturnReference)
+          : await getTravelReservation(cardReturnReference);
         if (!active) return;
         setReturnBooking(booking);
-        setReturnState(
-          booking?.status === "confirmed" ? "success" : "processing"
-        );
-      })
-      .catch((paymentError) => {
-        if (!active) return;
-        setReturnState("error");
-        setReturnError(
-          paymentError.message ||
-            "Ödeme dönüşü alındı ancak rezervasyon henüz tamamlanamadı."
-        );
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [cardReturnReference, redirectStatus, returnAttempt]);
+        setReturnState(booking.status === "confirmed" ? "success" : "processing");
+        if (booking.status === "processing" && ++polls < 30) timer = setTimeout(() => check(), 6000);
+      } catch (e) { if (active) { setReturnState("error"); setReturnError(e.message); } }
+    }
+    check(true);
+    return () => { active = false; clearTimeout(timer); };
+  }, [cardReturnReference, isCardPaymentReturn, returnAttempt]);
 
   const hotel = state?.hotel;
   const prebook = state?.prebook;
@@ -242,56 +220,7 @@ function TravelCheckout() {
     }
   }
 
-  if (isCardReturn) {
-    if (
-      returnBooking?.status === "confirmed" ||
-      returnState === "success"
-    ) {
-      return (
-        <main className="travelCheckoutState travelCheckoutState--success">
-          <CheckCircle2 size={46} />
-          <h1>Rezervasyon onaylandı</h1>
-          <p>Kart ödemen ve Rotavoy rezervasyonun başarıyla tamamlandı.</p>
-          <strong>
-            Referans: {returnBooking?.clientReference || cardReturnReference}
-          </strong>
-          <Link to="/travel">Yeni otel ara</Link>
-        </main>
-      );
-    }
-
-    if (returnState === "error") {
-      return (
-        <main className="travelCheckoutState">
-          <AlertCircle size={38} />
-          <h1>Rezervasyon tamamlanamadı</h1>
-          <p>{returnError}</p>
-          <strong>Referans: {cardReturnReference}</strong>
-          <button
-            className="travelCheckoutRetry"
-            type="button"
-            onClick={() => setReturnAttempt((value) => value + 1)}
-          >
-            Tekrar kontrol et
-          </button>
-          <Link to="/travel">Otel aramasına dön</Link>
-        </main>
-      );
-    }
-
-    return (
-      <main className="travelCheckoutState">
-        <LoaderCircle className="travelSpin" size={38} />
-        <h1>
-          {returnState === "processing"
-            ? "Ödeme işleniyor"
-            : "Rezervasyon tamamlanıyor"}
-        </h1>
-        <p>Kart ödemeni doğrulayıp Rotavoy rezervasyonunu tamamlıyoruz.</p>
-        <strong>Referans: {cardReturnReference}</strong>
-      </main>
-    );
-  }
+  if (isCardReturn) return <main className="travelCheckoutState">{returnError && <p role="alert">{returnError}</p>}{returnBooking ? <ReservationResult booking={returnBooking} onRefresh={() => setReturnAttempt(v => v + 1)} /> : <><h1>{returnState === "error" ? "Rezervasyon kontrol edilemedi" : "Rezervasyon kontrol ediliyor"}</h1><strong>Referans: {cardReturnReference}</strong><button onClick={() => setReturnAttempt(v => v + 1)}>Durumu kontrol et</button></>}</main>;
 
   if (!hotel || !prebook || !offer?.offerId) {
     return (
@@ -304,23 +233,7 @@ function TravelCheckout() {
     );
   }
 
-  if (cryptoBooking?.status === "confirmed") {
-    const paidToken = cryptoBooking.payment?.token || cryptoAsset;
-    const paidNetwork = cryptoBooking.payment?.network || selectedNetwork;
-
-    return (
-      <main className="travelCheckoutState travelCheckoutState--success">
-        <CheckCircle2 size={42} />
-        <h1>Rezervasyon onaylandı</h1>
-        <p>
-          {hotelName} için {paidToken} ({paidNetwork}) ödemen ve Rotavoy
-          rezervasyonun başarıyla onaylandı.
-        </p>
-        <strong>Referans: {cryptoBooking.clientReference}</strong>
-        <Link to="/travel">Yeni otel ara</Link>
-      </main>
-    );
-  }
+  if (cryptoBooking?.status === "confirmed" || cryptoBooking?.paymentStatus === "paid") return <main className="travelCheckoutState"><ReservationResult booking={cryptoBooking} onRefresh={async () => { try { setCryptoBooking(await getTravelReservation(cryptoBooking.clientReference)); } catch (e) { setError(e.message); } }} />{error && <p role="alert">{error}</p>}<Link to={`/travel/checkout?bookingRef=${encodeURIComponent(cryptoBooking.clientReference)}`}>Rezervasyon durum sayfasını aç</Link></main>;
 
   const cardReturnUrl = cardSession
     ? `${window.location.origin}/travel/checkout?cardRef=${encodeURIComponent(
