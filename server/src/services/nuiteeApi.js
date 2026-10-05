@@ -71,7 +71,8 @@ async function requestNuitee(
     throw createNuiteeError("Nuitee Connect API key is not configured.", 503);
   }
 
-  if (process.env.NODE_ENV === 'production' && settings.environment === 'sandbox') {
+  const catalogRead = (method === 'GET' && path.startsWith('/data/')) || path === '/hotels/rates';
+  if (process.env.NODE_ENV === 'production' && settings.environment === 'sandbox' && !catalogRead) {
     throw createNuiteeError('Canlı ortamda Nuitee production API anahtarı gerekiyor.', 503);
   }
   const url = new URL(`${baseUrl}${path}`);

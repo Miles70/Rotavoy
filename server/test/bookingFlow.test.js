@@ -43,7 +43,7 @@ test('HTTP hotel and flight payment sessions finalize only on provider confirmat
     if (options?.method === 'POST') { providerPosts++; assert.equal(JSON.parse(options.body).payment.method, 'TRANSACTION_ID'); return Response.json({ data: url.hostname === 'book.liteapi.travel' ? providerResult() : [providerResult()] }); }
     return Response.json({ data: [providerResult()] });
   };
-  const server = createApp().listen(0); await once(server, 'listening'); const base = `http://localhost:${server.address().port}/api`;
+  const server = createApp({ bookingEnabled: true }).listen(0); await once(server, 'listening'); const base = `http://localhost:${server.address().port}/api`;
   const request = (path, body, token) => originalFetch(`${base}${path}`, { method: body ? 'POST' : 'GET', headers: { 'Content-Type': 'application/json', ...(token ? { 'X-Booking-Token': token } : {}) }, ...(body ? { body: JSON.stringify(body) } : {}) });
   try {
     const session = await request('/hotels/card/session', { offerId: 'offer', holder: contact, guests: [{ ...contact, occupancyNumber: 1 }] });

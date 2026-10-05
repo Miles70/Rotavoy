@@ -6,26 +6,24 @@ import "./InformationPage.css";
 const supportEmail = import.meta.env.VITE_SUPPORT_EMAIL || "support@rotavoy.com";
 
 const content = {
-  en: {
-    about: ["About Rotavoy", "Rotavoy is a travel-first platform focused on hotel discovery, live room availability and secure reservation flows. The service is currently evolving in beta as travel inventory and payment options expand."],
-    contact: ["Contact", `Questions, hotel partnership requests and travel feedback can be sent to ${supportEmail}. We aim to respond as soon as possible during the beta period.`],
-    support: ["Travel Support", `For reservation support, include your Rotavoy booking reference and the email address used during checkout when contacting ${supportEmail}. Never send a wallet recovery phrase or private key.`],
-    privacy: ["Privacy Policy", "Rotavoy processes the information required to provide hotel search, reservations, payments, authentication and customer support. Authentication may be handled by third-party identity providers. Payment transactions made on public blockchains are public by design. Personal information is not sold."],
-    terms: ["Travel Terms of Service", "Rotavoy provides travel search and booking services in beta. Hotel availability, room conditions, cancellation terms and prices may change until a reservation is confirmed. Users must provide accurate guest and contact information and review the live rate conditions before payment."],
-    refund: ["Cancellation & Refund Policy", "Cancellation and refund eligibility depends on the hotel rate and reservation conditions shown during booking. Some rates may be non-refundable. Blockchain network fees and completed irreversible transfers cannot be reversed by Rotavoy. Contact support with your booking reference for eligible cancellation or refund requests."],
-    updated: "Last updated: September 28, 2026",
-    back: "Back to travel",
-  },
-  tr: {
-    about: ["Rotavoy Hakkında", "Rotavoy; otel keşfi, canlı oda müsaitliği ve güvenli rezervasyon akışına odaklanan travel-first bir platformdur. Seyahat envanteri ve ödeme seçenekleri genişletilirken hizmet beta sürecinde geliştirilmeye devam etmektedir."],
-    contact: ["İletişim", `Sorularını, otel iş birliği taleplerini ve seyahat geri bildirimlerini ${supportEmail} adresine gönderebilirsin. Beta sürecinde mümkün olan en kısa sürede dönüş yapmayı hedefliyoruz.`],
-    support: ["Seyahat Desteği", `Rezervasyon desteği için ${supportEmail} adresine yazarken Rotavoy rezervasyon referansını ve checkout sırasında kullandığın e-posta adresini ekle. Cüzdan kurtarma kelimelerini veya özel anahtarını asla gönderme.`],
-    privacy: ["Gizlilik Politikası", "Rotavoy; otel arama, rezervasyon, ödeme, kimlik doğrulama ve müşteri desteği için gereken bilgileri işler. Kimlik doğrulama üçüncü taraf sağlayıcılar üzerinden gerçekleştirilebilir. Herkese açık blokzincirlerdeki ödeme işlemleri yapıları gereği açıktır. Kişisel bilgiler satılmaz."],
-    terms: ["Seyahat Kullanım Şartları", "Rotavoy beta aşamasında seyahat arama ve rezervasyon hizmeti sunar. Otel müsaitliği, oda koşulları, iptal şartları ve fiyatlar rezervasyon onaylanana kadar değişebilir. Kullanıcı doğru misafir ve iletişim bilgisi vermeli ve ödeme öncesinde güncel fiyat koşullarını kontrol etmelidir."],
-    refund: ["İptal ve İade Politikası", "İptal ve iade uygunluğu rezervasyon sırasında gösterilen otel fiyat planı ve rezervasyon koşullarına bağlıdır. Bazı fiyatlar iade edilemez olabilir. Blokzincir ağ ücretleri ve tamamlanmış geri döndürülemez transferler Rotavoy tarafından geri alınamaz. Uygun iptal veya iade talepleri için rezervasyon referansınla desteğe ulaş."],
-    updated: "Son güncelleme: 28 Eylül 2026",
-    back: "Travel'a dön",
-  },
+ en: {
+ about: ['About Rotavoy', 'Discover hotels and destinations with Rotavoy. Share your travel preferences and request a personalised quote.'],
+ contact: ['Contact', `Send questions and travel enquiries to ${supportEmail}.`],
+ support: ['Travel Support', `Contact ${supportEmail} with your request reference and email address.`],
+ privacy: ['Privacy Policy', 'We process your contact details, travel preferences and enquiry notes to respond to your request. We also collect browsing events and approximate location information for site analytics. Authentication may use third-party providers. Personal information is not sold. Contact support to request access or deletion.'],
+ terms: ['Travel Terms', 'Rotavoy currently accepts travel enquiries. Submitting a request does not confirm a reservation. Price and availability are checked separately and communicated before any booking. Online payments are not collected.'],
+ refund: ['Cancellation & Refunds', 'Travel requests are free and involve no payment. You may withdraw a request by contacting support with your reference. Conditions for any future reservation will be communicated before confirmation.'],
+ updated: 'Last updated: October 5, 2026', back: 'Back to travel'
+ },
+ tr: {
+ about: ['Rotavoy Hakkında', 'Rotavoy ile otelleri ve destinasyonları keşfet. Seyahat tercihlerini paylaşarak sana özel teklif talep et.'],
+ contact: ['İletişim', `Sorularını ve seyahat taleplerini ${supportEmail} adresine gönderebilirsin.`],
+ support: ['Seyahat Desteği', `${supportEmail} adresine yazarken talep referansını ve e-posta adresini ekle.`],
+ privacy: ['Gizlilik Politikası', 'İletişim bilgilerin, seyahat tercihlerin ve talep notların sana dönüş yapmak için işlenir. Site analitiği için gezinme olayları ve yaklaşık konum bilgisi de toplanır. Giriş işlemleri üçüncü taraf sağlayıcıları kullanabilir. Kişisel bilgiler satılmaz. Bilgilerine erişim veya silme talebi için desteğe ulaşabilirsin.'],
+ terms: ['Seyahat Kullanım Şartları', 'Rotavoy şu aşamada seyahat talebi toplar. Talep göndermek rezervasyon onayı oluşturmaz. Fiyat ve müsaitlik ayrıca kontrol edilerek rezervasyon öncesinde sana bildirilir. Online ödeme alınmaz.'],
+ refund: ['İptal ve İade', 'Seyahat talepleri ücretsizdir ve ödeme içermez. Referansınla desteğe yazarak talebini geri çekebilirsin. İleride oluşturulacak rezervasyonların koşulları onay öncesinde paylaşılır.'],
+ updated: 'Son güncelleme: 5 Ekim 2026', back: 'Seyahat sayfasına dön'
+ }
 };
 
 function InformationPage({ page }) {

@@ -22,8 +22,7 @@ export default function CategoryPage({ category, embedded = false }) {
   function submit(event) {
     event.preventDefault();
     trackTravel(category === 'cars' ? 'car_plan' : 'activity_plan', { destination: location.trim(), checkin: date, checkout: category === 'cars' ? end : '', adults: people, category });
-    const query = new URLSearchParams({ location: location.trim(), date, ...(category === 'cars' ? { end } : { people: String(people) }), plan: '1' });
-    navigate(`/${category}?${query}`);
+    navigate(`/request?${new URLSearchParams({kind:category,destination:location.trim(),startDate:date,endDate:category === 'cars' ? end : '',adults:String(people)})}`);
   }
   return <Container className={`categoryPage${embedded ? ' categoryPage--embedded' : ''}`}>
     {!embedded && <nav className="categoryBreadcrumb"><Link to="/">{copy.home}</Link><span> / {title}</span></nav>}
@@ -35,8 +34,8 @@ export default function CategoryPage({ category, embedded = false }) {
         <label>{category === 'cars' ? copy.pickup : copy.date}<input required type="date" min={today()} value={date} onChange={(event) => { setDate(event.target.value); if (end < event.target.value) setEnd(event.target.value); }} /></label>
         {category === 'cars' ? <label>{copy.dropoff}<input required type="date" min={date || today()} value={end} onChange={(event) => setEnd(event.target.value)} /></label> : <label>{copy.people}<input required type="number" min="1" max="20" value={people} onChange={(event) => setPeople(Number(event.target.value))} /></label>}
       </div>
-      <p className="categoryNotice">{copy.unavailable}</p>
-      <button type="submit">{copy.plan}<ArrowRight size={18} /></button>
+      <p className="categoryNotice">{language === "tr" ? "Tercihlerini gönder; seçenekler için sana ulaşalım." : "Send your preferences and we will contact you with options."}</p>
+      <button type="submit">{language === "tr" ? "Talep gönder" : "Send request"}<ArrowRight size={18} /></button>
     </form>
     {!embedded && <section className="categoryDetails"><h2>{params.get('plan') === '1' ? copy.summary : copy.details}</h2>
       {params.get('plan') === '1' ? <><p>{copy.notice}</p><dl><dt>{t(`travelPage.services.${category}.locationLabel`)}</dt><dd>{params.get('location')}</dd><dt>{category === 'cars' ? copy.pickup : copy.date}</dt><dd>{params.get('date')}</dd><dt>{category === 'cars' ? copy.dropoff : copy.people}</dt><dd>{params.get(category === 'cars' ? 'end' : 'people')}</dd></dl></> : <p>{copy[`${category}Text`]}</p>}

@@ -36,7 +36,7 @@ export default function Flights({ embedded = false }) {
   const [cabinClass, setCabinClass] = useState(() => ['ECONOMY', 'PREMIUM_ECONOMY', 'BUSINESS', 'FIRST'].includes(initial.get('cabinClass')) ? initial.get('cabinClass') : 'ECONOMY');
   const [currency, setCurrency] = useState(() => ['USD', 'EUR', 'TRY', 'GBP'].includes(initial.get('currency')) ? initial.get('currency') : 'USD');
   const [country, setCountry] = useState(() => regionCodes.includes(initial.get('country')) ? initial.get('country') : 'TR');
-  
+
   const [state, setState] = useState('idle');
   const [error, setError] = useState('');
   const [results, setResults] = useState([]);
@@ -53,7 +53,7 @@ export default function Flights({ embedded = false }) {
   useEffect(() => {
     if (embedded) return undefined;
     const controller = new AbortController();
-    
+
     return () => { controller.abort(); searchController.current?.abort(); searchController.current = null; };
   }, [embedded]);
   useEffect(() => {
@@ -68,6 +68,11 @@ export default function Flights({ embedded = false }) {
     setError(''); setResults([]); setVisible(20); setFocusedFlight(null); setChosenOfferId(null);
     if (!origin || !destination) { setError('selectAirport'); setState('error'); return; }
     if (origin.iata === destination.iata || departure < localDate() || (roundTrip && returnDate < departure) || infants > adults || adults + children + infants > 9) { setError('invalid'); setState('error'); return; }
+    if (origin && destination) {
+      trackTravel('flight_search', {origin:origin.iata,destination:destination.iata,departure,adults});
+      navigate(`/request?${new URLSearchParams({kind:'flight',origin:origin.name || origin.iata,destination:destination.name || destination.iata,startDate:departure,endDate:roundTrip ? returnDate : '',adults:String(adults),children:String(children)})}`);
+      return;
+    }
     if (embedded) {
       const query = new URLSearchParams({ origin: origin.iata, originName: origin.name || origin.iata, destination: destination.iata, destinationName: destination.name || destination.iata, departure, oneWay: roundTrip ? '0' : '1', ...(roundTrip ? { returnDate } : {}), adults: String(adults), children: String(children), infants: String(infants), cabinClass, currency, country, auto: '1' });
       navigate(`/flights?${query}`);
@@ -110,10 +115,10 @@ export default function Flights({ embedded = false }) {
             <label>{copy.currency}<select value={currency} onChange={(event) => setCurrency(event.target.value)}>{['USD','EUR','TRY','GBP'].map((code) => <option key={code}>{code}</option>)}</select></label>
             <label>{copy.country}<select value={country} onChange={(event) => setCountry(event.target.value)}>{countries.map((region) => <option key={region.code} value={region.code}>{region.name}</option>)}</select></label>
           </div>
-          <button className="flightSearchButton" type="submit" disabled={loading}>{loading ? <LoaderCircle className="flightSpin" size={20} /> : <Search size={20} />}{loading ? copy.searching : copy.search}</button>
+          <button className="flightSearchButton" type="submit" disabled={loading}>{loading ? <LoaderCircle className="flightSpin" size={20} /> : <Search size={20} />}{loading ? copy.searching : language === "tr" ? "Uçuş talebi gönder" : "Request a flight"}</button>
         </fieldset>
         {error && <p className="flightError" role="alert">{copy[error]}</p>}
-        
+
       </form>
     </section>
     {!embedded && <section ref={resultsRef} className="flightResults" aria-live="polite" aria-busy={loading}>
