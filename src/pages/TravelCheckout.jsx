@@ -1,3 +1,5 @@
+import { useCustomerAuth } from "../context/CustomerAuthContext";
+import { accountRequest } from "../services/customerApi";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -43,6 +45,15 @@ function money(amount, currency = "EUR") {
 }
 
 function TravelCheckout() {
+  const { customerSession } = useCustomerAuth();
+  const [savedTravelers, setSavedTravelers] = useState([]);
+  const [travelerError, setTravelerError] = useState("");
+  useEffect(() => {
+    const controller = new AbortController();
+    setSavedTravelers([]); setTravelerError("");
+    if (customerSession?.token) accountRequest("/preferences", { signal: controller.signal }).then(data => setSavedTravelers(data.travelers)).catch(e => { if (e.name !== "AbortError") setTravelerError(e.message); });
+    return () => controller.abort();
+  }, [customerSession?.token]);
   const location = useLocation();
   const { state } = location;
   const returnParams = new URLSearchParams(location.search);
@@ -350,6 +361,8 @@ function TravelCheckout() {
               />
             ) : (
               <form onSubmit={submit} className="travelCheckoutForm">
+                {savedTravelers.length > 0 && <label className="checkoutSavedTraveler">Kayıtlı yolcu bilgilerini kullan<select defaultValue="" onChange={event => { const person = savedTravelers.find(p => p._id === event.target.value); if (!person) return; setForm(current => ({ ...current, firstName: person.firstName, lastName: person.lastName, email: person.email || current.email, phone: person.phone || current.phone, guests: current.guests.map((g, i) => i === 0 ? { ...g, firstName: person.firstName, lastName: person.lastName } : g) })); }}><option value="">Yolcu seç</option>{savedTravelers.map(p => <option key={p._id} value={p._id}>{p.firstName} {p.lastName}</option>)}</select></label>}
+                {travelerError && <p role="status">Kayıtlı yolcular yüklenemedi. Bilgilerini aşağıdan doldurabilirsin.</p>}
                 <div className="travelCheckoutFormGrid">
                   <label>
                     Ad

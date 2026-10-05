@@ -1,3 +1,4 @@
+import HotelFavorite from "../components/HotelFavorite";
 import { trackTravel } from '../services/analytics';
 import { useEffect, useRef, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
@@ -587,6 +588,7 @@ function HotelDetails() {
               )}
             </div>
             <h1>{name}</h1>
+            <HotelFavorite hotelId={hotelId} name={name} image={images[0]} />
             {address && (
               <p>
                 <MapPin size={17} /> {address}

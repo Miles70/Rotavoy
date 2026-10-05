@@ -1,3 +1,4 @@
+import { optionalCustomer } from "../middleware/customerAuth.js";
 import { bookingStay } from "../services/bookingStay.js";
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
@@ -140,7 +141,7 @@ function publicBooking(booking) {
   };
 }
 
-cardPaymentsRouter.post("/session", cardPaymentLimiter, async (request, response, next) => {
+cardPaymentsRouter.post("/session", cardPaymentLimiter, optionalCustomer, async (request, response, next) => {
   try {
     const status = getNuiteeStatus();
     if (!status.configured || status.environment === "unconfigured") {
@@ -175,6 +176,7 @@ cardPaymentsRouter.post("/session", cardPaymentLimiter, async (request, response
 
     const clientReference = travelReference();
     const booking = await TravelBooking.create({
+      customerId: request.customer?._id || null,
       stay: bookingStay(request.body?.stay),
       clientReference,
       offerId,

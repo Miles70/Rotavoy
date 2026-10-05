@@ -249,6 +249,8 @@ function Header() {
                     </span>
                   </div>
 
+                  <Link to="/account" role="menuitem" className="customerAccountDropdownSignOut"><UserRound size={18} />{text("account.title", "Hesabım")}</Link>
+
                   {isGuest && (
                     <button
                       type="button"

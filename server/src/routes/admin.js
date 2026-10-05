@@ -95,7 +95,7 @@ adminRouter.put('/settings', async (request, response) => {
   await audit(request, 'settings.update', 'travel'); response.json({ settings });
 });
 for (const [path, Model, fields, enums] of [
-  ['tickets', TravelSupportTicket, ['subject', 'email', 'clientReference', 'type', 'status', 'priority', 'note'], { type: ['support', 'cancellation', 'refund', 'payment', 'provider'], status: ['open', 'in_progress', 'waiting_provider', 'resolved'], priority: ['normal', 'high', 'urgent'] }],
+  ['tickets', TravelSupportTicket, ['subject', 'email', 'clientReference', 'type', 'status', 'priority', 'note', 'reply'], { type: ['support', 'cancellation', 'refund', 'payment', 'provider'], status: ['open', 'in_progress', 'waiting_provider', 'resolved'], priority: ['normal', 'high', 'urgent'] }],
   ['content', TravelContent, ['title', 'type', 'destination', 'body', 'status'], { type: ['destination', 'campaign', 'guide'], status: ['draft', 'ready', 'archived'] }],
 ]) {
   adminRouter.get(`/${path}`, async (request, response) => {
@@ -108,7 +108,7 @@ for (const [path, Model, fields, enums] of [
   async function save(request, response) {
     const body = {};
     for (const field of fields) if (request.body[field] !== undefined) {
-      body[field] = text(request.body[field], ['note', 'body'].includes(field) ? 5000 : 254);
+      body[field] = text(request.body[field], ['note', 'body', 'reply'].includes(field) ? 5000 : 254);
       if (enums[field] && !enums[field].includes(body[field])) throw bad(`Geçersiz ${field}.`);
     }
     if (!body[path === 'tickets' ? 'subject' : 'title']) throw bad('Başlık zorunlu.');

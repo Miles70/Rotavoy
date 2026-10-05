@@ -1,3 +1,4 @@
+import { optionalCustomer } from "../middleware/customerAuth.js";
 import { bookingStay } from "../services/bookingStay.js";
 import crypto from "node:crypto";
 import { Router } from "express";
@@ -117,6 +118,7 @@ function travelBookingPayload(booking) {
 cryptoCheckoutRouter.post(
   "/crypto-checkout",
   bookingLimiter,
+  optionalCustomer,
   async (request, response, next) => {
     try {
       const guests = Array.isArray(request.body?.guests)
@@ -201,6 +203,7 @@ cryptoCheckoutRouter.post(
       const paymentExpiresAt = new Date(Date.now() + 20 * 60 * 1000);
 
       const booking = await TravelBooking.create({
+      customerId: request.customer?._id || null,
       stay: bookingStay(request.body?.stay),
         clientReference: travelReference(),
         offerId,

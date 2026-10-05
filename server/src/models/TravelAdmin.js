@@ -8,6 +8,8 @@ export const TravelAdminSettings = mongoose.model('TravelAdminSettings', new mon
   announcement: { type: String, default: '' },
 }, options));
 export const TravelSupportTicket = mongoose.model('TravelSupportTicket', new mongoose.Schema({
+  customerId: { type: mongoose.Schema.Types.ObjectId, ref: "Customer", index: true },
+  message: { type: String, default: "" }, reply: { type: String, default: "" },
   subject: { type: String, required: true }, email: { type: String, default: '' }, clientReference: { type: String, default: '', index: true },
   type: { type: String, enum: ['support', 'cancellation', 'refund', 'payment', 'provider'], default: 'support' },
   status: { type: String, enum: ['open', 'in_progress', 'waiting_provider', 'resolved'], default: 'open', index: true },

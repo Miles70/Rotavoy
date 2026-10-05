@@ -469,3 +469,5 @@
 .hotelStaySearch :disabled { opacity: .6; cursor: wait; }
 @media (max-width: 900px) { .hotelStaySearch { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 540px) { .hotelStaySearch { grid-template-columns: minmax(0, 1fr); padding: 16px; } }
+
+.hotelFavoriteControl{margin-top:14px}.hotelFavoriteButton{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid #dbe6f2;border-radius:10px;background:#fff;color:#0b63f6;font:inherit;font-size:13px;font-weight:700;cursor:pointer}.hotelFavoriteButton.saved{color:#c92a6d;background:#fff0f6;border-color:#f5c8df}.hotelFavoriteButton:disabled{opacity:.6;cursor:wait}.hotelFavoriteControl small{display:block;color:#c0372c;margin-top:8px}

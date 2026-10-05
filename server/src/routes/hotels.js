@@ -1,3 +1,4 @@
+import { optionalCustomer } from "../middleware/customerAuth.js";
 import { bookingStay } from "../services/bookingStay.js";
 import { readTravelMargin } from "../services/travelAdminSettings.js";
 import { HotelVideoIndex } from "../models/HotelVideoIndex.js";
@@ -477,7 +478,7 @@ hotelsRouter.post("/prebook", bookingLimiter, async (request, response, next) =>
   }
 });
 
-hotelsRouter.post("/checkout", bookingLimiter, async (request, response, next) => {
+hotelsRouter.post("/checkout", bookingLimiter, optionalCustomer, async (request, response, next) => {
   try {
     const guests = Array.isArray(request.body?.guests)
       ? request.body.guests.map((guest, index) =>
@@ -510,6 +511,7 @@ hotelsRouter.post("/checkout", bookingLimiter, async (request, response, next) =
       throw error;
     }
     const booking = await TravelBooking.create({
+      customerId: request.customer?._id || null,
       stay: bookingStay(request.body?.stay),
       clientReference: travelReference(), offerId, prebookId, holder, guests,
       total: customerTotal,

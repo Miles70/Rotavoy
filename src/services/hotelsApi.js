@@ -1,3 +1,4 @@
+import { getCustomerAccessToken } from "./customerApi";
 const apiBaseUrl = String(import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
 
 async function hotelRequest(path, options = {}) {
@@ -5,6 +6,7 @@ async function hotelRequest(path, options = {}) {
     ...options,
     headers: {
       "Content-Type": "application/json",
+      ...(getCustomerAccessToken() ? { Authorization: `Bearer ${getCustomerAccessToken()}` } : {}),
       ...(options.headers || {}),
     },
   });

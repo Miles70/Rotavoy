@@ -27,3 +27,4 @@
 @keyframes travelCheckoutSpin{to{transform:rotate(360deg)}}.travelSpin{animation:travelCheckoutSpin .8s linear infinite}
 
 @media(max-width:760px){.travelPaymentChoice{grid-template-columns:1fr}.travelCryptoAssetChoice{grid-template-columns:1fr 1fr}.travelCryptoNetworkOptions{grid-template-columns:1fr 1fr}}
+.checkoutSavedTraveler{display:grid;gap:8px;background:#eef5ff;padding:16px;border-radius:12px;margin-bottom:20px;color:#071b3a;font-weight:700}.checkoutSavedTraveler select{padding:12px;border:1px solid #cedbea;border-radius:8px;background:white;color:#071b3a;font:inherit}

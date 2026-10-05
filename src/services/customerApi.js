@@ -135,3 +135,10 @@ export async function logoutCustomerSession() {
     clearStoredCustomerSession();
   }
 }
+
+export function accountRequest(path = '', options = {}) {
+  return request(`/api/account${path}`, {
+    ...options,
+    headers: { 'Content-Type': 'application/json', ...options.headers },
+  }, { authenticated: true });
+}

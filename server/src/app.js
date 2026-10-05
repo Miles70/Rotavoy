@@ -1,3 +1,4 @@
+import { accountRouter } from "./routes/account.js";
 import { adminAuthRouter } from "./routes/adminAuth.js";
 import { analyticsRouter } from "./routes/analytics.js";
 import { adminRouter } from "./routes/admin.js";
@@ -65,6 +66,7 @@ export function createApp() {
   app.use("/api/analytics", analyticsRouter);
   app.use("/api/admin-auth", adminAuthRouter);
   app.use("/api/admin", adminRouter);
+  app.use("/api/account", accountRouter);
   app.use("/api/customer-auth", customerAuthRouter);
   app.use("/api/hotels/card", cardPaymentsRouter);
   app.use("/api/hotels", cryptoCheckoutRouter);

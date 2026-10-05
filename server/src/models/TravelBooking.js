@@ -13,6 +13,7 @@ const personSchema = new mongoose.Schema(
 
 const travelBookingSchema = new mongoose.Schema(
   {
+    customerId: { type: mongoose.Schema.Types.ObjectId, ref: "Customer", default: null, index: true },
     clientReference: { type: String, required: true, unique: true, index: true },
     offerId: { type: String, required: true, trim: true },
     prebookId: { type: String, required: true, trim: true, index: true },
