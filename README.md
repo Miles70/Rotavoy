@@ -55,7 +55,7 @@ ROTAVOY_ADMIN_EMAILS=your-verified-login-email@example.com
 ROTAVOY_ADMIN_WALLETS=
 ```
 
-Comma-separated identities are supported. Firebase email identities must be verified; guest accounts never receive admin access. Empty allowlists deny all access. Do not place these settings or provider secrets in frontend `VITE_*` variables.
+Existing `ADMIN_EMAIL` configuration is also supported when `ROTAVOY_ADMIN_EMAILS` is empty. An explicit Travel email list takes precedence. The email setting must be in the backend environment (`server/.env` for local development). Comma-separated identities are supported. Firebase email identities must be verified; guest accounts never receive admin access. Empty allowlists deny all access. Do not place these settings or provider secrets in frontend `VITE_*` variables.
 
 Available operations: real hotel booking/payment lists, search and pagination, booking details and operational notes (new checkouts also save informational hotel/stay selections), customer directory, CSV export of the current page, indexed hotel showcase visibility/priority, support/cancellation/refund request tracking, editorial destination/campaign/guide drafts, provider configuration status, commission settings for new hotel searches, and an audit trail of admin writes. Gross paid totals remain separated by currency and are not net commission or provider payouts.
 

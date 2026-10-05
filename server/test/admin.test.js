@@ -9,6 +9,7 @@ import { HotelVideoIndex } from '../src/models/HotelVideoIndex.js';
 import { adminBooking, bookingFilters } from '../src/routes/admin.js';
 
 test('admin roles require a verified allowed identity; guests and unverified emails cannot escalate', () => {
+  const previousLegacy = process.env.ADMIN_EMAIL; process.env.ADMIN_EMAIL = '';
   const previousEmails = process.env.ROTAVOY_ADMIN_EMAILS; const previousWallets = process.env.ROTAVOY_ADMIN_WALLETS;
   process.env.ROTAVOY_ADMIN_EMAILS = ' Owner@Example.com '; process.env.ROTAVOY_ADMIN_WALLETS = '0xABCD';
   try {
@@ -20,7 +21,7 @@ test('admin roles require a verified allowed identity; guests and unverified ema
     assert.equal(isTravelAdmin({ provider: 'wallet', providerId: '0xaaaa' }), false);
     process.env.ROTAVOY_ADMIN_EMAILS = ''; process.env.ROTAVOY_ADMIN_WALLETS = '';
     assert.equal(isTravelAdmin({ provider: 'firebase', email: 'owner@example.com', emailVerified: true }), false);
-  } finally { for (const [key, value] of [['ROTAVOY_ADMIN_EMAILS', previousEmails], ['ROTAVOY_ADMIN_WALLETS', previousWallets]]) { if (value === undefined) delete process.env[key]; else process.env[key] = value; } }
+  } finally { for (const [key, value] of [['ADMIN_EMAIL', previousLegacy], ['ROTAVOY_ADMIN_EMAILS', previousEmails], ['ROTAVOY_ADMIN_WALLETS', previousWallets]]) { if (value === undefined) delete process.env[key]; else process.env[key] = value; } }
 });
 test('booking projection omits payment secrets and search treats user regex as literal', () => {
   const output = adminBooking({ clientReference: 'TRV-1', payment: { method: 'card', clientSecret: 'private', transactionId: 'private' }, providerBooking: { secret: 'private' } });
@@ -76,4 +77,18 @@ test('checkout stay metadata rejects invalid dates and cannot alter booking/paym
   assert.equal(stay.checkin, ''); assert.equal(stay.checkout, '2026-12-10'); assert.equal(stay.adults, 2);
   assert.equal(stay.total, undefined); assert.equal(stay.paymentStatus, undefined);
   assert.deepEqual(bookingStay(null), { hotelId: '', hotelName: '', checkin: '', checkout: '', adults: null });
+});
+
+
+test('existing ADMIN_EMAIL grants verified owner access and explicit Travel list takes precedence', () => {
+  const keys = ['ADMIN_EMAIL', 'ROTAVOY_ADMIN_EMAILS']; const previous = keys.map(key => process.env[key]);
+  try {
+    process.env.ADMIN_EMAIL = ' Owner@Example.com '; delete process.env.ROTAVOY_ADMIN_EMAILS;
+    const owner = { provider: 'firebase', email: 'owner@example.com', emailVerified: true };
+    assert.equal(isTravelAdmin(owner), true);
+    assert.equal(isTravelAdmin({ ...owner, emailVerified: false }), false);
+    assert.equal(isTravelAdmin({ ...owner, provider: 'guest' }), false);
+    process.env.ROTAVOY_ADMIN_EMAILS = '   '; assert.equal(isTravelAdmin(owner), true);
+    process.env.ROTAVOY_ADMIN_EMAILS = 'other@example.com'; assert.equal(isTravelAdmin(owner), false);
+  } finally { keys.forEach((key, index) => { if (previous[index] === undefined) delete process.env[key]; else process.env[key] = previous[index]; }); }
 });
