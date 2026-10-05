@@ -141,6 +141,12 @@ adminRouter.get('/analytics', async (request, response) => {
     TravelAnalytics.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
     TravelAnalytics.countDocuments(filter),
     TravelAnalytics.aggregate([{ $match: filter }, { $facet: {
+      visitorCards: [
+        { $sort: { createdAt: -1, _id: -1 } },
+        { $group: { _id: '$visitorId', identity: { $max: '$identity' }, ip: { $first: '$ip' }, city: { $first: '$city' }, country: { $first: '$country' }, device: { $first: '$device' }, browser: { $first: '$browser' }, source: { $first: '$source' }, lastSeen: { $first: '$createdAt' }, firstSeen: { $min: '$createdAt' }, events: { $sum: 1 }, sessionIds: { $addToSet: '$sessionId' }, hotelViews: { $sum: { $cond: [{ $eq: ['$type', 'hotel_view'] }, 1, 0] } }, flightSearches: { $sum: { $cond: [{ $eq: ['$type', 'flight_search'] }, 1, 0] } }, selections: { $sum: { $cond: [{ $in: ['$type', ['hotel_select', 'room_select', 'flight_select']] }, 1, 0] } } } },
+        { $sort: { lastSeen: -1, _id: 1 } }, { $skip: (page - 1) * limit }, { $limit: limit },
+        { $project: { identity: 1, ip: 1, city: 1, country: 1, device: 1, browser: 1, source: 1, lastSeen: 1, firstSeen: 1, events: 1, hotelViews: 1, flightSearches: 1, selections: 1, sessions: { $size: '$sessionIds' } } },
+      ],
       visitors: [{ $group: { _id: '$visitorId' } }, { $count: 'count' }],
       sessions: [{ $group: { _id: '$sessionId' } }, { $count: 'count' }],
       types: [{ $group: { _id: '$type', count: { $sum: 1 } } }],
@@ -149,5 +155,6 @@ adminRouter.get('/analytics', async (request, response) => {
       hotels: [{ $match: { type: 'hotel_view' } }, { $group: { _id: '$details.hotelId', name: { $first: '$details.hotelName' }, count: { $sum: 1 } } }, { $sort: { count: -1 } }, { $limit: 10 }],
     } }]),
   ]);
-  response.json({ items, total, page, limit, summary: summary[0] || {}, days });
+  const grouped = request.query.view === 'visitors';
+  response.json({ items: grouped ? summary[0]?.visitorCards || [] : items, total: grouped ? summary[0]?.visitors?.[0]?.count || 0 : total, eventTotal: total, page, limit, summary: summary[0] || {}, days, mode: grouped ? 'visitors' : 'events' });
 });
