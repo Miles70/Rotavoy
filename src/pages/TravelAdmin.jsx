@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, CalendarCheck, CreditCard, Users, Hotel, Headphones, FileText, Settings, Activity, Plug, Plane, CarFront, MapPinned, RefreshCw, Download, Plus, ArrowUpRight, Moon, Sun } from 'lucide-react';
-import { useCustomerAuth } from '../context/CustomerAuthContext';
+import { getAdminSession, loginAdmin, logoutAdmin } from '../services/adminSession';
 import RotavoyLogo from '../components/Brand/RotavoyLogo';
 import Seo from '../components/Seo/Seo';
 import AdminRecordEditor, { statusLabels } from '../components/Admin/AdminRecordEditor';
@@ -47,7 +47,16 @@ export default function TravelAdmin() {
   const [dark, setDark] = useState(() => { try { return localStorage.getItem('rotavoy_admin_theme') === 'dark'; } catch { return false; } });
   useEffect(() => { try { localStorage.setItem('rotavoy_admin_theme', dark ? 'dark' : 'light'); } catch { /* Theme still works when browser storage is unavailable. */ } }, [dark]);
   const themeToggle = <AdminThemeToggle dark={dark} onToggle={() => setDark(value => !value)} />;
-  const { isAuthenticated, customerSession, openAuthModal, signOut } = useCustomerAuth();
+  const [customerSession, setAdminSession] = useState(getAdminSession);
+  const [loginBusy, setLoginBusy] = useState(false);
+  const isAuthenticated = Boolean(customerSession?.token);
+  async function openAuthModal() {
+    setLoginBusy(true); setAccessError('');
+    try { setAdminSession(await loginAdmin()); }
+    catch (err) { setAccessError(err.code ? `Google girişi tamamlanamadı (${err.code}).` : err.message); }
+    finally { setLoginBusy(false); }
+  }
+  async function signOut() { setAdminSession(null); await logoutAdmin(); }
   const location = useLocation(); const navigate = useNavigate();
   const section = location.pathname.split('/')[2] || 'overview';
   const current = sections.find(item => item[0] === section);
@@ -75,7 +84,7 @@ export default function TravelAdmin() {
     downloadAdminCsv(rows, `rotavoy-${section}-sayfa-${page}.csv`);
   }
   const seo = <Seo title="Travel Yönetimi | Rotavoy" description="Rotavoy Travel operasyon yönetimi." path={location.pathname} noIndex />;
-  if (access !== 'allowed') return <div className="adminGateSurface" data-theme={dark ? "dark" : "light"}><main className="adminGate">{themeToggle}{seo}<Link to="/"><RotavoyLogo className="adminLogo" /></Link><h1>Rotavoy Travel Yönetimi</h1>{access === 'loading' ? <p role="status">Yönetici erişimi kontrol ediliyor…</p> : <><p>{access === 'login' ? 'Yönetici hesabınla giriş yap.' : accessError || 'Bu hesabın yönetim yetkisi yok.'}</p><button className="adminPrimary" onClick={openAuthModal}>{access === 'login' ? 'Giriş yap' : 'Hesap değiştir'}</button>{isAuthenticated && <button onClick={signOut}>Çıkış yap</button>}<p className="adminHint">Yetki, sunucudaki ROTAVOY_ADMIN_EMAILS (veya mevcut ADMIN_EMAIL) ya da ROTAVOY_ADMIN_WALLETS izin listesiyle tanımlanır. E-posta hesabı doğrulanmış olmalı.</p><Link to="/">Siteye dön</Link></>}</main></div>;
+  if (access !== 'allowed') return <div className="adminGateSurface" data-theme={dark ? "dark" : "light"}><main className="adminGate">{themeToggle}{seo}<Link to="/"><RotavoyLogo className="adminLogo" /></Link><h1>Rotavoy Travel Yönetimi</h1>{access === 'loading' ? <p role="status">Yönetici erişimi kontrol ediliyor…</p> : <><p>{access === 'login' ? accessError || 'Yönetici Google hesabınla giriş yap. Bu oturum müşteri girişinden bağımsızdır.' : accessError || 'Bu hesabın yönetim yetkisi yok.'}</p><button className="adminPrimary" disabled={loginBusy} onClick={openAuthModal}>{loginBusy ? 'Bağlanıyor…' : access === 'login' ? 'Google ile yönetici girişi' : 'Google hesabını değiştir'}</button>{isAuthenticated && <button onClick={signOut}>Çıkış yap</button>}<p className="adminHint">Yetki, sunucudaki ROTAVOY_ADMIN_EMAILS (veya mevcut ADMIN_EMAIL) ya da ROTAVOY_ADMIN_WALLETS izin listesiyle tanımlanır. E-posta hesabı doğrulanmış olmalı.</p><Link to="/">Siteye dön</Link></>}</main></div>;
   return <div className="travelAdmin" data-theme={dark ? "dark" : "light"}>{seo}<aside className="adminSidebar"><Link to="/"><RotavoyLogo className="adminLogo" /></Link><span className="adminEyebrow">TRAVEL OPERASYON</span><nav aria-label="Travel yönetimi">{sections.map(([key, title, Icon]) => <NavLink key={key} to={key === 'overview' ? '/admin' : `/admin/${key}`} end><Icon size={19} />{title}</NavLink>)}</nav><div className="adminSidebarBottom"><p>{admin?.identity}</p><Link to="/">Siteye dön <ArrowUpRight size={16} /></Link><button onClick={signOut}>Çıkış yap</button></div></aside><main className="adminMain" ref={contentRef}><header className="adminTopbar"><div><span className="adminEyebrow">ROTAVOY TRAVEL</span><h1>{current?.[1] || 'Sayfa bulunamadı'}</h1></div><div className="adminTopbarActions">{themeToggle}<button disabled={loading} onClick={() => reload()} aria-label="Verileri yenile"><RefreshCw size={18} />Yenile</button></div></header>
     {!current && <p><Link to="/admin">Genel bakışa dön</Link></p>}
     {success && <p className="adminSuccess" role="status">{success}</p>}{error && <p className="adminError" role="alert">{error}</p>}

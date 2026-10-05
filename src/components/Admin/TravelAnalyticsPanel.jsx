@@ -6,6 +6,11 @@ function detail(item) {
   const d = item.details || {};
   return [d.hotelName || d.hotelId, d.origin ? `${d.originName || d.origin} (${d.origin}) → ${d.destinationName || d.destination} (${d.destination})` : d.destination, d.roomName, d.category, d.checkin && `${d.checkin} → ${d.checkout}`, d.departure && `${d.departure}${d.returnDate ? ` → ${d.returnDate}` : ''}`, d.adults && `${d.adults} yetişkin`, d.children && `${d.children} çocuk`, d.offerId].filter(Boolean).join(' · ');
 }
+function TrackingStatus({ refresh }) {
+  let value = null;
+  try { value = JSON.parse(localStorage.getItem('rotavoy_analytics_status_v1') || 'null'); } catch { /* No local tracking yet. */ }
+  return <p className={value?.lastError ? 'adminError' : 'adminHint'} key={refresh}>Bu tarayıcıda son başarılı analitik gönderimi: {value?.lastSuccess ? date(value.lastSuccess) : 'Henüz yok'}.{value?.pending ? ` Bekleyen ${value.pending} olay var.` : ''}{value?.lastError ? ` Son hata: ${value.lastError}. Bağlantı düzeldiğinde yeniden denenecek.` : ''}</p>;
+}
 export default function TravelAnalyticsPanel({ refreshKey = 0 }) {
   const [days, setDays] = useState('7'); const [type, setType] = useState(''); const [bots, setBots] = useState('');
   const [query, setQuery] = useState(''); const [search, setSearch] = useState(''); const [visitor, setVisitor] = useState('');
@@ -19,7 +24,7 @@ export default function TravelAnalyticsPanel({ refreshKey = 0 }) {
   useEffect(() => { const timer = setInterval(() => setRefresh(value => value + 1), 30000); return () => clearInterval(timer); }, []);
   const summary = data?.summary || {}; const types = summary.types || [];
   function change(setter, value) { setter(value); setPage(1); }
-  return <section><p className="adminHint">Giriş yapan hesaplar hesap bilgisiyle; diğerleri anonim ziyaretçi numarasıyla görünür. IP konumu yaklaşık olup yerel bağlantıda boş olabilir. Loglar 30 saniyede yenilenir. Ölçüm bu özelliğin kurulmasıyla başlar.</p>
+  return <section><TrackingStatus refresh={refresh + refreshKey} /><p className="adminHint">Giriş yapan hesaplar hesap bilgisiyle; diğerleri anonim ziyaretçi numarasıyla görünür. IP konumu yaklaşık olup yerel bağlantıda boş olabilir. Loglar 30 saniyede yenilenir. Ölçüm bu özelliğin kurulmasıyla başlar.</p>
     <div className="adminToolbar"><form onSubmit={event => { event.preventDefault(); change(setSearch, query); }}><label>İsim, IP, şehir, otel veya rota<input value={query} maxLength="100" onChange={event => setQuery(event.target.value)} /></label><button>Ara</button></form><label>Dönem<select value={days} onChange={event => change(setDays, event.target.value)}>{[['1','Son 24 saat'],['7','Son 7 gün'],['30','Son 30 gün'],['90','Son 90 gün'],['365','Son 1 yıl']].map(([key,title]) => <option key={key} value={key}>{title}</option>)}</select></label><label>Olay<select value={type} onChange={event => change(setType, event.target.value)}><option value="">Tümü</option>{Object.entries(eventLabels).map(([key,title]) => <option key={key} value={key}>{title}</option>)}</select></label><label>Trafik<select value={bots} onChange={event => change(setBots, event.target.value)}><option value="">Tümü</option><option value="exclude">Belirgin botları gizle</option></select></label><button onClick={() => setRefresh(value => value + 1)}>Yenile</button><button disabled={!data?.items?.length || loading} onClick={() => downloadAdminCsv(data.items.map(item => ({ tarih: item.createdAt, ziyaretci: item.visitorId, oturum: item.sessionId, hesap: item.identity, ip: item.ip, ulke: item.country, sehir: item.city, cihaz: item.device, kaynak: item.source, olay: eventLabels[item.type], sayfa: item.path, detay: detail(item) })), 'rotavoy-analitik.csv')}>Bu sayfayı CSV indir</button></div>
     {visitor && <p className="adminHint">Ziyaretçi: {visitor} <button onClick={() => change(setVisitor, '')}>Tüm ziyaretçiler</button></p>}
     {error && <p className="adminError" role="alert">{error}</p>}{loading && <p role="status">Analitik yükleniyor…</p>}

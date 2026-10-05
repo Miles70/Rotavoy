@@ -1,7 +1,7 @@
-import { getCustomerAccessToken } from './customerApi';
+import { getAdminSession } from './adminSession';
 const base = String(import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
 export async function adminRequest(path, { method = 'GET', body, signal } = {}) {
-  const response = await fetch(`${base}/api/admin${path}`, { method, signal, headers: { Authorization: `Bearer ${getCustomerAccessToken()}`, ...(body ? { 'Content-Type': 'application/json' } : {}) }, ...(body ? { body: JSON.stringify(body) } : {}) });
+  const response = await fetch(`${base}/api/admin${path}`, { method, signal, headers: { Authorization: `Bearer ${getAdminSession()?.token || ''}`, ...(body ? { 'Content-Type': 'application/json' } : {}) }, ...(body ? { body: JSON.stringify(body) } : {}) });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) { const error = new Error(data.message || 'Yönetim verileri alınamadı.'); error.status = response.status; throw error; }
   return data;
