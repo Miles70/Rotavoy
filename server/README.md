@@ -26,3 +26,5 @@ The Vite frontend proxies local `/api` requests to `http://localhost:5000`.
 - `POST /api/hotels/:clientReference/verify-payment`
 
 Product catalog, cart, shopping orders, CJdropshipping, marketplace admin and campaign APIs have been removed from Rotavoy.
+
+Travel administration is now provided by `/api/admin`, using verified customer sessions plus `ROTAVOY_ADMIN_EMAILS` / `ROTAVOY_ADMIN_WALLETS` server allowlists. See the root README for setup and supported operations. Admin responses use `private, no-store`; payment client secrets and upstream credentials are not returned. The legacy shopping admin remains removed.

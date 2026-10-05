@@ -200,8 +200,10 @@ function TravelCheckout() {
         },
       ];
 
+      const stay = { hotelId: hotel.hotelId, hotelName, checkin: state.checkin, checkout: state.checkout, adults: state.adults };
       if (paymentMethod === "card") {
         const result = await createCardPaymentSession({
+          stay,
           offerId: offer.offerId,
           holder,
           guests,
@@ -212,6 +214,7 @@ function TravelCheckout() {
       }
 
       const result = await createTravelCheckout({
+        stay,
         offerId: offer.offerId,
         holder,
         guests,

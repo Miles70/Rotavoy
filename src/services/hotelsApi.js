@@ -112,6 +112,7 @@ export function bookSandboxHotel({ prebookId, clientReference, holder, guests })
 }
 
 export function createTravelCheckout({
+  stay,
   offerId,
   holder,
   guests,
@@ -121,6 +122,7 @@ export function createTravelCheckout({
   return hotelRequest("/crypto-checkout", {
     method: "POST",
     body: JSON.stringify({
+      stay,
       offerId,
       holder,
       guests,
@@ -137,10 +139,10 @@ export function verifyTravelPayment(clientReference, { transactionHash, payerAdd
   }).then((payload) => payload.booking);
 }
 
-export function createCardPaymentSession({ offerId, holder, guests }) {
+export function createCardPaymentSession({ offerId, holder, guests, stay }) {
   return hotelRequest("/card/session", {
     method: "POST",
-    body: JSON.stringify({ offerId, holder, guests }),
+    body: JSON.stringify({ offerId, holder, guests, stay }),
   });
 }
 

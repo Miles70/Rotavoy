@@ -34,6 +34,7 @@ const travelBookingSchema = new mongoose.Schema(
     paymentExpiresAt: { type: Date, default: null, index: true },
     holder: { type: personSchema, required: true },
     guests: { type: [personSchema], required: true },
+    stay: { type: new mongoose.Schema({ hotelId: String, hotelName: String, checkin: String, checkout: String, adults: Number }, { _id: false }), default: () => ({}) },
     providerBooking: { type: mongoose.Schema.Types.Mixed, default: {} },
     failureReason: { type: String, trim: true, default: "" },
   },

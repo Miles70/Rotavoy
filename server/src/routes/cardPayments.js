@@ -1,3 +1,4 @@
+import { bookingStay } from "../services/bookingStay.js";
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import crypto from "node:crypto";
@@ -174,6 +175,7 @@ cardPaymentsRouter.post("/session", cardPaymentLimiter, async (request, response
 
     const clientReference = travelReference();
     const booking = await TravelBooking.create({
+      stay: bookingStay(request.body?.stay),
       clientReference,
       offerId,
       prebookId,

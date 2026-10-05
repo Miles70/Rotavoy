@@ -1,3 +1,4 @@
+import { adminRouter } from "./routes/admin.js";
 import { flightsRouter } from "./routes/flights.js";
 import cors from "cors";
 import express from "express";
@@ -58,6 +59,7 @@ export function createApp() {
     });
   });
 
+  app.use("/api/admin", adminRouter);
   app.use("/api/customer-auth", customerAuthRouter);
   app.use("/api/hotels/card", cardPaymentsRouter);
   app.use("/api/hotels", cryptoCheckoutRouter);

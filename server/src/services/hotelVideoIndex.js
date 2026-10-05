@@ -164,20 +164,22 @@ function hotelPhoto(hotel) {
 
 export async function listIndexedVideoHotels(limit = 40) {
   return HotelVideoIndex.find({
+    showcaseVisible: { $ne: false },
     hasVideo: true,
     videoUrl: { $ne: "" },
     stars: { $gte: 5 },
   })
-    .sort({ checkedAt: -1 })
+    .sort({ showcasePriority: -1, checkedAt: -1 })
     .limit(Math.min(Math.max(Number(limit) || 40, 1), 100))
     .lean();
 }
 
 export async function listIndexedShowcaseHotels(limit = 80) {
   return HotelVideoIndex.find({
+    showcaseVisible: { $ne: false },
     stars: { $gte: 5 },
   })
-    .sort({ hasVideo: -1, checkedAt: -1 })
+    .sort({ showcasePriority: -1, hasVideo: -1, checkedAt: -1 })
     .limit(Math.min(Math.max(Number(limit) || 80, 1), 120))
     .lean();
 }

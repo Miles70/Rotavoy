@@ -454,6 +454,7 @@ function Travel({ hotelsOnly = false }) {
 
       try {
         const indexedResponse = await listIndexedShowcaseHotels(60);
+        for (const hotelId of indexedResponse?.excludedHotelIds || []) knownIds.add(hotelId);
         const indexedHotels = Array.isArray(indexedResponse?.hotels)
           ? indexedResponse.hotels
           : [];

@@ -1,8 +1,9 @@
 import { Suspense, lazy } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
 import AuthModal from "./components/AuthModal/AuthModal";
 
+const TravelAdmin = lazy(() => import("./pages/TravelAdmin"));
 const CategoryPage = lazy(() => import("./pages/CategoryPage"));
 const Flights = lazy(() => import("./pages/Flights"));
 const Travel = lazy(() => import("./pages/Travel"));
@@ -25,6 +26,8 @@ function App() {
     <>
       <Suspense fallback={<RouteFallback />}>
         <Routes>
+          <Route path="/admin/dashboard" element={<Navigate to="/admin" replace />} />
+          <Route path="/admin/*" element={<TravelAdmin />} />
           <Route element={<MainLayout />}>
             <Route path="/" element={<Travel />} />
             <Route path="/travel" element={<Travel />} />

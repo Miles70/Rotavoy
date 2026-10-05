@@ -42,3 +42,21 @@ Frontend configuration:
 Backend configuration is documented in `server/.env.example`.
 
 Never commit local `.env` files or production credentials.
+
+## Travel administration
+
+The Travel admin is available at `/admin` (separate from the customer site). It uses the same Google/Facebook or signed wallet login, with administrator authorization enforced by the server on every `/api/admin` endpoint.
+
+Set at least one allowlist in **server/.env** or your backend hosting environment, then restart the backend:
+
+```dotenv
+ROTAVOY_ADMIN_EMAILS=your-verified-login-email@example.com
+# Alternatively, use a wallet address you own and authenticate by signing:
+ROTAVOY_ADMIN_WALLETS=
+```
+
+Comma-separated identities are supported. Firebase email identities must be verified; guest accounts never receive admin access. Empty allowlists deny all access. Do not place these settings or provider secrets in frontend `VITE_*` variables.
+
+Available operations: real hotel booking/payment lists, search and pagination, booking details and operational notes (new checkouts also save informational hotel/stay selections), customer directory, CSV export of the current page, indexed hotel showcase visibility/priority, support/cancellation/refund request tracking, editorial destination/campaign/guide drafts, provider configuration status, commission settings for new hotel searches, and an audit trail of admin writes. Gross paid totals remain separated by currency and are not net commission or provider payouts.
+
+Support/refund records do not cancel provider reservations or transfer money. Editorial `ready` records are not automatically published. Flight ticketing, rental/activity providers, payout reconciliation, granular staff roles and scheduled publishing are explicitly shown as pending integrations. Existing booking/payment execution remains the checkout flow; the admin does not offer manual “mark paid/confirmed” overrides.

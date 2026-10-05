@@ -10,6 +10,8 @@ const hotelVideoIndexSchema = new mongoose.Schema(
     mainPhoto: { type: String, trim: true, default: "" },
     videoUrl: { type: String, trim: true, default: "" },
     hasVideo: { type: Boolean, default: false, index: true },
+    showcaseVisible: { type: Boolean, default: true, index: true },
+    showcasePriority: { type: Number, default: 0, min: 0, max: 100 },
     checkedAt: { type: Date, default: Date.now, index: true },
   },
   { timestamps: true, versionKey: false },

@@ -1,3 +1,6 @@
+import { bookingStay } from "../services/bookingStay.js";
+import { readTravelMargin } from "../services/travelAdminSettings.js";
+import { HotelVideoIndex } from "../models/HotelVideoIndex.js";
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import {
@@ -135,10 +138,6 @@ function normalizeOccupancies(value) {
   });
 }
 
-function getMargin() {
-  const margin = Number.parseFloat(process.env.NUITEE_DEFAULT_MARGIN_PERCENT || "15");
-  return Number.isFinite(margin) && margin >= 0 && margin <= 100 ? margin : 15;
-}
 
 function roundMoney(value) {
   return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
@@ -298,7 +297,7 @@ hotelsRouter.get("/video-showcase", async (request, response, next) => {
     const limit = boundedInteger(request.query.limit, 40, 1, 100);
     const hotels = await listIndexedVideoHotels(limit);
 
-    response.set("Cache-Control", "public, max-age=1800");
+    response.set("Cache-Control", "no-cache");
     response.json({
       hotels: hotels.map((hotel) => ({
         hotelId: hotel.hotelId,
@@ -319,9 +318,11 @@ hotelsRouter.get("/showcase-index", async (request, response, next) => {
   try {
     const limit = boundedInteger(request.query.limit, 80, 1, 120);
     const hotels = await listIndexedShowcaseHotels(limit);
+    const hidden = await HotelVideoIndex.find({ showcaseVisible: false }).select("hotelId -_id").lean();
 
-    response.set("Cache-Control", "public, max-age=1800");
+    response.set("Cache-Control", "no-cache");
     response.json({
+      excludedHotelIds: hidden.map((hotel) => hotel.hotelId),
       hotels: hotels.map((hotel) => ({
         hotelId: hotel.hotelId,
         name: hotel.name,
@@ -444,7 +445,7 @@ hotelsRouter.post("/rates", searchLimiter, async (request, response, next) => {
         2,
       ),
       occupancies: normalizeOccupancies(request.body?.occupancies),
-      margin: getMargin(),
+      margin: await readTravelMargin(),
       includeHotelData: true,
       roomMapping: true,
       maxRatesPerHotel: boundedInteger(request.body?.maxRatesPerHotel, 3, 1, 10),
@@ -509,6 +510,7 @@ hotelsRouter.post("/checkout", bookingLimiter, async (request, response, next) =
       throw error;
     }
     const booking = await TravelBooking.create({
+      stay: bookingStay(request.body?.stay),
       clientReference: travelReference(), offerId, prebookId, holder, guests,
       total: customerTotal,
       currency,

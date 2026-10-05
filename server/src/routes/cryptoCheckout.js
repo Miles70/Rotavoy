@@ -1,3 +1,4 @@
+import { bookingStay } from "../services/bookingStay.js";
 import crypto from "node:crypto";
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
@@ -200,6 +201,7 @@ cryptoCheckoutRouter.post(
       const paymentExpiresAt = new Date(Date.now() + 20 * 60 * 1000);
 
       const booking = await TravelBooking.create({
+      stay: bookingStay(request.body?.stay),
         clientReference: travelReference(),
         offerId,
         prebookId,
