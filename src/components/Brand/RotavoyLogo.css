@@ -7,8 +7,8 @@
 }
 
 .headerRotavoyLogo {
-  width: 220px;
-  max-width: min(32vw, 220px);
+  width: 190px;
+  max-width: min(32vw, 190px);
 }
 
 .heroRotavoyLogo {
@@ -27,7 +27,7 @@
 
 @media (max-width: 620px) {
   .headerRotavoyLogo {
-    width: 172px;
+    width: 150px;
     max-width: 44vw;
   }
 
