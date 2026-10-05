@@ -34,7 +34,7 @@ export async function flushTravelAnalytics() {
     while (pending.length && sent < 10) {
       const body = pending[0];
       let token = ''; try { token = getCustomerAccessToken(); } catch { /* Track anonymously. */ }
-      const send = auth => fetch(`${base}/api/analytics/events`, { method: 'POST', keepalive: true, signal: AbortSignal.timeout(8000), headers: { 'Content-Type': 'application/json', ...(auth ? { Authorization: `Bearer ${auth}` } : {}) }, body: JSON.stringify(body) });
+      const send = auth => fetch(`${base}/api/visits/events`, { method: 'POST', keepalive: true, signal: AbortSignal.timeout(8000), headers: { 'Content-Type': 'application/json', ...(auth ? { Authorization: `Bearer ${auth}` } : {}) }, body: JSON.stringify(body) });
       status({ lastAttempt: new Date().toISOString() });
       let response = await send(token);
       if (response.status === 401 && token) response = await send('');

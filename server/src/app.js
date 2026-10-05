@@ -61,6 +61,7 @@ export function createApp() {
     });
   });
 
+  app.use("/api/visits", analyticsRouter);
   app.use("/api/analytics", analyticsRouter);
   app.use("/api/admin-auth", adminAuthRouter);
   app.use("/api/admin", adminRouter);

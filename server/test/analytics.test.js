@@ -19,7 +19,7 @@ test('analytics ingestion persists anonymous and authenticated events, deduplica
   CustomerSession.findOne = () => ({ populate: async () => ({ customer: { _id: 'customer-id', email: 'traveler@example.com', provider: 'firebase', emailVerified: true }, lastUsedAt: new Date() }) });
   const server = createApp().listen(0); await once(server, 'listening'); const base = `http://127.0.0.1:${server.address().port}`;
   try {
-    const post = (body, token) => fetch(`${base}/api/analytics/events`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer verified' } : {}) }, body: JSON.stringify(body) });
+    const post = (body, token) => fetch(`${base}/api/visits/events`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer verified' } : {}) }, body: JSON.stringify(body) });
     assert.equal((await post(event)).status, 204); assert.equal((await post(event)).status, 204); assert.equal(writes.size, 1);
     const saved = writes.get(event.eventId); assert.equal(saved.identity, ''); assert.equal(saved.ip, '127.0.0.1'); assert.equal(saved.city, '');
     assert.equal((await post({ ...event, eventId: 'authenticated-123', identity: 'spoofed' }, true)).status, 204);
