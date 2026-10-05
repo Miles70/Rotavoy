@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { FaFacebookF, FaInstagram, FaXTwitter, FaYoutube } from "react-icons/fa6";
 import siteConfig from "../../config/site";
 import "./Footer.css";
+import RotavoyLogo from "../Brand/RotavoyLogo";
 
 const cardPaymentMethods = [
   { id: "visa", label: "Visa", display: "VISA" },
@@ -50,7 +51,7 @@ function Footer() {
       <div className="container footerInner">
         <div className="footerBrand">
           <Link to="/" className="footerLogo">
-            <img className="approvedLogo" src="/rotavoy-approved-logo.png" alt={siteConfig.brandName} />
+            <RotavoyLogo className="footerRotavoyLogo" alt={siteConfig.brandName} />
           </Link>
 
           <p>{siteConfig.description}</p>

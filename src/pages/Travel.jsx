@@ -1,3 +1,4 @@
+import RotavoyLogo from "../components/Brand/RotavoyLogo";
 import { withHotelDistances } from "../services/hotelDistance.js";
 import { getCurrentCoordinates } from "../services/geolocation.js";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -806,7 +807,7 @@ function Travel() {
           <div className="travelIntro">
             <div className="travelBrandBlock">
               <div>
-                <img className="approvedLogo" src="/rotavoy-approved-logo.png" alt="Rotavoy" />
+                <RotavoyLogo className="heroRotavoyLogo" />
                 <small>{t("travelPage.onlineTravelAgency")}</small>
               </div>
             </div>

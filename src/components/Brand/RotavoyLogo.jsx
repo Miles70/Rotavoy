@@ -1,6 +1,6 @@
 import "./RotavoyLogo.css";
 
-const LOGO_SRC = "/rotavoy-approved-logo.png?v=20261005-full-r";
+const LOGO_SRC = "/brand/rotavoy-horizontal.png";
 
 function RotavoyLogo({ className = "", alt = "Rotavoy" }) {
   return (

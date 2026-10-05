@@ -24,17 +24,6 @@
   margin-bottom: 14px;
 }
 
-.footerLogo img:first-child {
-  width: 46px;
-  height: 42px;
-  object-fit: contain;
-}
-
-.footerLogo img:last-child {
-  width: 150px;
-  height: auto;
-}
-
 .footerBrand p {
   max-width: 340px;
   margin: 0;

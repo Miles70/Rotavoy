@@ -3,6 +3,7 @@
   width: auto;
   height: auto;
   object-fit: contain;
+  flex-shrink: 0;
 }
 
 .headerRotavoyLogo {
@@ -16,6 +17,10 @@
 }
 
 .footerRotavoyLogo {
+  background: #fff;
+  padding: 8px 12px;
+  border-radius: 12px;
+  box-sizing: border-box;
   width: 230px;
   max-width: 100%;
 }
