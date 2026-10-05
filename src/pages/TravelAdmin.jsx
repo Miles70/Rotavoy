@@ -6,8 +6,9 @@ import RotavoyLogo from '../components/Brand/RotavoyLogo';
 import Seo from '../components/Seo/Seo';
 import AdminRecordEditor, { statusLabels } from '../components/Admin/AdminRecordEditor';
 import { adminRequest, downloadAdminCsv } from '../services/adminApi';
+import TravelAnalyticsPanel from '../components/Admin/TravelAnalyticsPanel';
 import './TravelAdmin.css';
-const sections = [ ['overview', 'Genel bakış', LayoutDashboard], ['bookings', 'Rezervasyonlar', CalendarCheck], ['payments', 'Ödemeler', CreditCard], ['customers', 'Müşteriler', Users], ['hotels', 'Otel vitrini', Hotel], ['tickets', 'Destek / iptal / iade', Headphones], ['content', 'Destinasyon ve içerik', FileText], ['providers', 'Sağlayıcılar ve servisler', Plug], ['settings', 'Operasyon ayarları', Settings], ['audit', 'İşlem geçmişi', Activity], ['roadmap', 'Geliştirme alanları', Plane] ];
+const sections = [ ['overview', 'Genel bakış', LayoutDashboard], ['analytics', 'Ziyaretçi analitiği', Activity], ['bookings', 'Rezervasyonlar', CalendarCheck], ['payments', 'Ödemeler', CreditCard], ['customers', 'Müşteriler', Users], ['hotels', 'Otel vitrini', Hotel], ['tickets', 'Destek / iptal / iade', Headphones], ['content', 'Destinasyon ve içerik', FileText], ['providers', 'Sağlayıcılar ve servisler', Plug], ['settings', 'Operasyon ayarları', Settings], ['audit', 'İşlem geçmişi', Activity], ['roadmap', 'Geliştirme alanları', Plane] ];
 const paginated = ['bookings', 'payments', 'customers', 'hotels', 'tickets', 'content', 'audit'];
 const date = value => value ? new Date(value).toLocaleString('tr-TR') : '—';
 const money = (value, currency) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: /^[A-Z]{3}$/.test(currency || '') ? currency : 'USD' }).format(value || 0);
@@ -61,7 +62,7 @@ export default function TravelAdmin() {
   useEffect(() => { if (!isAuthenticated) { setAccess('login'); return undefined; } const controller = new AbortController(); setAccess('loading'); setAccessError(''); adminRequest('/session', { signal: controller.signal }).then(result => { setAdmin(result.admin); setAccess('allowed'); }).catch(err => { if (err.name !== 'AbortError') { setAccess('denied'); setAccessError(err.message); } }); return () => controller.abort(); }, [isAuthenticated, customerSession?.token]);
   useEffect(() => { setHotelEdit(null); setQuery(''); setSearch(''); setStatus(''); setPage(1); setEditor(section === 'tickets' && location.state?.ticketDraft ? { kind: 'tickets', record: location.state.ticketDraft } : null); setReference(''); setSuccess(''); }, [section, location.state]);
   useEffect(() => {
-    if (access !== 'allowed' || !current || section === 'roadmap') return undefined;
+    if (access !== 'allowed' || !current || ['roadmap', 'analytics'].includes(section)) return undefined;
     const controller = new AbortController(); setLoading(true); setError(''); setLoadedData(null);
     const endpoint = section === 'payments' ? 'bookings' : section;
     const params = new URLSearchParams({ page: String(page), limit: '25', ...(search ? { q: search } : {}), ...(status ? { [section === 'payments' ? 'paymentStatus' : 'status']: status } : {}) });
@@ -91,6 +92,7 @@ export default function TravelAdmin() {
     {data && section === 'providers' && <Providers data={data} />}
     {data && section === 'settings' && <SettingsForm key={refresh} settings={data.settings} onSaved={() => reload('Ayarlar kaydedildi.')} />}
     {data && section === 'audit' && <div className="adminTableWrap"><table><thead><tr><th>Tarih</th><th>Yönetici</th><th>İşlem</th><th>Hedef</th></tr></thead><tbody>{data.items.map(item => <tr key={item._id}><td>{date(item.createdAt)}</td><td>{item.actor}</td><td>{item.action}</td><td>{item.target}</td></tr>)}</tbody></table></div>}
+    {section === 'analytics' && <TravelAnalyticsPanel refreshKey={refresh} />}
     {section === 'roadmap' && <Roadmap />}
     {data?.items?.length === 0 && <Empty />}
     {data && paginated.includes(section) && <div className="adminPagination"><span>{data.total} kayıt · Sayfa {page} / {Math.max(1, Math.ceil(data.total / data.limit))}</span><button disabled={page <= 1 || loading} onClick={() => setPage(value => value - 1)}>Önceki</button><button disabled={page * data.limit >= data.total || loading} onClick={() => setPage(value => value + 1)}>Sonraki</button></div>}

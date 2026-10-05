@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { trackTravel } from '../services/analytics';
+import { useEffect, useRef, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   AlertCircle,
@@ -339,6 +340,7 @@ function HotelDetails() {
   const [prebook, setPrebook] = useState(null);
   const [selectedOffer, setSelectedOffer] = useState(null);
   const [localizedDescription, setLocalizedDescription] = useState("");
+  const trackedHotel = useRef("");
 
   useEffect(() => {
     let cancelled = false;
@@ -385,6 +387,10 @@ function HotelDetails() {
           : rateHotel || fallbackHotel;
 
       if (resolvedHotel) {
+        if (trackedHotel.current !== hotelId) {
+          trackedHotel.current = hotelId;
+          trackTravel('hotel_view', { hotelId, hotelName: resolvedHotel.name || resolvedHotel.hotelName });
+        }
         setHotel(resolvedHotel);
         setState("success");
       } else {
@@ -521,6 +527,7 @@ function HotelDetails() {
     setBookingState("loading");
     setBookingError("");
     setPrebook(null);
+    trackTravel('hotel_select', { hotelId, hotelName: hotel?.name, checkin, checkout, adults });
     setSelectedOffer(offer);
 
     try {
@@ -757,7 +764,7 @@ function HotelDetails() {
                       )}
                       <button
                         type="button"
-                        onClick={() => setSelectedOffer(offer)}
+                        onClick={() => { trackTravel('room_select', { hotelId, hotelName: name, roomName: offer.roomName || offer.roomType || '', offerId: offer.offerId }); setSelectedOffer(offer); }}
                         aria-pressed={selectedOffer?.offerId === offer.offerId}
                       >
                         {selectedOffer?.offerId === offer.offerId ? "Seçildi" : "Bu odayı seç"}

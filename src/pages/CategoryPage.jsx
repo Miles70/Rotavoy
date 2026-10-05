@@ -1,3 +1,4 @@
+import { trackTravel } from '../services/analytics';
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { CarFront, MapPinned, ArrowRight } from 'lucide-react';
@@ -20,6 +21,7 @@ export default function CategoryPage({ category, embedded = false }) {
   const Container = embedded ? 'div' : 'main';
   function submit(event) {
     event.preventDefault();
+    trackTravel(category === 'cars' ? 'car_plan' : 'activity_plan', { destination: location.trim(), checkin: date, checkout: category === 'cars' ? end : '', adults: people, category });
     const query = new URLSearchParams({ location: location.trim(), date, ...(category === 'cars' ? { end } : { people: String(people) }), plan: '1' });
     navigate(`/${category}?${query}`);
   }

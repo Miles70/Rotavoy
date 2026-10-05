@@ -1,3 +1,5 @@
+import { TravelAnalytics } from '../models/TravelAnalytics.js';
+import { analyticsTypes } from './analytics.js';
 import { readTravelMargin, resolveTravelMargin } from "../services/travelAdminSettings.js";
 import { Router } from 'express';
 import mongoose from 'mongoose';
@@ -125,4 +127,27 @@ adminRouter.get('/audit', async (request, response) => {
   const { page, limit } = pagination(request.query);
   const [items, total] = await Promise.all([TravelAdminAudit.find().sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(), TravelAdminAudit.countDocuments()]);
   response.json({ items, total, page, limit });
+});
+
+adminRouter.get('/analytics', async (request, response) => {
+  const { page, limit } = pagination(request.query);
+  const days = Math.max(1, Math.min(365, Number(request.query.days) || 7));
+  const filter = { createdAt: { $gte: new Date(Date.now() - days * 86400000) } };
+  if (analyticsTypes.includes(request.query.type)) filter.type = request.query.type;
+  if (request.query.visitorId) filter.visitorId = text(request.query.visitorId, 100);
+  if (request.query.q) { const regex = new RegExp(literal(request.query.q), 'i'); filter.$or = ['visitorId', 'identity', 'ip', 'city', 'country', 'source', 'path', 'details.hotelName', 'details.origin', 'details.destination', 'details.originName', 'details.destinationName'].map(key => ({ [key]: regex })); }
+  if (request.query.bots === 'exclude') filter.bot = { $ne: true };
+  const [items, total, summary] = await Promise.all([
+    TravelAnalytics.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
+    TravelAnalytics.countDocuments(filter),
+    TravelAnalytics.aggregate([{ $match: filter }, { $facet: {
+      visitors: [{ $group: { _id: '$visitorId' } }, { $count: 'count' }],
+      sessions: [{ $group: { _id: '$sessionId' } }, { $count: 'count' }],
+      types: [{ $group: { _id: '$type', count: { $sum: 1 } } }],
+      locations: [{ $group: { _id: { country: '$country', city: '$city' }, count: { $sum: 1 } } }, { $sort: { count: -1 } }, { $limit: 10 }],
+      sources: [{ $group: { _id: '$source', count: { $sum: 1 } } }, { $sort: { count: -1 } }, { $limit: 10 }],
+      hotels: [{ $match: { type: 'hotel_view' } }, { $group: { _id: '$details.hotelId', name: { $first: '$details.hotelName' }, count: { $sum: 1 } } }, { $sort: { count: -1 } }, { $limit: 10 }],
+    } }]),
+  ]);
+  response.json({ items, total, page, limit, summary: summary[0] || {}, days });
 });

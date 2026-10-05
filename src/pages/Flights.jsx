@@ -1,3 +1,4 @@
+import { trackTravel } from '../services/analytics';
 import FlightCard from '../components/Flights/FlightCard';
 import FlightSelection from '../components/Flights/FlightSelection';
 import flightSelectionTranslations from '../i18n/flightSelectionTranslations';
@@ -73,6 +74,7 @@ export default function Flights({ embedded = false }) {
     }
     searchController.current?.abort();
     const controller = new AbortController(); searchController.current = controller;
+    trackTravel('flight_search', { origin: origin.iata, originName: origin.name, destination: destination.iata, destinationName: destination.name, departure, returnDate: roundTrip ? returnDate : '', adults, children, infants, currency });
     setState('loading');
     const timeout = setTimeout(() => controller.abort(), 70000);
     try {
@@ -117,9 +119,9 @@ export default function Flights({ embedded = false }) {
     {!embedded && <section ref={resultsRef} className="flightResults" aria-live="polite" aria-busy={loading}>
       {loading && <p className="flightStatus">{copy.searching}</p>}
       {state === 'done' && <><h2>{copy.results} · {results.length}</h2><p>{copy.localTimes}</p>{environment === 'sandbox' && <p className="flightSandbox">{copy.sandbox}</p>}{results.length === 0 && <p className="flightStatus">{copy.empty}</p>}</>}
-      {results.slice(0, visible).map((result) => <FlightCard key={result.offer.offerId} result={result} copy={copy} language={language} onSelect={setFocusedFlight} selected={chosenOfferId === result.offer.offerId} />)}
+      {results.slice(0, visible).map((result) => <FlightCard key={result.offer.offerId} result={result} copy={copy} language={language} onSelect={result => { trackTravel('flight_view', { offerId: result.offer.offerId, origin: origin?.iata, destination: destination?.iata }); setFocusedFlight(result); }} selected={chosenOfferId === result.offer.offerId} />)}
       {visible < results.length && <button className="flightSearchButton" onClick={() => setVisible((count) => count + 20)}>{copy.more}</button>}
     </section>}
-    {focusedFlight && <FlightSelection key={focusedFlight.offer.offerId} result={focusedFlight} copy={copy} language={language} environment={environment} onVerified={setChosenOfferId} onClose={() => setFocusedFlight(null)} />}
+    {focusedFlight && <FlightSelection key={focusedFlight.offer.offerId} result={focusedFlight} copy={copy} language={language} environment={environment} onVerified={offerId => { trackTravel('flight_select', { offerId, origin: origin?.iata, destination: destination?.iata, departure }); setChosenOfferId(offerId); }} onClose={() => setFocusedFlight(null)} />}
   </Container>;
 }

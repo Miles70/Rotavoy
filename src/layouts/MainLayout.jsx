@@ -1,5 +1,6 @@
 import { useLayoutEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
+import TravelTracker from "../components/TravelTracker";
 import Header from "../components/Header/Header";
 import Footer from "../components/Footer/Footer";
 import Seo from "../components/Seo/Seo";
@@ -55,6 +56,7 @@ function MainLayout() {
 
   return (
     <div className="app">
+      <TravelTracker />
       {staticSeo ? (
         <Seo
           title={staticSeo.title}

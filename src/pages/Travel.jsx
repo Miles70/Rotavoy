@@ -1,3 +1,4 @@
+import { trackTravel } from '../services/analytics';
 import Flights from "./Flights";
 import CategoryPage from "./CategoryPage";
 import RotavoyLogo from "../components/Brand/RotavoyLogo";
@@ -600,6 +601,7 @@ function Travel({ hotelsOnly = false }) {
       return;
     }
 
+    trackTravel('hotel_search', { destination: location.destination || 'Konum yakını', checkin, checkout, adults });
     completedSearch.current = null;
     setLoadMoreState("idle");
     setSearchState("loading");
@@ -744,6 +746,7 @@ function Travel({ hotelsOnly = false }) {
   }
 
   async function handlePrebook(hotel) {
+    trackTravel('hotel_select', { hotelId: hotel.hotelId, hotelName: hotel.name, checkin, checkout, adults });
     setSelectedHotel(hotel);
     setPrebook(null);
     setPrebookError("");
@@ -859,12 +862,13 @@ function Travel({ hotelsOnly = false }) {
                     const index = services.findIndex((service) => service.key === key);
                     const next = event.key === "ArrowRight" ? (index + 1) % services.length : event.key === "ArrowLeft" ? (index + services.length - 1) % services.length : event.key === "Home" ? 0 : event.key === "End" ? services.length - 1 : null;
                     if (next === null) return;
-                    event.preventDefault(); setActiveService(services[next].key);
+                    event.preventDefault(); trackTravel('category_select', { category: services[next].key }); setActiveService(services[next].key);
                     document.getElementById(`service-tab-${services[next].key}`)?.focus();
                   }}
                   aria-selected={activeService === key}
                   className={activeService === key ? "active" : ""}
                   onClick={() => {
+                    trackTravel('category_select', { category: key });
                     setActiveService(key);
                     setSearchError("");
                   }}

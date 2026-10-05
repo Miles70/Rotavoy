@@ -1,3 +1,4 @@
+import { analyticsRouter } from "./routes/analytics.js";
 import { adminRouter } from "./routes/admin.js";
 import { flightsRouter } from "./routes/flights.js";
 import cors from "cors";
@@ -59,6 +60,7 @@ export function createApp() {
     });
   });
 
+  app.use("/api/analytics", analyticsRouter);
   app.use("/api/admin", adminRouter);
   app.use("/api/customer-auth", customerAuthRouter);
   app.use("/api/hotels/card", cardPaymentsRouter);
