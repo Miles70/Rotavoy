@@ -25,10 +25,6 @@ export const firebaseAuthReady = setPersistence(
   browserLocalPersistence,
 ).catch(() => undefined);
 
-const adminApp = getApps().find(app => app.name === 'rotavoy-admin') || initializeApp(firebaseConfig, 'rotavoy-admin');
-export const adminFirebaseAuth = getAuth(adminApp);
-export const adminFirebaseReady = setPersistence(adminFirebaseAuth, browserLocalPersistence);
-
 export const googleAuthProvider = new GoogleAuthProvider();
 googleAuthProvider.setCustomParameters({
   prompt: "select_account",
@@ -43,3 +39,4 @@ export const firebaseProviderAvailability = {
 };
 
 export default firebaseApp;
+

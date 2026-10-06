@@ -27,4 +27,12 @@ The Vite frontend proxies local `/api` requests to `http://localhost:5000`.
 
 Product catalog, cart, shopping orders, CJdropshipping, marketplace admin and campaign APIs have been removed from Rotavoy.
 
-Travel administration is now provided by `/api/admin`, using verified customer sessions plus `ROTAVOY_ADMIN_EMAILS` / `ROTAVOY_ADMIN_WALLETS` server allowlists. See the root README for setup and supported operations. Admin responses use `private, no-store`; payment client secrets and upstream credentials are not returned. The legacy shopping admin remains removed.
+Travel administration is now provided by `/api/admin`, using independent password-authenticated admin sessions. See the root README for setup and supported operations. Admin responses use `private, no-store`; payment client secrets and upstream credentials are not returned. The legacy shopping admin remains removed.
+
+
+## Admin login
+
+Admin uses a password form at `/admin`, independently of customer authentication.
+Set `ROTAVOY_ADMIN_PASSWORD` in the backend deployment environment to a private password of at least 12 characters, then redeploy the backend. Do not commit the password or put it in a `VITE_*` variable. The frontend does not need the password at build time.
+
+Admin sessions expire after eight hours, are revoked on logout, and are invalidated when the configured password changes. The previous Google admin endpoint is removed.

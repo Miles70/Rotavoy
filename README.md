@@ -45,17 +45,9 @@ Never commit local `.env` files or production credentials.
 
 ## Travel administration
 
-The Travel admin is available at `/admin` (separate from the customer site). It uses the same Google/Facebook or signed wallet login, with administrator authorization enforced by the server on every `/api/admin` endpoint.
+The Travel admin at `/admin` uses a password form, independently of customer authentication. Every `/api/admin` endpoint requires its own server-validated admin session.
 
-Set at least one allowlist in **server/.env** or your backend hosting environment, then restart the backend:
-
-```dotenv
-ROTAVOY_ADMIN_EMAILS=your-verified-login-email@example.com
-# Alternatively, use a wallet address you own and authenticate by signing:
-ROTAVOY_ADMIN_WALLETS=
-```
-
-Existing `ADMIN_EMAIL` configuration is also supported when `ROTAVOY_ADMIN_EMAILS` is empty. An explicit Travel email list takes precedence. The email setting must be in the backend environment (`server/.env` for local development). Comma-separated identities are supported. Firebase email identities must be verified; guest accounts never receive admin access. Empty allowlists deny all access. Do not place these settings or provider secrets in frontend `VITE_*` variables.
+Set `ROTAVOY_ADMIN_PASSWORD` in **server/.env** or your backend hosting environment to a private password of at least 12 characters, then restart or redeploy the backend. Never commit its value or expose it in frontend `VITE_*` variables. An empty or invalid configuration disables admin login. Sessions last eight hours; logout revokes them and changing the password invalidates existing sessions.
 
 Available operations: real hotel booking/payment lists, search and pagination, booking details and operational notes (new checkouts also save informational hotel/stay selections), customer directory, CSV export of the current page, indexed hotel showcase visibility/priority, support/cancellation/refund request tracking, editorial destination/campaign/guide drafts, provider configuration status, commission settings for new hotel searches, and an audit trail of admin writes. Gross paid totals remain separated by currency and are not net commission or provider payouts.
 
@@ -65,7 +57,7 @@ Support/refund records do not cancel provider reservations or transfer money. Ed
 
 Run `npm run check` before publishing. On the backend host run `npm run check:readiness` from the repository root (or `npm run check:readiness` inside `server` with its `.env` loaded). This prints configuration presence only, never credential values, and never charges a card.
 
-Production needs `NODE_ENV=production`, a production `NUITEE_API_KEY`, `NUITEE_ENABLE_LIVE_BOOKING=true`, MongoDB, Firebase project/admin allowlist and HTTPS `CLIENT_ORIGINS`. Build the frontend with `VITE_API_BASE_URL` set to the backend HTTPS origin. Production rejects sandbox keys. Local card testing with a sandbox key remains available in development.
+Production needs `NODE_ENV=production`, a production `NUITEE_API_KEY`, `NUITEE_ENABLE_LIVE_BOOKING=true`, MongoDB, Firebase project for customers, admin password and HTTPS `CLIENT_ORIGINS`. Build the frontend with `VITE_API_BASE_URL` set to the backend HTTPS origin. Production rejects sandbox keys. Local card testing with a sandbox key remains available in development.
 
 Hotel cards use Nuitee Payment SDK. Flights use Nuitee flight prebooks with Payment SDK and Stripe Payment Element; Nuitee must enable production flights for the account. Checkout revalidates flight price, passenger counts, birth dates and travel documents. A successful payment alone never marks a reservation confirmed: upstream `CONFIRMED` and a booking ID are required.
 
@@ -74,3 +66,4 @@ Crypto hotel payments are verified on the selected mainnet, including transfer r
 Reservation capability tokens protect guest checkout records; signed-in customers can also access their own records. Interrupted hotel booking calls are reconciled by client reference, without blindly resubmitting. A backend worker reconciles processing records after browser closure. Unpaid card sessions are not automatically charged; payment-return finalization is required. Unknown provider outcomes remain processing for follow-up instead of showing fabricated success.
 
 Automated tests use isolated provider/DB fixtures. They do not establish that production account permissions, real 3DS, actual ticket issuance, provider account funding or live database connectivity work. Complete one provider-authorized live verification before accepting public sales. Car rental and activities remain information sections until a supplier is connected.
+

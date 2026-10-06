@@ -5,6 +5,7 @@ import { createApp } from '../src/app.js';
 import { sanitizeAnalytics } from '../src/routes/analytics.js';
 import { TravelAnalytics } from '../src/models/TravelAnalytics.js';
 import { CustomerSession } from '../src/models/CustomerSession.js';
+import { AdminSession } from '../src/models/AdminSession.js';
 const event = { visitorId: 'visitor-12345', sessionId: 'session-12345', eventId: 'event-123456', type: 'flight_search', path: '/flights?token=secret', details: { origin: 'AYT', destination: 'LHR', adults: 2, password: 'private' }, referrer: 'https://example.com/search?private=secret' };
 test('analytics accepts only bounded travel fields and rejects invalid/admin events', () => {
   const result = sanitizeAnalytics({ ...event, identity: 'fake-owner', ip: 'spoofed' });
@@ -26,24 +27,25 @@ test('analytics ingestion persists anonymous and authenticated events, deduplica
     assert.equal(writes.get('authenticated-123').identity, 'traveler@example.com');
     assert.equal((await post({ ...event, type: 'invalid' })).status, 400);
     assert.equal((await fetch(`${base}/api/admin/analytics`)).status, 401);
-    assert.equal((await fetch(`${base}/api/admin/analytics`, { headers: { Authorization: 'Bearer verified' } })).status, 403);
+    assert.equal((await fetch(`${base}/api/admin/analytics`, { headers: { Authorization: 'Bearer verified' } })).status, 401);
   } finally { TravelAnalytics.updateOne = realWrite; CustomerSession.findOne = realSession; await new Promise(resolve => server.close(resolve)); }
 });
 test('admin analytics filters visitor journeys and returns totals without allowing regex injection', async () => {
-  const previousEmails = process.env.ROTAVOY_ADMIN_EMAILS; process.env.ROTAVOY_ADMIN_EMAILS = 'owner@example.com';
-  const real = { find: TravelAnalytics.find, count: TravelAnalytics.countDocuments, aggregate: TravelAnalytics.aggregate, session: CustomerSession.findOne };
+  const previousPassword = process.env.ROTAVOY_ADMIN_PASSWORD; process.env.ROTAVOY_ADMIN_PASSWORD = 'test-admin-password';
+  const real = { find: TravelAnalytics.find, count: TravelAnalytics.countDocuments, aggregate: TravelAnalytics.aggregate, session: AdminSession.findOne };
   let captured;
-  CustomerSession.findOne = () => ({ populate: async () => ({ customer: { provider: 'firebase', email: 'owner@example.com', emailVerified: true }, lastUsedAt: new Date() }) });
+  AdminSession.findOne = async () => ({ _id: 'admin-session' });
   TravelAnalytics.find = filter => { captured = filter; const chain = { sort: () => chain, skip: () => chain, limit: () => chain, lean: async () => [{ _id: 'fixture', visitorId: 'visitor-12345', type: 'flight_search', details: { origin: 'AYT', destination: 'LHR' } }] }; return chain; };
   TravelAnalytics.countDocuments = async () => 1;
   TravelAnalytics.aggregate = async () => [{ visitors: [{ count: 1 }], sessions: [{ count: 1 }], types: [{ _id: 'flight_search', count: 1 }] }];
   const server = createApp().listen(0); await once(server, 'listening');
   try {
-    const response = await fetch(`http://127.0.0.1:${server.address().port}/api/admin/analytics?visitorId=visitor-12345&q=.*&days=9999&bots=exclude&type=flight_search&limit=999`, { headers: { Authorization: 'Bearer verified' } });
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/api/admin/analytics?visitorId=visitor-12345&q=.*&days=9999&bots=exclude&type=flight_search&limit=999`, { headers: { Authorization: 'Bearer admin_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' } });
     assert.equal(response.status, 200); assert.equal(response.headers.get('cache-control'), 'private, no-store');
     const data = await response.json(); assert.equal(data.days, 365); assert.equal(data.limit, 100); assert.equal(data.total, 1); assert.equal(data.summary.visitors[0].count, 1);
     assert.equal(captured.visitorId, 'visitor-12345'); assert.equal(captured.type, 'flight_search'); assert.deepEqual(captured.bot, { $ne: true });
     assert.equal(captured.$or[0].visitorId.test('anything'), false); assert.equal(captured.$or[0].visitorId.test('literal .*'), true);
     assert.equal(data.items[0].details.origin, 'AYT');
-  } finally { TravelAnalytics.find = real.find; TravelAnalytics.countDocuments = real.count; TravelAnalytics.aggregate = real.aggregate; CustomerSession.findOne = real.session; if (previousEmails === undefined) delete process.env.ROTAVOY_ADMIN_EMAILS; else process.env.ROTAVOY_ADMIN_EMAILS = previousEmails; await new Promise(resolve => server.close(resolve)); }
+  } finally { TravelAnalytics.find = real.find; TravelAnalytics.countDocuments = real.count; TravelAnalytics.aggregate = real.aggregate; AdminSession.findOne = real.session; if (previousPassword === undefined) delete process.env.ROTAVOY_ADMIN_PASSWORD; else process.env.ROTAVOY_ADMIN_PASSWORD = previousPassword; await new Promise(resolve => server.close(resolve)); }
 });
+

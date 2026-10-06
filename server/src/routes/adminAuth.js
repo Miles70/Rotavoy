@@ -1,13 +1,21 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { verifyFirebaseIdToken } from '../services/firebaseTokenVerification.js';
-import { createFirebaseCustomerSession } from '../services/customerAuthService.js';
-import { isTravelAdmin } from '../middleware/adminAuth.js';
+import { AdminSession } from '../models/AdminSession.js';
+import { createPasswordAdminSession, authenticatePasswordAdmin } from '../services/adminPasswordAuth.js';
+
 export const adminAuthRouter = Router();
 adminAuthRouter.use((request, response, next) => { response.set('Cache-Control', 'private, no-store'); next(); });
-adminAuthRouter.post('/google', rateLimit({ windowMs: 600000, limit: 20, standardHeaders: 'draft-8', legacyHeaders: false }), async (request, response) => {
-  const identity = await verifyFirebaseIdToken(request.body?.idToken);
-  if (identity.provider !== 'google.com' || !isTravelAdmin({ provider: 'firebase', email: identity.email, emailVerified: identity.emailVerified })) return response.status(403).json({ message: 'Bu Google hesabının yönetici yetkisi yok.' });
-  const session = await createFirebaseCustomerSession(request.body.idToken);
-  response.status(201).json({ session });
+adminAuthRouter.post('/password', rateLimit({
+  windowMs: 600000, limit: 10, standardHeaders: 'draft-8', legacyHeaders: false,
+  message: { message: 'Çok fazla giriş denemesi. Biraz sonra tekrar dene.' },
+}), async (request, response, next) => {
+  try { response.status(201).json({ session: await createPasswordAdminSession(request.body?.password) }); }
+  catch (error) {
+    if (error.statusCode === 503) return response.status(503).json({ message: error.message });
+    next(error);
+  }
+});
+adminAuthRouter.post('/logout', authenticatePasswordAdmin, async (request, response, next) => {
+  try { await AdminSession.deleteOne({ _id: request.adminSession._id }); response.status(204).end(); }
+  catch (error) { next(error); }
 });
