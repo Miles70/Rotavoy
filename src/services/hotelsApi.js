@@ -1,10 +1,6 @@
 import { getCustomerAccessToken } from "./customerApi";
 const apiBaseUrl = String(import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
 
-export function getHotelProviderStatus(options = {}) {
-  return hotelRequest('/status', options);
-}
-
 export function storeBookingAccess(reference, token) {
   if (reference && token) sessionStorage.setItem(`rotavoy_booking_access:${reference}`, token);
 }
