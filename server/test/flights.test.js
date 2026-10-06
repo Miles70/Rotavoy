@@ -35,6 +35,10 @@ test('provider batches preserve complete itineraries, total prices and baggage',
 test('airport response and all ten language dictionaries are complete', () => {
   assert.deepEqual(airportResults({ data: [{ airports: [{ iata: 'AYT', city: 'Antalya' }, { iata: null }] }] }), [{ iata: 'AYT', city: 'Antalya' }]);
   assert.equal(Object.keys(flightTranslations).length, 10);
+  for (const dictionary of Object.values(flightTranslations)) {
+    assert.ok(dictionary.search?.trim(), "flight search button needs an accessible label");
+    assert.ok(dictionary.searching?.trim(), "flight loading state needs a label");
+  }
   for (const dictionary of Object.values({ ...flightTranslations, ...Object.fromEntries(Object.entries(flightSelectionTranslations).map(([key, value]) => [`selection-${key}`, value])) })) {
 
     assert.ok(Object.values(dictionary).every((value) => typeof value === 'string' && value.length));
@@ -101,3 +105,4 @@ test('verified offers use updated price, baggage and conditions without stale fa
   assert.throws(() => verifiedFlightResult({ data: [] }, original));
   assert.equal(verifiedFlightResult({ data: [{ journey: { ...journey, pricing: { display: { total: 400, currency: 'USD' } } } }] }, original).priceChanged, false);
 });
+
