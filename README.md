@@ -57,7 +57,7 @@ Support/refund records do not cancel provider reservations or transfer money. Ed
 
 Run `npm run check` before publishing. On the backend host run `npm run check:readiness` from the repository root (or `npm run check:readiness` inside `server` with its `.env` loaded). This prints configuration presence only, never credential values, and never charges a card.
 
-Production needs `NODE_ENV=production`, a production `NUITEE_API_KEY`, `NUITEE_ENABLE_LIVE_BOOKING=true`, MongoDB, Firebase project for customers, admin password and HTTPS `CLIENT_ORIGINS`. Build the frontend with `VITE_API_BASE_URL` set to the backend HTTPS origin. Production rejects sandbox keys. Local card testing with a sandbox key remains available in development.
+Production needs `NODE_ENV=production`, a production `NUITEE_API_KEY`, `NUITEE_ENABLE_LIVE_BOOKING=true`, MongoDB, Firebase project for customers, admin password and HTTPS `CLIENT_ORIGINS`. Build the frontend with `VITE_API_BASE_URL` set to the backend HTTPS origin. Production permits read-only hotel catalog and rate previews with sandbox keys, clearly labeled as test results. Hotel prebooks, payments and bookings still require a production key. Local card testing with a sandbox key remains available in development.
 
 Hotel cards use Nuitee Payment SDK. Flights use Nuitee flight prebooks with Payment SDK and Stripe Payment Element; Nuitee must enable production flights for the account. Checkout revalidates flight price, passenger counts, birth dates and travel documents. A successful payment alone never marks a reservation confirmed: upstream `CONFIRMED` and a booking ID are required.
 

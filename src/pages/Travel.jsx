@@ -27,8 +27,10 @@ import {
 } from "lucide-react";
 
 import { useLanguage } from "../i18n/LanguageContext";
+import flightTranslations from "../i18n/flightTranslations";
 import {
   listHotels,
+  getHotelProviderStatus,
   listIndexedShowcaseHotels,
   prebookHotel,
   searchHotelRates,
@@ -319,6 +321,7 @@ function Travel({ hotelsOnly = false }) {
   const travelVideoRef = useRef(null);
   const showcaseRefreshingRef = useRef(false);
   const [activeService, setActiveService] = useState("hotels");
+  const [providerEnvironment, setProviderEnvironment] = useState(null);
   const [cityName, setCityName] = useState(
     () => homeSearchParams.get("cityName") || "Antalya",
   );
@@ -351,6 +354,15 @@ function Travel({ hotelsOnly = false }) {
   const [prebook, setPrebook] = useState(null);
   const { t, language } = useLanguage();
   const activeServiceKey = "travelPage.services.hotels";
+  const sandboxNote = (flightTranslations[language] || flightTranslations.en).sandbox;
+
+  useEffect(() => {
+    const controller = new AbortController();
+    getHotelProviderStatus({ signal: controller.signal })
+      .then(status => setProviderEnvironment(status.environment))
+      .catch(() => { /* Hotel search reports any provider error separately. */ });
+    return () => controller.abort();
+  }, []);
 
   function customerHotelError(error, fallbackKey = "travelPage.runtime.noAvailability") {
     const message = String(error?.message || "");
@@ -993,7 +1005,7 @@ function Travel({ hotelsOnly = false }) {
               )}
 
               <p className="travelPrototypeNote">
-                {t("travelPage.runtime.liveNote")}
+                {providerEnvironment === 'sandbox' ? sandboxNote : t("travelPage.runtime.liveNote")}
               </p>
             </form>
             </div>
@@ -1195,7 +1207,7 @@ function Travel({ hotelsOnly = false }) {
         <div className="travelContainer">
           <div className="travelSectionHeading">
             <div>
-              <span>{t("travelPage.runtime.liveAvailability")} · 5★</span>
+              <span>{providerEnvironment === 'sandbox' ? 'SANDBOX' : t("travelPage.runtime.liveAvailability")} · 5★</span>
               <h2>5★ {t("travelPage.runtime.hotels")}</h2>
             </div>
             <p>
@@ -1204,6 +1216,8 @@ function Travel({ hotelsOnly = false }) {
                 : `${showcaseHotels.length} ${t("travelPage.runtime.resultsSuffix")}`}
             </p>
           </div>
+
+          {providerEnvironment === 'sandbox' && <p className="travelPrototypeNote">{sandboxNote}</p>}
 
           {showcaseState === "loading" && (
             <div className="travelShowcaseStatus">

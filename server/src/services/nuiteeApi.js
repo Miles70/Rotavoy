@@ -71,7 +71,11 @@ async function requestNuitee(
     throw createNuiteeError("Nuitee Connect API key is not configured.", 503);
   }
 
-  if (process.env.NODE_ENV === 'production' && settings.environment === 'sandbox') {
+  const hotelPreviewRead = baseUrl === settings.dataBaseUrl && (
+    (method === 'GET' && ['/data/hotels', '/data/countries', '/data/places', '/data/hotel'].includes(path)) ||
+    (method === 'POST' && path === '/hotels/rates')
+  );
+  if (process.env.NODE_ENV === 'production' && settings.environment === 'sandbox' && !hotelPreviewRead) {
     throw createNuiteeError('Canlı ortamda Nuitee production API anahtarı gerekiyor.', 503);
   }
   const url = new URL(`${baseUrl}${path}`);
