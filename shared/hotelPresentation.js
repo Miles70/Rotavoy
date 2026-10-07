@@ -2,6 +2,7 @@ export const extraFacilityKeys = {
   'fitness facilities': 'fitness', 'non-smoking rooms': 'nonSmokingRooms',
   'swimming pool': 'pool', laundry: 'laundry', cycling: 'cycling',
   'tour desk': 'tourDesk', terrace: 'terrace',
+  'facilities for disabled guests': 'accessibleFacilities',
 };
 export function interpolate(template, values) {
   return template.replace(/\{(\w+)\}/g, (match, key) => values[key] ?? match);
