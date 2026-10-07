@@ -5,7 +5,7 @@ import './RateConditions.css';
 
 export function formatPolicyDate(value, language) {
   const date = new Date(value);
-  return Number.isFinite(date.getTime()) ? `${new Intl.DateTimeFormat(language, { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' }).format(date)} GMT` : '';
+  return Number.isFinite(date.getTime()) ? `${new Intl.DateTimeFormat(language, { dateStyle: 'medium', timeStyle: 'short' }).format(date)} ${new Intl.DateTimeFormat(language, { timeZoneName: 'short' }).formatToParts(date).find(part => part.type === 'timeZoneName')?.value || ''}` : '';
 }
 function money(amount, currency, language) {
   if (amount === null || !/^[A-Z]{3}$/.test(currency || '')) return '';

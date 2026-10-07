@@ -1,3 +1,4 @@
+import { facilityExtras } from "./hotelRateTranslations.js";
 const hotelDetailTranslations = {
   en: {
     back: "Back to search results",
@@ -127,6 +128,10 @@ const availabilityLabels = {"en": "Check availability", "tr": "Müsaitliği kont
 
 for (const [language, label] of Object.entries(availabilityLabels)) {
   hotelDetailTranslations[language].checkAvailability = label;
+}
+
+for (const [language, extra] of Object.entries(facilityExtras)) {
+  Object.assign(hotelDetailTranslations[language].facilities, extra);
 }
 
 export default hotelDetailTranslations;

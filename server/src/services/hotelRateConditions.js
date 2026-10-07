@@ -1,3 +1,4 @@
+import { cancellationInstant } from "../../../shared/hotelPresentation.js";
 import crypto from 'node:crypto';
 
 // LiteAPI semantics: docs.liteapi.travel/reference/post_hotels-rates and
@@ -8,13 +9,9 @@ const text = value => typeof value === 'string' ? value.trim().slice(0, 8000) : 
 const amount = value => ['number', 'string'].includes(typeof value) && value !== '' && Number.isFinite(Number(value)) && Number(value) >= 0 ? Number(value) : null;
 
 function policyTime(value, timezone) {
-  const time = text(value);
-  // LiteAPI documents GMT even when timezone is omitted. Reject other zones
-  // instead of allowing the server/browser's local timezone to shift a deadline.
-  if (timezone && !['GMT', 'UTC'].includes(timezone)) return null;
-  if (!/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}$/.test(time)) return null;
-  const iso = `${time.replace(' ', 'T')}Z`;
-  return Number.isFinite(Date.parse(iso)) && new Date(iso).toISOString().slice(0, 19) === iso.slice(0, 19) ? iso : null;
+  // LiteAPI defines GMT when omitted; explicit offsets retain their exact instant.
+  const date = cancellationInstant({ cancelTime: text(value), timezone: timezone || 'GMT' });
+  return date ? date.toISOString().replace('.000Z', 'Z') : null;
 }
 
 export function normalizeRateConditions(rate = {}) {

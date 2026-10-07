@@ -1,3 +1,4 @@
+import { extraFacilityKeys } from "../../shared/hotelPresentation.js";
 import RateConditions from "../components/RateConditions";
 import HotelFavorite from "../components/HotelFavorite";
 import { trackTravel } from '../services/analytics';
@@ -40,6 +41,7 @@ import { useLanguage } from "../i18n/LanguageContext";
 import "./HotelDetails.css";
 
 const facilityKeys = new Map([
+  ...Object.entries(extraFacilityKeys),
   ["wifi available", "wifi"],
   ["free wifi", "freeWifi"],
   ["parking", "parking"],
@@ -71,8 +73,8 @@ const facilityKeys = new Map([
   ["languages spoken", "languages"],
 ]);
 
-function money(amount, currency = "EUR") {
-  return new Intl.NumberFormat("tr-TR", {
+function money(amount, currency = "EUR", language = "en") {
+  return new Intl.NumberFormat(language === "pt" ? "pt-BR" : language, {
     style: "currency",
     currency,
     maximumFractionDigits: 2,
@@ -155,7 +157,7 @@ function textList(value, t) {
     .map((item) => String(item).trim())
     .filter(Boolean)
     .map((item) => {
-      const key = facilityKeys.get(item.toLowerCase());
+      const key = facilityKeys.get(item.toLowerCase().replace(/\s+/g, " "));
       return key ? t(`hotelDetail.facilities.${key}`) : item;
     });
 
@@ -718,6 +720,7 @@ function HotelDetails() {
                         {money(
                           offer.suggestedSellingPrice.amount,
                           offer.suggestedSellingPrice.currency,
+                          language,
                         )}
                       </b>
                       <button
@@ -763,6 +766,7 @@ function HotelDetails() {
                       {money(
                         prebook.data.sellingPriceToUser,
                         prebook.data.currency,
+                        language,
                       )}
                       {" · "}{totalStayLabel}
                     </span>
