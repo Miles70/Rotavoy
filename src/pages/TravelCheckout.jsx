@@ -1,3 +1,5 @@
+import { useLanguage } from "../i18n/LanguageContext";
+import { interpolate } from "../../shared/hotelPresentation.js";
 import { rateTerms, changedTerms, mergeTerms } from "../../shared/hotelRate.js";
 import RateDetails from "../components/Hotels/RateDetails.jsx";
 import { useCustomerAuth } from "../context/CustomerAuthContext";
@@ -90,6 +92,9 @@ function TravelCheckout() {
   }, [cardReturnReference, isCardPaymentReturn, returnAttempt]);
 
   const hotel = state?.hotel;
+  const { t, language } = useLanguage();
+  const rateText = (key, values = {}) => interpolate(t(`hotelRate.${key}`), values);
+  const changeKeys = { 'Toplam fiyat': 'price', 'Yemek planı': 'meal', 'İptal koşulları': 'cancellation', 'Vergi ve ücretler': 'fees', 'Rezervasyon koşulları': 'bookingTerms', 'Fiyat ve koşullar': 'allTerms' };
   const prebook = state?.prebook;
   const offer = state?.offer || hotel?.offer;
   const adults = Math.max(Number(state?.adults) || 1, 1);
@@ -230,7 +235,7 @@ function TravelCheckout() {
       }
       setSubmitState("error");
       setError(
-        bookingError.message || "Rezervasyon şu anda tamamlanamadı."
+        bookingError.code === 'RATE_CHANGED' ? rateText('changed', { changes: rateText('allTerms') }) : bookingError.message || "Rezervasyon şu anda tamamlanamadı."
       );
     }
   }
@@ -289,7 +294,7 @@ function TravelCheckout() {
               />
             ) : (
               <form onSubmit={submit} className="travelCheckoutForm">
-                {rateChanges.length > 0 && <div className="travelRateChange" role="alert"><strong>{rateChanges.join(', ')} güncellendi</strong><p>Güncel toplam: {money(confirmedTerms.total, confirmedTerms.currency)}. Ödemeden önce aşağıdaki koşulları incele.</p><RateDetails terms={confirmedTerms} /><label><input type="checkbox" checked={termsAccepted} onChange={event => setTermsAccepted(event.target.checked)} /> Güncel fiyat ve koşulları kabul ediyorum</label></div>}
+                {rateChanges.length > 0 && <div className="travelRateChange" role="alert"><strong>{rateText('changed', { changes: rateChanges.map(change => rateText(changeKeys[change] || 'allTerms')).join(', ') })}</strong><p>{rateText('review', { total: new Intl.NumberFormat(language === 'pt' ? 'pt-BR' : language, { style: 'currency', currency: confirmedTerms.currency }).format(confirmedTerms.total) })}</p><RateDetails terms={confirmedTerms} /><label><input type="checkbox" checked={termsAccepted} onChange={event => setTermsAccepted(event.target.checked)} /> {rateText('accept')}</label></div>}
 
                 {savedTravelers.length > 0 && <label className="checkoutSavedTraveler">Kayıtlı yolcu bilgilerini kullan<select defaultValue="" onChange={event => { const person = savedTravelers.find(p => p._id === event.target.value); if (!person) return; setForm(current => ({ ...current, firstName: person.firstName, lastName: person.lastName, email: person.email || current.email, phone: person.phone || current.phone, guests: current.guests.map((g, i) => i === 0 ? { ...g, firstName: person.firstName, lastName: person.lastName } : g) })); }}><option value="">Yolcu seç</option>{savedTravelers.map(p => <option key={p._id} value={p._id}>{p.firstName} {p.lastName}</option>)}</select></label>}
                 {travelerError && <p role="status">Kayıtlı yolcular yüklenemedi. Bilgilerini aşağıdan doldurabilirsin.</p>}

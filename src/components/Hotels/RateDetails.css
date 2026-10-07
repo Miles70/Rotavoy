@@ -7,3 +7,4 @@
 .rateFacts details p { color: #52647a; }
 .hotelOffer > .rateFacts { display: block; margin-top: 12px; }
 .hotelOffer > button:focus-visible, .rateFacts summary:focus-visible { outline: 3px solid #19c6d8; outline-offset: 3px; }
+.rateLocalTime { display: block; color: var(--color-text-muted, #52647a); font-size: .75rem; font-weight: 400; }

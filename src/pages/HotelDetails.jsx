@@ -1,3 +1,4 @@
+import { extraFacilityKeys } from "../../shared/hotelPresentation.js";
 import { rateTerms } from "../../shared/hotelRate.js";
 import RateDetails from "../components/Hotels/RateDetails.jsx";
 import HotelFavorite from "../components/HotelFavorite";
@@ -41,6 +42,7 @@ import { useLanguage } from "../i18n/LanguageContext";
 import "./HotelDetails.css";
 
 const facilityKeys = new Map([
+  ...Object.entries(extraFacilityKeys),
   ["wifi available", "wifi"],
   ["free wifi", "freeWifi"],
   ["parking", "parking"],
@@ -72,8 +74,8 @@ const facilityKeys = new Map([
   ["languages spoken", "languages"],
 ]);
 
-function money(amount, currency = "EUR") {
-  return new Intl.NumberFormat("tr-TR", {
+function money(amount, currency = "EUR", language = "en") {
+  return new Intl.NumberFormat(language === "pt" ? "pt-BR" : language, {
     style: "currency",
     currency,
     maximumFractionDigits: 2,
@@ -156,7 +158,7 @@ function textList(value, t) {
     .map((item) => String(item).trim())
     .filter(Boolean)
     .map((item) => {
-      const key = facilityKeys.get(item.toLowerCase());
+      const key = facilityKeys.get(item.toLowerCase().replace(/\s+/g, " "));
       return key ? t(`hotelDetail.facilities.${key}`) : item;
     });
 
@@ -719,6 +721,7 @@ function HotelDetails() {
                         {money(
                           offer.suggestedSellingPrice.amount,
                           offer.suggestedSellingPrice.currency,
+                          language,
                         )}
                       </b>
                       <RateDetails terms={terms} />
@@ -727,7 +730,7 @@ function HotelDetails() {
                         onClick={() => { trackTravel('room_select', { hotelId, hotelName: name, roomName: offer.roomName || offer.roomType || '', offerId: offer.offerId }); setSelectedOffer(offer); }}
                         aria-pressed={selectedOffer?.offerId === offer.offerId}
                       >
-                        {selectedOffer?.offerId === offer.offerId ? "Seçildi" : "Bu odayı seç"}
+                        {selectedOffer?.offerId === offer.offerId ? t("hotelRate.selected") : t("hotelRate.select")}
                       </button>
                     </article>
                     );
@@ -765,6 +768,7 @@ function HotelDetails() {
                       {money(
                         prebook.data.sellingPriceToUser,
                         prebook.data.currency,
+                        language,
                       )}
                       {" · "}{totalStayLabel}
                     </span>
