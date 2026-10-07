@@ -1,4 +1,4 @@
-import { guardRateTerms } from "../../../shared/hotelRate.js";
+import { normalizeOfferConditions, publicPrebook, requireAcceptedTerms } from "../services/hotelRateConditions.js";
 import { createBookingAccess, requireBookingAccess } from "../services/bookingAccess.js";
 import { finalizeBooking, bookingPayload } from "../services/finalizeBooking.js";
 import { optionalCustomer } from "../middleware/customerAuth.js";
@@ -182,68 +182,21 @@ function sanitizeProviderResponse(value) {
 }
 
 function normalizeRatesResult(result) {
-  if (!Array.isArray(result?.data)) {
-    return result;
-  }
-
-  const normalized = {
-    ...result,
-    data: result.data.map((hotel) => ({
-      ...hotel,
-      roomTypes: Array.isArray(hotel?.roomTypes)
-        ? hotel.roomTypes.map((room) => {
-            const basePrice = Number(room?.offerRetailRate?.amount);
-            if (!Number.isFinite(basePrice) || basePrice < 0) {
-              return room;
-            }
-
-            // Nuitee already applies the requested commission margin to
-            // offerRetailRate. Do not add the Rotavoy margin a second time.
-            const sellingPrice = roundMoney(basePrice);
-
-            return {
-              ...room,
-              suggestedSellingPrice: {
-                ...(room.suggestedSellingPrice || {}),
-                amount: sellingPrice,
-                currency:
-                  room?.offerRetailRate?.currency ||
-                  room?.suggestedSellingPrice?.currency ||
-                  "",
-              },
-            };
-          })
-        : hotel?.roomTypes,
-    })),
-  };
-
-  return sanitizeProviderResponse(normalized);
-}
-
-function normalizePrebookResult(result) {
-  const basePrice = Number(result?.data?.price);
-  const sanitized = sanitizeProviderResponse(result);
-  const data = sanitized?.data;
-
-  if (
-    !data ||
-    typeof data !== "object" ||
-    !Number.isFinite(basePrice) ||
-    basePrice < 0
-  ) {
-    return sanitized;
-  }
-
-  // The prebook total already includes the margin encoded in the offer.
-  const sellingPrice = roundMoney(basePrice);
-
   return {
-    ...sanitized,
-    data: {
-      ...data,
-      suggestedSellingPrice: sellingPrice,
-      sellingPriceToUser: sellingPrice,
-    },
+    data: (Array.isArray(result?.data) ? result.data : []).map(hotel => ({
+      hotelId: hotel.hotelId,
+      roomTypes: (Array.isArray(hotel.roomTypes) ? hotel.roomTypes : []).flatMap(room => {
+        const total = Number(room?.offerRetailRate?.amount);
+        if (!Number.isFinite(total) || total <= 0) return [];
+        return [{
+          offerId: room.offerId,
+          suggestedSellingPrice: { amount: roundMoney(total), currency: room.offerRetailRate.currency },
+          conditions: normalizeOfferConditions(room),
+          rates: (room.rates || []).map(rate => ({ name: rate.name })),
+        }];
+      }),
+    })),
+    hotels: sanitizeProviderResponse(result?.hotels || []),
   };
 }
 
@@ -475,7 +428,7 @@ hotelsRouter.post("/prebook", bookingLimiter, async (request, response, next) =>
     });
 
     response.set("Cache-Control", "no-store");
-    response.json(normalizePrebookResult(result));
+    response.json({ data: publicPrebook(result?.data, request.body?.previousTerms) });
   } catch (error) {
     next(error);
   }
@@ -498,7 +451,7 @@ hotelsRouter.post("/checkout", bookingLimiter, optionalCustomer, async (request,
     const offerId = requiredText(request.body?.offerId, "offerId", 5000);
     const prebook = await prebookNuiteeRate({ offerId, usePaymentSdk: false });
     const prebookData = prebook?.data || {};
-    if (!guardRateTerms(response, request.body?.acceptedTerms, prebookData)) return;
+    if (!requireAcceptedTerms(request, response, prebookData)) return;
     const prebookId = requiredText(prebookData?.prebookId || prebookData?.id, "prebookId", 500);
     const providerTotal = Number(prebookData?.price);
     const currency = String(prebookData?.currency || "USD").toUpperCase();

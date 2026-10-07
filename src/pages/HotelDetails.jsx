@@ -1,6 +1,5 @@
 import { extraFacilityKeys } from "../../shared/hotelPresentation.js";
-import { rateTerms } from "../../shared/hotelRate.js";
-import RateDetails from "../components/Hotels/RateDetails.jsx";
+import RateConditions from "../components/RateConditions";
 import HotelFavorite from "../components/HotelFavorite";
 import { trackTravel } from '../services/analytics';
 import { useEffect, useRef, useMemo, useState } from "react";
@@ -501,7 +500,7 @@ function HotelDetails() {
     setSelectedOffer(offer);
 
     try {
-      const response = await prebookHotel(offer.offerId);
+      const response = await prebookHotel(offer.offerId, { total: offer.suggestedSellingPrice.amount, currency: offer.suggestedSellingPrice.currency, conditions: offer.conditions });
       navigate("/travel/checkout", {
         state: { hotel, offer, prebook: response.data, checkin, checkout, adults },
       });
@@ -704,7 +703,6 @@ function HotelDetails() {
               ) : offers.length ? (
                 <div className="hotelOffers">
                   {offers.map((offer) => {
-                    const terms = rateTerms(offer);
                     return (
                     <article
                       key={offer.offerId}
@@ -717,6 +715,7 @@ function HotelDetails() {
                         </strong>
                       </div>
                       <span>{totalStayLabel}</span>
+                      <RateConditions conditions={offer.conditions} />
                       <b>
                         {money(
                           offer.suggestedSellingPrice.amount,
@@ -724,13 +723,12 @@ function HotelDetails() {
                           language,
                         )}
                       </b>
-                      <RateDetails terms={terms} />
                       <button
                         type="button"
                         onClick={() => { trackTravel('room_select', { hotelId, hotelName: name, roomName: offer.roomName || offer.roomType || '', offerId: offer.offerId }); setSelectedOffer(offer); }}
                         aria-pressed={selectedOffer?.offerId === offer.offerId}
                       >
-                        {selectedOffer?.offerId === offer.offerId ? t("hotelRate.selected") : t("hotelRate.select")}
+                        {selectedOffer?.offerId === offer.offerId ? t("rateConditions.selected") : t("rateConditions.select")}
                       </button>
                     </article>
                     );

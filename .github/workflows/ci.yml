@@ -34,6 +34,9 @@ jobs:
       - name: Build frontend
         run: npm run lint && npm run build
 
+      - name: Test hotel UI
+        run: npm run test:hotel-ui
+
       - name: Install backend dependencies
         run: npm ci --prefix server --ignore-scripts --no-audit --no-fund
 
@@ -43,6 +46,20 @@ jobs:
           while IFS= read -r -d '' file; do
             node --check "$file"
           done < <(find server/src -name '*.js' -print0)
+
+      - name: Install browser for hotel regression tests
+        run: npx playwright install --with-deps chromium
+
+      - name: Test desktop and mobile hotel flow
+        run: npm run test:hotel-e2e
+
+      - name: Save hotel UI screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hotel-ui-screenshots
+          path: test-results/hotel-ui
+          if-no-files-found: ignore
 
       - name: Test backend
         run: npm --prefix server test

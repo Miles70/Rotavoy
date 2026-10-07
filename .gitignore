@@ -31,3 +31,6 @@ dist-ssr
 .rotavoy-cj-stock-harvest.json.tmp
 server/.rotavoy-cj-stock-harvest.json
 server/.rotavoy-cj-stock-harvest.json.tmp
+
+# Generated browser regression captures
+test-results/

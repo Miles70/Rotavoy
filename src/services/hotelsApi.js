@@ -21,13 +21,11 @@ async function hotelRequest(path, options = {}) {
   const payload = await response.json().catch(() => ({}));
 
   if (!response.ok || payload?.error) {
-    const error = new Error(
+    throw Object.assign(new Error(
       payload?.message ||
         payload?.error?.message ||
         "Otel servisine şu anda ulaşılamıyor.",
-    );
-    Object.assign(error, payload);
-    throw error;
+    ), { code: payload.code, prebook: payload.prebook });
   }
 
   const reference = payload.booking?.clientReference;
@@ -110,10 +108,10 @@ export function searchHotelRates({
   });
 }
 
-export function prebookHotel(offerId) {
+export function prebookHotel(offerId, previousTerms) {
   return hotelRequest("/prebook", {
     method: "POST",
-    body: JSON.stringify({ offerId }),
+    body: JSON.stringify({ offerId, previousTerms }),
   });
 }
 
@@ -126,10 +124,10 @@ export function bookSandboxHotel({ prebookId, clientReference, holder, guests })
 
 export function createTravelCheckout({
   stay,
+  acceptedRevision,
   offerId,
   holder,
   guests,
-  acceptedTerms,
   cryptoAsset = "USDT",
   cryptoNetwork = "BSC",
 }) {
@@ -137,10 +135,10 @@ export function createTravelCheckout({
     method: "POST",
     body: JSON.stringify({
       stay,
+      acceptedRevision,
       offerId,
       holder,
       guests,
-      acceptedTerms,
       cryptoAsset,
       cryptoNetwork,
     }),
@@ -155,10 +153,10 @@ export function verifyTravelPayment(clientReference, { transactionHash, payerAdd
   }).then((payload) => payload.booking);
 }
 
-export function createCardPaymentSession({ offerId, holder, guests, stay, acceptedTerms }) {
+export function createCardPaymentSession({ offerId, holder, guests, stay, acceptedRevision }) {
   return hotelRequest("/card/session", {
     method: "POST",
-    body: JSON.stringify({ offerId, holder, guests, stay, acceptedTerms }),
+    body: JSON.stringify({ offerId, holder, guests, stay, acceptedRevision }),
   });
 }
 

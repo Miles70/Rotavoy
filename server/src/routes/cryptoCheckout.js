@@ -1,4 +1,4 @@
-import { guardRateTerms } from "../../../shared/hotelRate.js";
+import { requireAcceptedTerms } from "../services/hotelRateConditions.js";
 import { createBookingAccess } from "../services/bookingAccess.js";
 import { optionalCustomer } from "../middleware/customerAuth.js";
 import { bookingStay } from "../services/bookingStay.js";
@@ -168,7 +168,8 @@ cryptoCheckoutRouter.post(
         usePaymentSdk: false,
       });
       const prebookData = prebook?.data || {};
-    if (!guardRateTerms(response, request.body?.acceptedTerms, prebookData)) return;
+      const acceptedTerms = requireAcceptedTerms(request, response, prebookData);
+      if (!acceptedTerms) return;
       const prebookId = requiredText(
         prebookData?.prebookId || prebookData?.id,
         "prebookId",
@@ -208,7 +209,8 @@ cryptoCheckoutRouter.post(
 
       const access = createBookingAccess();
       const booking = await TravelBooking.create({
-        accessTokenHash: access.hash,
+        rateTerms: acceptedTerms,
+      accessTokenHash: access.hash,
       customerId: request.customer?._id || null,
       stay: bookingStay(request.body?.stay),
         clientReference: travelReference(),

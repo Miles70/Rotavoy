@@ -1,4 +1,5 @@
 import hotelRateTranslations from "./hotelRateTranslations";
+import rateConditionsTranslations from "./rateConditionsTranslations";
 import en from "./locales/en";
 import tr from "./locales/tr";
 import ru from "./locales/ru";
@@ -22,6 +23,7 @@ function withTravelTranslations(baseTranslations, language) {
     ...baseTranslations,
     auth,
     hotelRate: hotelRateTranslations[language],
+    rateConditions: rateConditionsTranslations[language] || rateConditionsTranslations.en,
     hotelDetail: hotelDetailTranslations[language] || hotelDetailTranslations.en,
     travelPage: {
       ...baseTranslations.travelPage,

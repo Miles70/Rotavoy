@@ -757,7 +757,7 @@ function Travel({ hotelsOnly = false }) {
 
     for (const offer of offers) {
       try {
-        const response = await prebookHotel(offer.offerId);
+        const response = await prebookHotel(offer.offerId, { total: offer.suggestedSellingPrice.amount, currency: offer.suggestedSellingPrice.currency, conditions: offer.conditions });
         navigate("/travel/checkout", {
           state: {
             hotel: { ...hotel, offer },

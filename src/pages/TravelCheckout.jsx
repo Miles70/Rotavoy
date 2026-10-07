@@ -1,7 +1,5 @@
+import RateConditions from "../components/RateConditions";
 import { useLanguage } from "../i18n/LanguageContext";
-import { interpolate } from "../../shared/hotelPresentation.js";
-import { rateTerms, changedTerms, mergeTerms } from "../../shared/hotelRate.js";
-import RateDetails from "../components/Hotels/RateDetails.jsx";
 import { useCustomerAuth } from "../context/CustomerAuthContext";
 import { accountRequest } from "../services/customerApi";
 import { useEffect, useState } from "react";
@@ -92,10 +90,10 @@ function TravelCheckout() {
   }, [cardReturnReference, isCardPaymentReturn, returnAttempt]);
 
   const hotel = state?.hotel;
-  const { t, language } = useLanguage();
-  const rateText = (key, values = {}) => interpolate(t(`hotelRate.${key}`), values);
-  const changeKeys = { 'Toplam fiyat': 'price', 'Yemek planı': 'meal', 'İptal koşulları': 'cancellation', 'Vergi ve ücretler': 'fees', 'Rezervasyon koşulları': 'bookingTerms', 'Fiyat ve koşullar': 'allTerms' };
-  const prebook = state?.prebook;
+  const { t } = useLanguage();
+  const [updatedPrebook, setUpdatedPrebook] = useState(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const prebook = updatedPrebook || state?.prebook;
   const offer = state?.offer || hotel?.offer;
   const adults = Math.max(Number(state?.adults) || 1, 1);
 
@@ -114,9 +112,6 @@ function TravelCheckout() {
   const [error, setError] = useState("");
   const [cryptoBooking, setCryptoBooking] = useState(null);
   const [cardSession, setCardSession] = useState(null);
-  const [confirmedTerms, setConfirmedTerms] = useState(() => mergeTerms(rateTerms(offer), rateTerms(prebook, true)));
-  const [rateChanges, setRateChanges] = useState(() => [...new Set([...changedTerms(rateTerms(offer), rateTerms(prebook, true)), ...(prebook?.boardChanged ? ['Yemek planı'] : []), ...(prebook?.cancellationChanged ? ['İptal koşulları'] : [])])]);
-  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const selectedCryptoAsset =
     CRYPTO_ASSETS.find((asset) => asset.symbol === cryptoAsset) ||
@@ -130,7 +125,6 @@ function TravelCheckout() {
   const hotelName = hotel?.name || hotel?.hotelName || "Seçilen otel";
   const price = Number(
     cardSession?.amount ??
-      confirmedTerms?.total ??
       prebook?.sellingPriceToUser ??
       prebook?.suggestedSellingPrice?.amount ??
       hotel?.offer?.suggestedSellingPrice?.amount ??
@@ -138,7 +132,6 @@ function TravelCheckout() {
   );
   const currency =
     cardSession?.currency ||
-    confirmedTerms?.currency ||
     prebook?.currency ||
     hotel?.offer?.suggestedSellingPrice?.currency ||
     "EUR";
@@ -181,7 +174,7 @@ function TravelCheckout() {
 
   async function submit(event) {
     event.preventDefault();
-    if (!offer?.offerId || submitState === "loading" || (rateChanges.length && !termsAccepted)) return;
+    if (!offer?.offerId || submitState === "loading" || !termsAccepted) return;
 
     setSubmitState("loading");
     setError("");
@@ -205,8 +198,8 @@ function TravelCheckout() {
       const stay = { hotelId: confirmedHotelId, hotelName, checkin: state.checkin, checkout: state.checkout, adults: state.adults };
       if (paymentMethod === "card") {
         const result = await createCardPaymentSession({
+          acceptedRevision: prebook.revision,
           stay,
-          acceptedTerms: confirmedTerms,
           offerId: offer.offerId,
           holder,
           guests,
@@ -217,8 +210,8 @@ function TravelCheckout() {
       }
 
       const result = await createTravelCheckout({
+        acceptedRevision: prebook.revision,
         stay,
-        acceptedTerms: confirmedTerms,
         offerId: offer.offerId,
         holder,
         guests,
@@ -228,14 +221,25 @@ function TravelCheckout() {
       setCryptoBooking(result);
       setSubmitState("success");
     } catch (bookingError) {
-      if (bookingError.code === 'RATE_CHANGED') {
-        setConfirmedTerms(bookingError.confirmedTerms);
-        setRateChanges(bookingError.changes?.length ? bookingError.changes : ['Fiyat ve koşullar']);
+      if (bookingError.code === 'HOTEL_TERMS_CHANGED' && bookingError.prebook) {
+        const next = bookingError.prebook;
+        const changes = [];
+        if (next.total !== prebook.total || next.currency !== prebook.currency) changes.push('price');
+        const previousRooms = prebook.conditions?.rooms || [], nextRooms = next.conditions?.rooms || [];
+        const differs = pick => JSON.stringify(previousRooms.map(pick)) !== JSON.stringify(nextRooms.map(pick));
+        if (differs(r => [r.refundability, r.cancellationPolicies])) changes.push('cancellation');
+        if (differs(r => [r.mealPlan, r.mealPlanName])) changes.push('meal');
+        if (differs(r => r.taxesAndFees)) changes.push('charges');
+        if (differs(r => [r.roomName, r.adults, r.children])) changes.push('room');
+        if (next.bookingConditions !== prebook.bookingConditions) changes.push('conditions');
+        setUpdatedPrebook({ ...next, changes });
         setTermsAccepted(false);
+        setSubmitState('idle');
+        return;
       }
       setSubmitState("error");
       setError(
-        bookingError.code === 'RATE_CHANGED' ? rateText('changed', { changes: rateText('allTerms') }) : bookingError.message || "Rezervasyon şu anda tamamlanamadı."
+        bookingError.message || "Rezervasyon şu anda tamamlanamadı."
       );
     }
   }
@@ -294,8 +298,6 @@ function TravelCheckout() {
               />
             ) : (
               <form onSubmit={submit} className="travelCheckoutForm">
-                {rateChanges.length > 0 && <div className="travelRateChange" role="alert"><strong>{rateText('changed', { changes: rateChanges.map(change => rateText(changeKeys[change] || 'allTerms')).join(', ') })}</strong><p>{rateText('review', { total: new Intl.NumberFormat(language === 'pt' ? 'pt-BR' : language, { style: 'currency', currency: confirmedTerms.currency }).format(confirmedTerms.total) })}</p><RateDetails terms={confirmedTerms} /><label><input type="checkbox" checked={termsAccepted} onChange={event => setTermsAccepted(event.target.checked)} /> {rateText('accept')}</label></div>}
-
                 {savedTravelers.length > 0 && <label className="checkoutSavedTraveler">Kayıtlı yolcu bilgilerini kullan<select defaultValue="" onChange={event => { const person = savedTravelers.find(p => p._id === event.target.value); if (!person) return; setForm(current => ({ ...current, firstName: person.firstName, lastName: person.lastName, email: person.email || current.email, phone: person.phone || current.phone, guests: current.guests.map((g, i) => i === 0 ? { ...g, firstName: person.firstName, lastName: person.lastName } : g) })); }}><option value="">Yolcu seç</option>{savedTravelers.map(p => <option key={p._id} value={p._id}>{p.firstName} {p.lastName}</option>)}</select></label>}
                 {travelerError && <p role="status">Kayıtlı yolcular yüklenemedi. Bilgilerini aşağıdan doldurabilirsin.</p>}
                 <div className="travelCheckoutFormGrid">
@@ -506,6 +508,12 @@ function TravelCheckout() {
                   </div>
                 )}
 
+                {prebook.changes?.length > 0 && <div className="rateTermsUpdate" role="alert">
+                  <h2>{t('rateConditions.updated')}</h2>
+                  <ul>{prebook.changes.map(change => <li key={change}>{t(`rateConditions.${change === 'price' ? 'priceChanged' : change === 'cancellation' ? 'cancellationChanged' : change === 'meal' ? 'mealChanged' : change === 'charges' ? 'chargesChanged' : change === 'room' ? 'roomChanged' : 'conditionsChanged'}`)}</li>)}</ul>
+                </div>}
+                <RateConditions conditions={prebook.conditions} bookingConditions={prebook.bookingConditions} confirmed />
+                <label className="rateTermsAccept"><input type="checkbox" checked={termsAccepted} required onChange={event => setTermsAccepted(event.target.checked)} /><span>{t('rateConditions.accept')} · {money(price, currency)}</span></label>
                 {error && (
                   <p className="travelCheckoutError">
                     <AlertCircle size={17} /> {error}
@@ -514,7 +522,7 @@ function TravelCheckout() {
 
                 <button
                   className="travelCheckoutSubmit"
-                  disabled={submitState === "loading" || (rateChanges.length > 0 && !termsAccepted)}
+                  disabled={submitState === "loading" || !termsAccepted}
                   type="submit"
                 >
                   {submitState === "loading" ? (
@@ -582,8 +590,6 @@ function TravelCheckout() {
               )}
             </dl>
 
-            {rateChanges.length === 0 && <RateDetails terms={confirmedTerms} />}
-
             <div className="travelCheckoutTotal">
               <span>
                 {cardSession
@@ -593,6 +599,7 @@ function TravelCheckout() {
               <strong>{money(price, currency)}</strong>
             </div>
 
+            {(cardSession || cryptoBooking) && <RateConditions conditions={prebook.conditions} bookingConditions={prebook.bookingConditions} confirmed />}
             {cardSession && (
               <p className="travelCheckoutPriceVerified">
                 Fiyat ödeme öncesi yeniden doğrulandı.

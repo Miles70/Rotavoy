@@ -1,3 +1,4 @@
+import { publicPrebook } from "../src/services/hotelRateConditions.js";
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { once } from 'node:events';
@@ -46,11 +47,11 @@ test('HTTP hotel and flight payment sessions finalize only on provider confirmat
   const server = createApp().listen(0); await once(server, 'listening'); const base = `http://localhost:${server.address().port}/api`;
   const request = (path, body, token) => originalFetch(`${base}${path}`, { method: body ? 'POST' : 'GET', headers: { 'Content-Type': 'application/json', ...(token ? { 'X-Booking-Token': token } : {}) }, ...(body ? { body: JSON.stringify(body) } : {}) });
   try {
-    const staleSession = await request('/hotels/card/session', { offerId: 'offer', acceptedTerms: { total: 100, currency: 'USD', rooms: [] }, holder: contact, guests: [{ ...contact, occupancyNumber: 1 }] });
+    const staleSession = await request('/hotels/card/session', { offerId: 'offer', acceptedRevision: publicPrebook({ price: 100, currency: 'USD' }).revision, holder: contact, guests: [{ ...contact, occupancyNumber: 1 }] });
     assert.equal(staleSession.status, 409);
-    assert.equal((await staleSession.json()).code, 'RATE_CHANGED');
+    assert.equal((await staleSession.json()).code, 'HOTEL_TERMS_CHANGED');
     assert.equal(records.size, 0, 'stale terms must not create a payable booking');
-    const session = await request('/hotels/card/session', { offerId: 'offer', acceptedTerms: { total: 175, currency: 'USD', rooms: [] }, holder: contact, guests: [{ ...contact, occupancyNumber: 1 }] });
+    const session = await request('/hotels/card/session', { offerId: 'offer', acceptedRevision: publicPrebook({ price: 175, currency: 'USD' }).revision, holder: contact, guests: [{ ...contact, occupancyNumber: 1 }] });
     assert.equal(session.status, 201); const hotel = await session.json(); const ref = hotel.booking.clientReference;
     assert.equal((await request(`/hotels/card/${ref}/finalize`, {})).status, 403);
     mode = 'pending';
