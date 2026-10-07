@@ -121,6 +121,7 @@ function TravelCheckout() {
     : selectedCryptoAsset.networks[0];
   const selectedNetwork = NETWORK_LABELS[selectedNetworkKey];
 
+  const confirmedHotelId = prebook?.hotelId || hotel?.hotelId || hotel?.id;
   const hotelName = hotel?.name || hotel?.hotelName || "Seçilen otel";
   const price = Number(
     cardSession?.amount ??
@@ -196,7 +197,7 @@ function TravelCheckout() {
         },
       ];
 
-      const stay = { hotelId: hotel.hotelId, hotelName, checkin: state.checkin, checkout: state.checkout, adults: state.adults };
+      const stay = { hotelId: confirmedHotelId, hotelName, checkin: state.checkin, checkout: state.checkout, adults: state.adults };
       if (paymentMethod === "card") {
         const result = await createCardPaymentSession({
           stay,
