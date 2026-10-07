@@ -5,7 +5,8 @@ export const facilityExtras = {
     "laundry": "Laundry",
     "cycling": "Cycling",
     "tourDesk": "Tour desk",
-    "terrace": "Terrace"
+    "terrace": "Terrace",
+    "accessibleFacilities": "Facilities for guests with disabilities"
   },
   "tr": {
     "nonSmokingRooms": "Sigara içilmeyen odalar",
@@ -13,7 +14,8 @@ export const facilityExtras = {
     "laundry": "Çamaşırhane",
     "cycling": "Bisiklet",
     "tourDesk": "Tur danışma masası",
-    "terrace": "Teras"
+    "terrace": "Teras",
+    "accessibleFacilities": "Engelli misafir olanakları"
   },
   "de": {
     "nonSmokingRooms": "Nichtraucherzimmer",
@@ -21,7 +23,8 @@ export const facilityExtras = {
     "laundry": "Wäscheservice",
     "cycling": "Radfahren",
     "tourDesk": "Tourenschalter",
-    "terrace": "Terrasse"
+    "terrace": "Terrasse",
+    "accessibleFacilities": "Einrichtungen für Gäste mit Behinderungen"
   },
   "fr": {
     "nonSmokingRooms": "Chambres non-fumeurs",
@@ -29,7 +32,8 @@ export const facilityExtras = {
     "laundry": "Blanchisserie",
     "cycling": "Cyclisme",
     "tourDesk": "Bureau d’excursions",
-    "terrace": "Terrasse"
+    "terrace": "Terrasse",
+    "accessibleFacilities": "Équipements pour personnes à mobilité réduite"
   },
   "es": {
     "nonSmokingRooms": "Habitaciones para no fumadores",
@@ -37,7 +41,8 @@ export const facilityExtras = {
     "laundry": "Lavandería",
     "cycling": "Ciclismo",
     "tourDesk": "Mostrador de excursiones",
-    "terrace": "Terraza"
+    "terrace": "Terraza",
+    "accessibleFacilities": "Instalaciones para personas con discapacidad"
   },
   "it": {
     "nonSmokingRooms": "Camere non fumatori",
@@ -45,7 +50,8 @@ export const facilityExtras = {
     "laundry": "Lavanderia",
     "cycling": "Ciclismo",
     "tourDesk": "Banco escursioni",
-    "terrace": "Terrazza"
+    "terrace": "Terrazza",
+    "accessibleFacilities": "Servizi per ospiti con disabilità"
   },
   "pt": {
     "nonSmokingRooms": "Quartos para não fumadores",
@@ -53,7 +59,8 @@ export const facilityExtras = {
     "laundry": "Lavandaria",
     "cycling": "Ciclismo",
     "tourDesk": "Balcão de excursões",
-    "terrace": "Terraço"
+    "terrace": "Terraço",
+    "accessibleFacilities": "Instalações para pessoas com deficiência"
   },
   "ru": {
     "nonSmokingRooms": "Номера для некурящих",
@@ -61,7 +68,8 @@ export const facilityExtras = {
     "laundry": "Прачечная",
     "cycling": "Велоспорт",
     "tourDesk": "Экскурсионное бюро",
-    "terrace": "Терраса"
+    "terrace": "Терраса",
+    "accessibleFacilities": "Удобства для гостей с ограниченными возможностями"
   },
   "ar": {
     "nonSmokingRooms": "غرف لغير المدخنين",
@@ -69,7 +77,8 @@ export const facilityExtras = {
     "laundry": "خدمة غسيل الملابس",
     "cycling": "ركوب الدراجات",
     "tourDesk": "مكتب الجولات",
-    "terrace": "تراس"
+    "terrace": "تراس",
+    "accessibleFacilities": "مرافق للضيوف ذوي الإعاقة"
   },
   "zh": {
     "nonSmokingRooms": "禁烟客房",
@@ -77,7 +86,8 @@ export const facilityExtras = {
     "laundry": "洗衣服务",
     "cycling": "骑行",
     "tourDesk": "旅游咨询台",
-    "terrace": "露台"
+    "terrace": "露台",
+    "accessibleFacilities": "无障碍设施"
   }
 };
 const hotelRateTranslations = {
