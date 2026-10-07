@@ -14,6 +14,7 @@ const personSchema = new mongoose.Schema(
 const travelBookingSchema = new mongoose.Schema(
   {
     kind: { type: String, enum: ["hotel", "flight"], default: "hotel", index: true },
+    rateTerms: { type: mongoose.Schema.Types.Mixed, default: {} },
     flight: { type: mongoose.Schema.Types.Mixed, default: {} },
     accessTokenHash: { type: String, default: "" },
     bookingAttemptAt: { type: Date, default: null },

@@ -1,0 +1,22 @@
+.rateConditions { min-width: 0; width: 100%; font-size: .9rem; line-height: 1.5; overflow-wrap: anywhere; }
+.rateConditions p { margin: .35rem 0; }
+.rateConditionsRoom { display: block; margin-block: .6rem; }
+.rateConditionsMeal { font-weight: 600; color: var(--color-text, #071b3a); }
+.rateConditionsCancel--freeUntil, .rateConditionsTax { color: #176345; }
+.rateConditionsCancel--nonRefundable, .rateConditionsCancel--penalty { color: #854516; }
+.rateConditionsExtra { color: #854516; }
+.rateConditionsExtra span { display: block; }
+.rateConditionsDetails { margin-block-start: .65rem; }
+.rateConditionsDetails summary { cursor: pointer; color: var(--color-primary, #0b63f6); padding-block: .6rem; min-height: 44px; }
+.rateConditionsDetails > div { padding: .25rem .75rem; background: #f6f9ff; border-radius: 10px; }
+.rateConditionsDetails p { white-space: pre-wrap; }
+.rateTermsUpdate { border-inline-start: 3px solid #f5b63a; background: #fff9ed; padding: 1rem; border-radius: 10px; margin-block: 1rem; overflow-wrap: anywhere; }
+.rateTermsUpdate h2 { font-size: 1.1rem; margin: 0 0 .5rem; }
+.rateTermsAccept { display: flex !important; align-items: flex-start; gap: .7rem; padding-block: .75rem; font-size: .95rem; cursor: pointer; }
+.rateTermsAccept input { width: 20px !important; height: 20px; flex: 0 0 20px; margin-top: 2px; }
+.hotelOffer > .rateConditions { display: block; }
+.hotelOffer { min-width: 0; }
+
+.hotelOffer > div:first-child { min-width: 0; align-items: flex-start; }
+.hotelOffer > div:first-child > strong { min-width: 0; overflow-wrap: anywhere; }
+.hotelOffer > div:first-child > svg { flex-shrink: 0; }

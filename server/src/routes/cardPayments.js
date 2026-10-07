@@ -1,4 +1,4 @@
-import { guardRateTerms } from "../../../shared/hotelRate.js";
+import { requireAcceptedTerms } from "../services/hotelRateConditions.js";
 import { createBookingAccess, requireBookingAccess } from "../services/bookingAccess.js";
 import { finalizeBooking, bookingPayload } from "../services/finalizeBooking.js";
 import { optionalCustomer } from "../middleware/customerAuth.js";
@@ -124,7 +124,8 @@ cardPaymentsRouter.post("/session", cardPaymentLimiter, optionalCustomer, async 
     const offerId = requiredText(request.body?.offerId, "offerId", 5000);
     const prebook = await prebookNuiteeRate({ offerId, usePaymentSdk: true });
     const data = prebook?.data || {};
-    if (!guardRateTerms(response, request.body?.acceptedTerms, data)) return;
+      const acceptedTerms = requireAcceptedTerms(request, response, data);
+      if (!acceptedTerms) return;
 
     const prebookId = requiredText(data.prebookId || data.id, "prebookId", 500);
     const transactionId = requiredText(data.transactionId, "transactionId", 500);
@@ -139,6 +140,7 @@ cardPaymentsRouter.post("/session", cardPaymentLimiter, optionalCustomer, async 
     const clientReference = travelReference();
     const access = createBookingAccess();
     const booking = await TravelBooking.create({
+      rateTerms: acceptedTerms,
       accessTokenHash: access.hash,
       customerId: request.customer?._id || null,
       stay: bookingStay(request.body?.stay),

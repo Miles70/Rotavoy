@@ -1,52 +1,53 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { rateTerms, changedTerms, mergeTerms, guardRateTerms } from '../../shared/hotelRate.js';
-// Shapes and values captured from the production /hotels/rates and /prebook responses.
+import { normalizeOfferConditions, normalizePrebookTerms, publicPrebook, termChanges, requireAcceptedTerms } from '../src/services/hotelRateConditions.js';
+// Shapes and values captured from production rates/prebook; existing regression cases retained.
 const rate = { name: '2 Twin Beds', adultCount: 2, childCount: 0, boardType: 'RO', boardName: 'Room Only', retailRate: { taxesAndFees: [{ included: true, description: 'OTHERS', amount: 70.23, currency: 'USD' }] }, cancellationPolicies: { cancelPolicyInfos: [], hotelRemarks: [], refundableTag: 'NRFN' }, remarks: '' };
 const offer = { suggestedSellingPrice: { amount: 458.26, currency: 'USD' }, rates: [rate], rateType: 'package', supplierId: 'private' };
 const prebook = { price: 458.26, currency: 'USD', roomTypes: [{ rates: [rate] }] };
-test('real rates and prebook shapes map identically without internal commercial fields or duplicate markup', () => {
-  assert.deepEqual(rateTerms(offer), rateTerms(prebook, true));
-  assert.equal(rateTerms(offer).total, 458.26);
-  assert.equal(rateTerms(offer).rooms[0].meal, 'RO');
-  assert.equal(rateTerms(offer).rooms[0].cancellation.refundableTag, 'NRFN');
-  assert.equal(JSON.stringify(rateTerms(offer)).includes('package'), false);
-  assert.equal(rateTerms({}).total, null);
-  assert.deepEqual(rateTerms({}).rooms, []);
+test('real rates and prebook map identically without internal commercial fields or duplicate markup', () => {
+  assert.deepEqual(normalizeOfferConditions(offer), normalizePrebookTerms(prebook).conditions);
+  const terms = normalizePrebookTerms(prebook);
+  assert.equal(terms.total, 458.26);
+  assert.equal(terms.conditions.rooms[0].mealPlan, 'roomOnly');
+  assert.equal(terms.conditions.rooms[0].refundability, 'nonRefundable');
+  assert.equal(JSON.stringify(terms).includes('package'), false);
+  assert.equal(normalizePrebookTerms({}).total, null);
+  assert.deepEqual(normalizePrebookTerms({}).conditions.rooms, []);
 });
 test('price, currency, board, penalty, deadline, refundability and excluded tax changes require review', () => {
-  const original = rateTerms(offer);
-  for (const patch of [{ total: 459 }, { currency: 'EUR' }]) assert.deepEqual(changedTerms(original, { ...original, ...patch }), ['Toplam fiyat']);
-  for (const cancellation of [{ ...rate.cancellationPolicies, refundableTag: 'RFN' }, { ...rate.cancellationPolicies, cancelPolicyInfos: [{ cancelTime: '2026-10-15 10:00:00', amount: 247.34, currency: 'USD', type: 'amount', timezone: 'GMT' }] }]) assert.deepEqual(changedTerms(original, { ...original, rooms: [{ ...original.rooms[0], cancellation }] }), ['İptal koşulları']);
-  assert.deepEqual(changedTerms(original, { ...original, rooms: [{ ...original.rooms[0], meal: 'BB' }] }), ['Yemek planı']);
-  assert.deepEqual(changedTerms(original, { ...original, rooms: [{ ...original.rooms[0], taxes: [{ included: false, amount: 10, currency: 'USD' }] }] }), ['Vergi ve ücretler']);
+  const original = normalizePrebookTerms(prebook);
+  for (const patch of [{ total: 459 }, { currency: 'EUR' }]) assert.deepEqual(termChanges(original, { ...original, ...patch }), ['price']);
+  for (const cancellationPolicies of [{ ...rate.cancellationPolicies, refundableTag: 'RFN' }, { ...rate.cancellationPolicies, cancelPolicyInfos: [{ cancelTime: '2026-10-15 10:00:00', amount: 247.34, currency: 'USD', type: 'amount', timezone: 'GMT' }] }]) assert.deepEqual(termChanges(original, normalizePrebookTerms({ ...prebook, roomTypes: [{ rates: [{ ...rate, cancellationPolicies }] }] })), ['cancellation']);
+  assert.deepEqual(termChanges(original, normalizePrebookTerms({ ...prebook, roomTypes: [{ rates: [{ ...rate, boardType: 'BI' }] }] })), ['meal']);
+  assert.deepEqual(termChanges(original, normalizePrebookTerms({ ...prebook, roomTypes: [{ rates: [{ ...rate, retailRate: { taxesAndFees: [{ included: false, amount: 10, currency: 'USD' }] } }] }] })), ['charges']);
 });
-test('missing prebook facts stay unknown and do not fabricate removed terms', () => {
-  const confirmed = rateTerms({ price: 458.26, currency: 'USD' }, true);
-  assert.deepEqual(changedTerms(rateTerms(offer), confirmed), []);
-  assert.deepEqual(mergeTerms(rateTerms(offer), confirmed).rooms, rateTerms(offer).rooms);
+test('missing prebook facts stay unknown and cannot silently inherit an old cancellation promise', () => {
+  const confirmed = normalizePrebookTerms({ price: 458.26, currency: 'USD' });
+  assert.deepEqual(confirmed.conditions.rooms, []);
+  assert.equal(confirmed.bookingConditions, '');
+  assert.ok(termChanges(normalizePrebookTerms(prebook), confirmed).includes('cancellation'));
 });
-test('checkout guard rejects missing or stale acceptance before issuing payment, then accepts confirmed terms', () => {
-  const response = { status(code) { this.code = code; return this; }, json(body) { this.body = body; } };
-  assert.equal(guardRateTerms(response, undefined, prebook), false);
+test('checkout guard rejects missing or stale acceptance before payment, then accepts current revision', () => {
+  const response = { set() {}, status(code) { this.code = code; return this; }, json(body) { this.body = body; } };
+  assert.equal(requireAcceptedTerms({ body: {} }, response, prebook), null);
   assert.equal(response.code, 409);
-  assert.equal(guardRateTerms(response, { ...rateTerms(offer), total: 400 }, prebook), false);
-  assert.equal(response.body.code, 'RATE_CHANGED');
-  assert.equal(guardRateTerms(response, response.body.confirmedTerms, prebook), true);
+  assert.equal(requireAcceptedTerms({ body: { acceptedRevision: publicPrebook({ ...prebook, price: 400 }).revision } }, response, prebook), null);
+  assert.equal(response.body.code, 'HOTEL_TERMS_CHANGED');
+  assert.ok(requireAcceptedTerms({ body: { acceptedRevision: response.body.prebook.revision } }, response, prebook));
 });
-
-test('explicit provider change flags cannot pass silently and acceptance can proceed without an endless loop', () => {
-  const before = rateTerms(offer), after = rateTerms({ ...prebook, boardChanged: true, cancellationChanged: true }, true);
-  assert.deepEqual(changedTerms(before, after), ['Yemek planı', 'İptal koşulları']);
-  assert.deepEqual(changedTerms(mergeTerms(before, after), after), []);
+test('provider change flags are visible while current acceptance avoids an endless review loop', () => {
+  const changed = { ...prebook, boardChanged: true, cancellationChanged: true };
+  assert.deepEqual(publicPrebook(changed).changes, ['cancellation', 'meal']);
+  const response = { set() {}, status() { throw new Error('current terms must be accepted'); } };
+  assert.ok(requireAcceptedTerms({ body: { acceptedRevision: publicPrebook(changed).revision } }, response, changed));
 });
-
-test('explicitly removed extra fees update the accepted terms; absent fee data does not claim removal', () => {
-  const before = rateTerms(offer);
-  const after = rateTerms({ ...prebook, roomTypes: [{ rates: [{ ...rate, retailRate: { taxesAndFees: [] } }] }] }, true);
-  assert.deepEqual(changedTerms(before, after), ['Vergi ve ücretler']);
-  assert.deepEqual(mergeTerms(before, after).rooms[0].taxes, []);
-  const missing = rateTerms({ ...prebook, roomTypes: [{ rates: [{ ...rate, retailRate: {} }] }] }, true);
-  assert.deepEqual(changedTerms(before, missing), []);
-  assert.deepEqual(mergeTerms(before, missing).rooms[0].taxes, before.rooms[0].taxes);
+test('empty extra-fee list and absent fee data remain distinct; neither proves taxes are included', () => {
+  const before = normalizePrebookTerms(prebook);
+  for (const retailRate of [{ taxesAndFees: [] }, {}]) {
+    const after = normalizePrebookTerms({ ...prebook, roomTypes: [{ rates: [{ ...rate, retailRate }] }] });
+    assert.deepEqual(termChanges(before, after), ['charges']);
+    assert.equal(after.conditions.rooms[0].taxesIncluded, null);
+    assert.deepEqual(after.conditions.rooms[0].taxesAndFees, 'taxesAndFees' in retailRate ? [] : null);
+  }
 });
