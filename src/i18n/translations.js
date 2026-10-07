@@ -1,3 +1,4 @@
+import hotelRateTranslations from "./hotelRateTranslations";
 import en from "./locales/en";
 import tr from "./locales/tr";
 import ru from "./locales/ru";
@@ -20,6 +21,7 @@ function withTravelTranslations(baseTranslations, language) {
   return {
     ...baseTranslations,
     auth,
+    hotelRate: hotelRateTranslations[language],
     hotelDetail: hotelDetailTranslations[language] || hotelDetailTranslations.en,
     travelPage: {
       ...baseTranslations.travelPage,
