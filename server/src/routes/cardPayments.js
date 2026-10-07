@@ -1,3 +1,4 @@
+import { guardRateTerms } from "../../../shared/hotelRate.js";
 import { createBookingAccess, requireBookingAccess } from "../services/bookingAccess.js";
 import { finalizeBooking, bookingPayload } from "../services/finalizeBooking.js";
 import { optionalCustomer } from "../middleware/customerAuth.js";
@@ -123,6 +124,7 @@ cardPaymentsRouter.post("/session", cardPaymentLimiter, optionalCustomer, async 
     const offerId = requiredText(request.body?.offerId, "offerId", 5000);
     const prebook = await prebookNuiteeRate({ offerId, usePaymentSdk: true });
     const data = prebook?.data || {};
+    if (!guardRateTerms(response, request.body?.acceptedTerms, data)) return;
 
     const prebookId = requiredText(data.prebookId || data.id, "prebookId", 500);
     const transactionId = requiredText(data.transactionId, "transactionId", 500);

@@ -471,3 +471,12 @@
 @media (max-width: 540px) { .hotelStaySearch { grid-template-columns: minmax(0, 1fr); padding: 16px; } }
 
 .hotelFavoriteControl{margin-top:14px}.hotelFavoriteButton{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid #dbe6f2;border-radius:10px;background:#fff;color:#0b63f6;font:inherit;font-size:13px;font-weight:700;cursor:pointer}.hotelFavoriteButton.saved{color:#c92a6d;background:#fff0f6;border-color:#f5c8df}.hotelFavoriteButton:disabled{opacity:.6;cursor:wait}.hotelFavoriteControl small{display:block;color:#c0372c;margin-top:8px}
+
+.rateFacts { width: 100%; font-size: .85rem; line-height: 1.5; overflow-wrap: anywhere; }
+.rateFacts p { margin: .4rem 0; }
+.rateFactsFree { color: #137454; font-weight: 600; }
+.rateFacts details { margin-top: .7rem; padding-top: .6rem; border-top: 1px solid #dce5ed; }
+.rateFacts summary { cursor: pointer; color: #0b63f6; font-weight: 600; }
+.rateFacts details p { color: #52647a; }
+.hotelOffer > .rateFacts { display: block; margin-top: 12px; }
+.hotelOffer > button:focus-visible, .rateFacts summary:focus-visible { outline: 3px solid #19c6d8; outline-offset: 3px; }

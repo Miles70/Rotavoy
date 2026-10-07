@@ -1,3 +1,4 @@
+import { guardRateTerms } from "../../../shared/hotelRate.js";
 import { createBookingAccess, requireBookingAccess } from "../services/bookingAccess.js";
 import { finalizeBooking, bookingPayload } from "../services/finalizeBooking.js";
 import { optionalCustomer } from "../middleware/customerAuth.js";
@@ -497,6 +498,7 @@ hotelsRouter.post("/checkout", bookingLimiter, optionalCustomer, async (request,
     const offerId = requiredText(request.body?.offerId, "offerId", 5000);
     const prebook = await prebookNuiteeRate({ offerId, usePaymentSdk: false });
     const prebookData = prebook?.data || {};
+    if (!guardRateTerms(response, request.body?.acceptedTerms, prebookData)) return;
     const prebookId = requiredText(prebookData?.prebookId || prebookData?.id, "prebookId", 500);
     const providerTotal = Number(prebookData?.price);
     const currency = String(prebookData?.currency || "USD").toUpperCase();

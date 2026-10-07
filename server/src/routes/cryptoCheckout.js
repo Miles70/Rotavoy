@@ -1,3 +1,4 @@
+import { guardRateTerms } from "../../../shared/hotelRate.js";
 import { createBookingAccess } from "../services/bookingAccess.js";
 import { optionalCustomer } from "../middleware/customerAuth.js";
 import { bookingStay } from "../services/bookingStay.js";
@@ -167,6 +168,7 @@ cryptoCheckoutRouter.post(
         usePaymentSdk: false,
       });
       const prebookData = prebook?.data || {};
+    if (!guardRateTerms(response, request.body?.acceptedTerms, prebookData)) return;
       const prebookId = requiredText(
         prebookData?.prebookId || prebookData?.id,
         "prebookId",

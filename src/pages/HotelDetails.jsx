@@ -1,3 +1,5 @@
+import { rateTerms } from "../../shared/hotelRate.js";
+import RateDetails from "../components/Hotels/RateDetails.jsx";
 import HotelFavorite from "../components/HotelFavorite";
 import { trackTravel } from '../services/analytics';
 import { useEffect, useRef, useMemo, useState } from "react";
@@ -202,41 +204,6 @@ function buildOffers(rateResponse) {
         Number(left.suggestedSellingPrice.amount) -
         Number(right.suggestedSellingPrice.amount),
     );
-}
-
-function offerText(value) {
-  if (typeof value === "string" || typeof value === "number") return String(value).trim();
-  if (!value || typeof value !== "object") return "";
-  return String(value.name || value.description || value.text || value.type || "").trim();
-}
-
-function firstOfferText(sources, keys) {
-  for (const source of sources) {
-    for (const key of keys) {
-      const value = offerText(source?.[key]);
-      if (value) return value;
-    }
-  }
-  return "";
-}
-
-function offerDetails(offer) {
-  const rate = offer?.rates?.[0] || {};
-  const sources = [offer, rate];
-  const rows = [];
-  const meal = firstOfferText(sources, ["mealPlan", "mealType", "board", "boardType", "meal"]);
-  const cancellation = firstOfferText(sources, ["cancellationPolicy", "cancellationConditions", "cancellation"]);
-  const rateName = firstOfferText(sources, ["rateName", "rateType", "name"]);
-  const refundable = sources.map((source) => source?.refundable ?? source?.isRefundable).find((value) => typeof value === "boolean");
-  const benefits = sources.flatMap((source) => Array.isArray(source?.benefits) ? source.benefits : Array.isArray(source?.inclusions) ? source.inclusions : [])
-    .map(offerText).filter(Boolean).slice(0, 3);
-
-  if (meal) rows.push({ label: "Yemek planı", value: meal, icon: Utensils });
-  if (refundable !== undefined) rows.push({ label: "İptal", value: refundable ? "İade edilebilir" : "İade edilemez", icon: ShieldCheck });
-  else if (cancellation) rows.push({ label: "İptal", value: cancellation, icon: ShieldCheck });
-  if (rateName && rateName !== offer?.rates?.[0]?.name) rows.push({ label: "Fiyat tipi", value: rateName, icon: CheckCircle2 });
-  benefits.forEach((value) => rows.push({ label: "Dahil", value, icon: CheckCircle2 }));
-  return rows;
 }
 
 function facilityIcon(name) {
@@ -735,7 +702,7 @@ function HotelDetails() {
               ) : offers.length ? (
                 <div className="hotelOffers">
                   {offers.map((offer) => {
-                    const details = offerDetails(offer);
+                    const terms = rateTerms(offer);
                     return (
                     <article
                       key={offer.offerId}
@@ -754,16 +721,7 @@ function HotelDetails() {
                           offer.suggestedSellingPrice.currency,
                         )}
                       </b>
-                      {details.length > 0 && (
-                        <dl className="hotelOfferDetails">
-                          {details.map(({ label, value, icon: Icon }, index) => (
-                            <div key={`${label}-${value}-${index}`}>
-                              <dt><Icon size={15} /> {label}</dt>
-                              <dd>{value}</dd>
-                            </div>
-                          ))}
-                        </dl>
-                      )}
+                      <RateDetails terms={terms} />
                       <button
                         type="button"
                         onClick={() => { trackTravel('room_select', { hotelId, hotelName: name, roomName: offer.roomName || offer.roomType || '', offerId: offer.offerId }); setSelectedOffer(offer); }}
