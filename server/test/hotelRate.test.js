@@ -40,3 +40,13 @@ test('explicit provider change flags cannot pass silently and acceptance can pro
   assert.deepEqual(changedTerms(before, after), ['Yemek planı', 'İptal koşulları']);
   assert.deepEqual(changedTerms(mergeTerms(before, after), after), []);
 });
+
+test('explicitly removed extra fees update the accepted terms; absent fee data does not claim removal', () => {
+  const before = rateTerms(offer);
+  const after = rateTerms({ ...prebook, roomTypes: [{ rates: [{ ...rate, retailRate: { taxesAndFees: [] } }] }] }, true);
+  assert.deepEqual(changedTerms(before, after), ['Vergi ve ücretler']);
+  assert.deepEqual(mergeTerms(before, after).rooms[0].taxes, []);
+  const missing = rateTerms({ ...prebook, roomTypes: [{ rates: [{ ...rate, retailRate: {} }] }] }, true);
+  assert.deepEqual(changedTerms(before, missing), []);
+  assert.deepEqual(mergeTerms(before, missing).rooms[0].taxes, before.rooms[0].taxes);
+});

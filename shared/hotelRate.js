@@ -15,7 +15,7 @@ export function rateTerms(value, prebook = false) {
       meal: rate.boardType || null,
       mealName: rate.boardName || null,
       cancellation: rate.cancellationPolicies || null,
-      taxes: (rate.retailRate?.taxesAndFees || []).map(tax => ({ included: tax.included, description: tax.description, amount: tax.amount, currency: tax.currency })),
+      taxes: Array.isArray(rate.retailRate?.taxesAndFees) ? rate.retailRate.taxesAndFees.map(tax => ({ included: tax.included, description: tax.description, amount: tax.amount, currency: tax.currency })) : null,
       remarks: typeof rate.remarks === 'string' ? rate.remarks.replace(/<[^>]*>/g, ' ').trim() : null,
     })),
   };
@@ -32,12 +32,12 @@ export function changedTerms(before, after) {
     if (!old) return;
     if (room.meal && old.meal && room.meal !== old.meal) changes.push('Yemek planı');
     if (room.cancellation && old.cancellation && JSON.stringify(room.cancellation) !== JSON.stringify(old.cancellation)) changes.push('İptal koşulları');
-    if (room.taxes.length && JSON.stringify(room.taxes) !== JSON.stringify(old.taxes || [])) changes.push('Vergi ve ücretler');
+    if (room.taxes !== null && JSON.stringify(room.taxes) !== JSON.stringify(old.taxes)) changes.push('Vergi ve ücretler');
   });
   return [...new Set(changes)];
 }
 export function mergeTerms(before, after) {
-  return { ...after, rooms: after.rooms.length ? after.rooms.map((room, i) => ({ ...before?.rooms?.[i], ...Object.fromEntries(Object.entries(room).filter(([, v]) => v !== null && (!Array.isArray(v) || v.length))) })) : before?.rooms || [] };
+  return { ...after, rooms: after.rooms.length ? after.rooms.map((room, i) => ({ ...before?.rooms?.[i], ...Object.fromEntries(Object.entries(room).filter(([, v]) => v !== null)) })) : before?.rooms || [] };
 }
 export function guardRateTerms(response, accepted, data) {
   const confirmed = rateTerms(data, true);

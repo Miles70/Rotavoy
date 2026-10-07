@@ -576,6 +576,8 @@ function TravelCheckout() {
               )}
             </dl>
 
+            {rateChanges.length === 0 && <RateDetails terms={confirmedTerms} />}
+
             <div className="travelCheckoutTotal">
               <span>
                 {cardSession
