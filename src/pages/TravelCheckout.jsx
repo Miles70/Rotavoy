@@ -261,7 +261,7 @@ function TravelCheckout() {
       <div className="travelCheckoutContainer">
         <Link
           className="travelCheckoutBack"
-          to={`/travel/hotels/${encodeURIComponent(hotel.hotelId)}`}
+          to={`/travel/hotels/${encodeURIComponent(confirmedHotelId)}`}
         >
           <ArrowLeft size={18} /> Otele dön
         </Link>
