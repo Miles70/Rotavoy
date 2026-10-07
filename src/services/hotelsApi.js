@@ -21,11 +21,13 @@ async function hotelRequest(path, options = {}) {
   const payload = await response.json().catch(() => ({}));
 
   if (!response.ok || payload?.error) {
-    throw new Error(
+    const error = new Error(
       payload?.message ||
         payload?.error?.message ||
         "Otel servisine şu anda ulaşılamıyor.",
     );
+    Object.assign(error, payload);
+    throw error;
   }
 
   const reference = payload.booking?.clientReference;
@@ -127,6 +129,7 @@ export function createTravelCheckout({
   offerId,
   holder,
   guests,
+  acceptedTerms,
   cryptoAsset = "USDT",
   cryptoNetwork = "BSC",
 }) {
@@ -137,6 +140,7 @@ export function createTravelCheckout({
       offerId,
       holder,
       guests,
+      acceptedTerms,
       cryptoAsset,
       cryptoNetwork,
     }),
@@ -151,10 +155,10 @@ export function verifyTravelPayment(clientReference, { transactionHash, payerAdd
   }).then((payload) => payload.booking);
 }
 
-export function createCardPaymentSession({ offerId, holder, guests, stay }) {
+export function createCardPaymentSession({ offerId, holder, guests, stay, acceptedTerms }) {
   return hotelRequest("/card/session", {
     method: "POST",
-    body: JSON.stringify({ offerId, holder, guests, stay }),
+    body: JSON.stringify({ offerId, holder, guests, stay, acceptedTerms }),
   });
 }
 
