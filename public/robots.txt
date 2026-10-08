@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /api/
 
-Sitemap: https://rotavoy.com/sitemap.xml
+Sitemap: https://www.rotavoy.com/sitemap.xml

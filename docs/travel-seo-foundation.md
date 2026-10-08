@@ -8,6 +8,8 @@ Before this change, flights were marked `noindex`, language selection only chang
 
 ## Delivered
 
+The canonical origin is `https://www.rotavoy.com`, matching the verified live Vercel redirect from the apex domain. Sitemap locations, alternate links, structured data and canonical metadata all use this origin. Search Console should track the www URL-prefix property or a DNS-verified Domain property that covers both hosts.
+
 - Twenty public landing URLs: English `/hotels` and `/flights`; other languages use `/{language}/hotels` and `/{language}/flights` for `tr`, `ru`, `ar`, `zh`, `es`, `pt`, `fr`, `de`, `it`.
 - Build-generated initial HTML with localized title, description, canonical, ten reciprocal language alternatives plus English `x-default`, WebPage structured data, and useful visible travel guides. The same guide component appears in the running application; there is no crawler-specific response.
 - URL language takes precedence over saved preference. The language selector preserves search parameters and URL fragments. Legacy hotel detail, account, reservation and checkout paths remain unchanged.

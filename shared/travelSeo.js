@@ -1,4 +1,4 @@
-export const SITE_URL = 'https://rotavoy.com';
+export const SITE_URL = 'https://www.rotavoy.com';
 export const SEO_LANGUAGES = ['en', 'tr', 'ru', 'ar', 'zh', 'es', 'pt', 'fr', 'de', 'it'];
 export const LANGUAGE_NAMES = { en: 'English', tr: 'Türkçe', ru: 'Русский', ar: 'العربية', zh: '中文', es: 'Español', pt: 'Português (Brasil)', fr: 'Français', de: 'Deutsch', it: 'Italiano' };
 export const languageTag = language => language === 'pt' ? 'pt-BR' : language;
