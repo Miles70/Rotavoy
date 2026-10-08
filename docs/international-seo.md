@@ -58,7 +58,7 @@ npm run build
 npm run test:seo
 ```
 
-Komut production sağlayıcı durumunu doğrular, en fazla 25 oteli sırayla okur ve atomik dosya değişikliği yapar. Hata durumunda eski snapshot korunur. Kaynak açıklama, ad veya konum değişirse ilgili otel yayımdan kaldırılır; 10 dil özeti gözden geçirilip `published:true` yapılmadan tekrar indekslenebilir içerik üretilmez. Fiyat/rates/booking endpointi çağrılmaz. Çeviri modeli tetiklenmez.
+Komut production sağlayıcı durumunu doğrular, en fazla 25 oteli sırayla okur ve atomik dosya değişikliği yapar. Hata durumunda eski snapshot korunur. Kaynak açıklama veya herhangi bir yayınlanan tesis bilgisi (ad, adres, şehir, ülke, yıldız, fotoğraf, koordinatlar) değişirse ilgili otel yayımdan kaldırılır; 10 dil özeti gözden geçirilip `published:true` yapılmadan tekrar indekslenebilir içerik üretilmez. Fiyat/rates/booking endpointi çağrılmaz. Çeviri modeli tetiklenmez.
 
 Yeni otel: gerçek provider detayını al, snapshot’ı aynı şemada ekle, tüm 10 açıklamayı kaynakla karşılaştır, production provenance ve reviewedAt kaydet, ardından yayımla. Sadece sağlayıcı metni kopyalanıp dil etiketi değiştirilmemelidir. Yeni şehir en az üç yayın onaylı profil içerdiğinde `seo/destinations.js` üzerinden açılabilir. Rota katalog girdisi ancak gerçek havaalanı eşleşmeleri ve kullanıcıya faydalı içerik ile genişletilmelidir.
 
@@ -83,7 +83,7 @@ npm run test:hotel-e2e
 
 `test:seo-e2e`: on dilde JavaScript kapalı otel/destinasyon/rota; hydrate; 320/390/1280px; RTL; tema; karşılık gelen dil bağlantısı; uçuş CTA’sından mevcut forma dil ve havalimanı aktarımı; HTTP 404. API tamamen fixture ile intercept edilir. Mevcut hotel-e2e oda seçimi/prebook ve kart/kripto koşul değişikliği akışlarını ayrıca kapsar. CI’a SEO testleri eklendi. CI build’inde yalnızca mevcut uygulamanın açılabilmesi için sahte Reown proje ID’si kullanılır; production Vercel ayarları değiştirilmez.
 
-Yerel doğrulama: build başarılı; lint sıfır hata (Travel.jsx’te önceden bulunan iki hooks uyarısı); 100 HTML SEO kontrolü başarılı; 10 dil otel UI başarılı; 46 backend testi başarılı. Chromium indirmesi bu çalışma ortamında geçerli arşiv döndürmediği için tarayıcı testleri burada henüz çalıştırılamadı. CI/browser ve Vercel preview yönlendirmelerinin sonucu PR üzerinden ayrıca doğrulanmalıdır. Gerçek kart/kripto ödeme ve gerçek rezervasyon yapılmadı.
+Yerel doğrulama: build başarılı; lint sıfır hata (Travel.jsx’te önceden bulunan iki hooks uyarısı); 100 HTML SEO kontrolü başarılı; 10 dil otel UI başarılı; 46 backend testi başarılı. Chromium indirmesi bu çalışma ortamında geçerli arşiv döndürmediği için tarayıcı testleri burada henüz çalıştırılamadı. GitHub Actions Chromium testleri daha sonra çalıştı: JavaScript kapalı 10 dil, mobil/masaüstü, RTL, tema ve uçuş formuna geçiş başarılı oldu. İlk 320px menü taşması düzeltildi. En yeni commit için tam regresyon sonucu PR’da izlenir. Vercel preview build’i başarılıdır; mevcut Vercel bağlantısı projeye erişim yetkisi vermediği için preview HTTP yönlendirmeleri henüz doğrulanamadı. Gerçek kart/kripto ödeme ve gerçek rezervasyon yapılmadı.
 
 Master’a merge veya production yayın yapılmaz; bu branch PR ile değerlendirilir. Sonraki aşamalar: preview’de Vercel cleanUrls/function dosya paketlemesini doğrula, staging’de mevcut otel/uçuş/ödeme regresyonlarını çalıştır, merge sonrası Search Console’a sitemap gönder, seçilmiş şehirlerde yeni gerçek tesis profilleri ekle, organik girişleri Analytics V2 ve Search Console’dan izle, LCP/INP/CLS saha verisi topla.
 

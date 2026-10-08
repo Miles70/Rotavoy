@@ -1,6 +1,7 @@
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { resolve, extname } from 'node:path';
+import { searchKeys } from '../seo/app-policy.js';
 import handler from '../api/page.js';
 // Mirrors cleanUrls filesystem priority and the page adapter, without calling production.
 export async function startSeoTestServer() {
@@ -16,7 +17,7 @@ export async function startSeoTestServer() {
     const body = await readFile(file);
     const mime = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.xml': 'application/xml', '.png': 'image/png', '.svg': 'image/svg+xml' }[extname(file)] || 'application/octet-stream';
     res.setHeader('Content-Type', mime);
-    if (url.searchParams.has('checkin') || url.searchParams.has('departure')) res.setHeader('X-Robots-Tag', 'noindex, follow');
+    if (searchKeys.some(key => url.searchParams.has(key))) res.setHeader('X-Robots-Tag', 'noindex, follow');
     res.end(body); return;
    } catch { /* Fall through to the server adapter. */ }
   }

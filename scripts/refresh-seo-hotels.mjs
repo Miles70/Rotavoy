@@ -1,4 +1,5 @@
 import { readFile, writeFile, rename } from 'node:fs/promises';
+import { hotelFactsChanged, publicHotelFacts } from '../seo/hotel-refresh.js';
 import { createHash } from 'node:crypto';
 // Explicit, sequential catalog maintenance, never run in build or a page request.
 const params = new Map(process.argv.slice(2).map(arg => { const i = arg.indexOf('='); return [arg.slice(0, i), arg.slice(i + 1)]; }));
@@ -21,8 +22,8 @@ for (const id of ids) {
  if (!hotel?.name || (hotel.id && hotel.id !== id)) throw new Error('Incomplete or mismatched provider hotel.');
  const description = String(hotel.description || hotel.hotelDescription || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
  const hash = createHash('sha256').update(description).digest('hex');
- const changed = hash !== existing.source.descriptionHash || ['name','address','city','country'].some(key => (hotel[key] || '') !== existing[key]);
- const next = { ...existing, name: hotel.name, address: hotel.address || '', city: hotel.city || '', country: hotel.country || '', image: hotel.main_photo || '', stars: hotel.stars, latitude: hotel.latitude, longitude: hotel.longitude, deletedAt: hotel.deletedAt || null, source: { provider: 'Nuitee/LiteAPI', environment: 'production', fetchedAt: new Date().toISOString(), description, descriptionHash: hash }, published: changed || hotel.deletedAt ? false : existing.published };
+ const changed = hotelFactsChanged(existing, hotel, hash);
+ const next = { ...existing, ...publicHotelFacts(hotel), deletedAt: hotel.deletedAt || null, source: { provider: 'Nuitee/LiteAPI', environment: 'production', fetchedAt: new Date().toISOString(), description, descriptionHash: hash }, published: changed || hotel.deletedAt ? false : existing.published };
  // Changed facts fail closed; a reviewer must recheck all 10 summaries before publication.
  await writeFile(`${path}.tmp`, JSON.stringify(next, null, 2) + '\n');
  await rename(`${path}.tmp`, path);

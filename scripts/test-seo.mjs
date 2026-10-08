@@ -3,7 +3,8 @@ import { readFile, readdir } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { buildPages, SITE_URL, eligibleHotel } from '../seo/model.js';
 import { languages, copy } from '../seo/copy.js';
-import { appPolicy } from '../seo/app-policy.js';
+import { hotelFactsChanged } from '../seo/hotel-refresh.js';
+import { appPolicy, searchKeys } from '../seo/app-policy.js';
 import handler from '../api/page.js';
 import { safeJson } from '../seo/html.js';
 const hotels = await Promise.all((await readdir('seo/hotels')).filter(f => f.endsWith('.json')).map(async f => JSON.parse(await readFile(`seo/hotels/${f}`, 'utf8'))));
@@ -62,8 +63,20 @@ for (const match of index.matchAll(/<loc>([^<]+)<\/loc>/g)) {
 for (const path of paths) assert.ok(locations.includes(SITE_URL + path));
 assert.ok(locations.every(url => !url.includes('?') && !/checkout|account|admin/.test(url)));
 const published = hotels.map(h => h.id);
+const config = JSON.parse(await readFile('vercel.json', 'utf8'));
+for (const key of searchKeys) {
+ assert.ok(config.headers.some(rule => rule.has.some(match => match.type === 'query' && match.key === key) && rule.headers.some(header => header.key === 'X-Robots-Tag' && header.value.includes('noindex'))));
+ assert.ok(appPolicy('/hotels', `${key}=example`, published).noIndex);
+}
+assert.ok(appPolicy('/privacy', 'lang=tr').title.includes('Gizlilik'));
+assert.ok(appPolicy('/privacy', 'lang=de').title.includes('Privacy'));
+const existing = hotels[0], provider = { ...existing, main_photo: existing.image };
+assert.equal(hotelFactsChanged(existing, provider, existing.source.descriptionHash), false);
+for (const [key, value] of Object.entries({ name: 'Updated', address: 'Updated', city: 'Updated', country: 'GB', main_photo: 'https://example.com/new.jpg', stars: 4, latitude: 1, longitude: 1 })) assert.equal(hotelFactsChanged(existing, { ...provider, [key]: value }, existing.source.descriptionHash), true);
+assert.equal(hotelFactsChanged(existing, provider, 'changed-description'), true);
 for (const [path, search] of [['/flights', 'departure=2099-01-01'], ['/travel/checkout',''], ['/flights/checkout',''], ['/account',''], ['/admin',''], ['/hotels','cityName=Antalya'], ['/travel/hotels/lp55de7','checkin=2099-01-01'], ['/not-a-page',''], ['/en/hotels/not-a-city','']]) assert.ok(appPolicy(path, search, published).noIndex);
 assert.equal(appPolicy('/not-a-page', '', published).status, 404);
+assert.equal(appPolicy('/travel/hotels/lp55de7', 'lang=tr', published).canonical, SITE_URL + '/tr/travel/hotels/lp55de7');
 assert.equal(appPolicy('/flights', '', published).redirect, '/en/flights');
 assert.equal(appPolicy('/travel/hotels/lp55de7', '', published).redirect, '/en/travel/hotels/lp55de7');
 assert.equal(appPolicy('/travel', 'cityName=Antalya', published).redirect, '/?cityName=Antalya');

@@ -33,7 +33,7 @@ try {
  await writeFile('dist/sitemaps/general.xml', `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${general.map(path => `<url><loc>${SITE_URL}${path}</loc></url>`).join('')}</urlset>`);
  chunks.push('/sitemaps/general.xml');
  await writeFile('dist/sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${chunks.map(path => `<sitemap><loc>${SITE_URL}${path}</loc></sitemap>`).join('')}</sitemapindex>`);
- await writeFile('dist/seo-manifest.json', JSON.stringify({ pages: pages.map(({ path, kind, lang }) => ({ path, kind, lang })), hotels: hotels.filter(h => h.published).map(h => h.id) }, null, 2));
+ await writeFile('dist/seo-manifest.json', JSON.stringify({ pages: pages.map(({ path, kind, lang }) => ({ path, kind, lang })), hotels: pages.filter(p => p.kind === 'hotel' && p.lang === 'en').map(p => p.hotel.id) }, null, 2));
  // Entry shell contains placeholders, never expose it as an indexable page.
  await rm('dist/seo.html');
  console.log(`SEO: ${pages.length} HTML pages, 10 languages, ${chunks.length} sitemap shards; zero build-time provider requests.`);
