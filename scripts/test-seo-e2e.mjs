@@ -12,6 +12,7 @@ try {
  for (const lang of languages) {
   const context = await browser.newContext({ javaScriptEnabled: false });
   await markAnalyticsTest(context, { fixture: true });
+  await context.route('**/*', route => new URL(route.request().url()).origin === server.base ? route.continue() : route.abort());
   await context.route('**/api/**', route => route.abort());
   const page = await context.newPage();
   for (const suffix of ['', '/hotels', '/flights', '/hotels/antalya', '/travel/hotels/lp55de7', '/flights/ayt-fra']) {
@@ -27,6 +28,7 @@ try {
  for (const width of [320, 390, 1280]) {
   const context = await browser.newContext({ viewport: { width, height: 900 } });
   await markAnalyticsTest(context, { fixture: true });
+  await context.route('**/*', route => new URL(route.request().url()).origin === server.base ? route.continue() : route.abort());
   await context.route('**/api/**', route => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ data: [], hotels: [] }) }));
   await context.route('https://static.cupid.travel/**', route => route.fulfill({ contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><rect width="800" height="600" fill="#19c6d8"/></svg>' }));
   const page = await context.newPage(), errors = [];

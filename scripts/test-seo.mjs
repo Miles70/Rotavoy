@@ -55,6 +55,7 @@ for (const page of pages) {
  if (page.kind === 'hotel') assert.ok(withoutScripts.includes(page.hotel.address));
  if (page.kind === 'route') assert.ok(withoutScripts.includes(page.route.from) && withoutScripts.includes(page.route.to));
 }
+assert.equal(await readFile('dist/google2fd19590f23b16c5.html', 'utf8'), await readFile('public/google2fd19590f23b16c5.html', 'utf8'));
 const index = await readFile('dist/sitemap.xml', 'utf8');
 assert.ok(index.includes('<sitemapindex'));
 let locations = [];
