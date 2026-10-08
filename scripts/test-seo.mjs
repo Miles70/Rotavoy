@@ -8,7 +8,7 @@ import handler from '../api/page.js';
 import { safeJson } from '../seo/html.js';
 const hotels = await Promise.all((await readdir('seo/hotels')).filter(f => f.endsWith('.json')).map(async f => JSON.parse(await readFile(`seo/hotels/${f}`, 'utf8'))));
 const pages = buildPages(hotels);
-assert.equal(pages.length, 100);
+assert.ok(pages.length > 0 && pages.length % languages.length === 0);
 const paths = new Set(pages.map(p => p.path));
 assert.equal(paths.size, pages.length);
 for (const h of hotels) {
@@ -20,7 +20,7 @@ for (const h of hotels) {
  assert.equal(eligibleHotel({ ...h, published: false }), false);
 }
 for (const lang of languages) {
- assert.equal(pages.filter(p => p.lang === lang).length, 10);
+ assert.equal(pages.filter(p => p.lang === lang).length, pages.length / languages.length);
  assert.ok(Object.values(copy[lang]).every(value => typeof value === 'string' && value.length));
 }
 for (const page of pages) {

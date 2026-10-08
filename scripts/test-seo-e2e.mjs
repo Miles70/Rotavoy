@@ -34,7 +34,8 @@ try {
   await page.goto(`${server.base}/tr/travel/hotels/lp55de7`);
   await page.getByRole('button', { name: copy.tr.theme }).click();
   await page.locator('.seoDark').waitFor();
-  assert.equal(await page.evaluate(() => globalThis.document.documentElement.scrollWidth > globalThis.innerWidth), false);
+  const overflowing = await page.evaluate(() => [...globalThis.document.querySelectorAll('body *')].filter(node => node.getBoundingClientRect().right > globalThis.innerWidth + 1).map(node => ({ tag: node.tagName, className: node.className, width: node.getBoundingClientRect().width })).slice(0, 12));
+  assert.equal(await page.evaluate(() => globalThis.document.documentElement.scrollWidth > globalThis.innerWidth), false, JSON.stringify(overflowing));
   await page.screenshot({ path: `test-results/seo/hotel-${width}.png`, fullPage: true });
   await page.locator('.seoLanguages a[lang=ar]').click();
   assert.equal(await page.locator('html').getAttribute('dir'), 'rtl');
