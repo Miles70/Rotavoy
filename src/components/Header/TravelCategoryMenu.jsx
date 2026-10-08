@@ -1,3 +1,4 @@
+import { travelLandingPath } from '../../../shared/travelSeo';
 import { useEffect, useId, useRef, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Hotel, Plane, CarFront, MapPinned, ChevronDown, Menu } from 'lucide-react';
@@ -20,6 +21,6 @@ export default function TravelCategoryMenu() {
   }, [open]);
   return <div className="travelCategoryControl" ref={root} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false); }}>
     <button ref={button} type="button" aria-label={copy.menu} aria-expanded={open} aria-controls={id} onClick={() => setOpen(!open)}><span>{copy.menu}</span><ChevronDown className="categoryMenuChevron" size={19} /><Menu className="categoryMenuMobile" size={20} /></button>
-    {open && <nav id={id} className="travelCategoryDropdown" aria-label={copy.menu}>{categories.map(({ key, Icon }) => <NavLink key={key} to={`/${key}`} onClick={() => setOpen(false)}><Icon size={20} /><span>{t(`travelPage.services.${key}.label`)}</span></NavLink>)}</nav>}
+    {open && <nav id={id} className="travelCategoryDropdown" aria-label={copy.menu}>{categories.map(({ key, Icon }) => <NavLink key={key} to={travelLandingPath(key, language)} onClick={() => setOpen(false)}><Icon size={20} /><span>{t(`travelPage.services.${key}.label`)}</span></NavLink>)}</nav>}
   </div>;
 }

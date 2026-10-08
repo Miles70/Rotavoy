@@ -1,3 +1,4 @@
+import { SEO_LANGUAGES } from '../shared/travelSeo';
 import { Suspense, lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
@@ -33,6 +34,8 @@ function App() {
           <Route element={<MainLayout />}>
             <Route path="/" element={<Travel />} />
             <Route path="/travel" element={<Travel />} />
+            {SEO_LANGUAGES.filter(code => code !== 'en').map(code => <Route key={`${code}-hotels`} path={`/${code}/hotels`} element={<Travel key="hotels" hotelsOnly />} />)}
+            {SEO_LANGUAGES.filter(code => code !== 'en').map(code => <Route key={`${code}-flights`} path={`/${code}/flights`} element={<Flights />} />)}
             <Route path="/hotels" element={<Travel key="hotels" hotelsOnly />} />
             <Route path="/cars" element={<CategoryPage key="cars" category="cars" />} />
             <Route path="/activities" element={<CategoryPage key="activities" category="activities" />} />

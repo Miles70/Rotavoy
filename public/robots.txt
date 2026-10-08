@@ -1,6 +1,5 @@
 User-agent: *
 Allow: /
 Disallow: /api/
-Disallow: /travel/checkout
 
 Sitemap: https://rotavoy.com/sitemap.xml

@@ -43,6 +43,9 @@ jobs:
 
       - name: Build frontend
         run: npm run lint && npm run build
+        env:
+          VITE_REOWN_PROJECT_ID: "00000000000000000000000000000000"
+          VITE_API_BASE_URL: ""
 
       - name: Test hotel UI
         run: npm run test:hotel-ui
@@ -59,6 +62,17 @@ jobs:
 
       - name: Install browser for hotel regression tests
         run: npx playwright install --with-deps chromium
+
+      - name: Test multilingual SEO HTML and browser navigation
+        run: npm run test:travel-seo
+
+      - name: Save SEO screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: travel-seo-screenshots
+          path: test-results/seo
+          if-no-files-found: ignore
 
       - name: Test desktop and mobile hotel flow
         run: npm run test:hotel-e2e

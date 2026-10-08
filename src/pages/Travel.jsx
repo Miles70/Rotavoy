@@ -1,3 +1,4 @@
+import TravelGuide from '../components/Seo/TravelGuide';
 import { trackTravel } from '../services/analytics';
 import Flights from "./Flights";
 import CategoryPage from "./CategoryPage";
@@ -1316,6 +1317,7 @@ function Travel({ hotelsOnly = false }) {
           )}
         </div>
       </section>
+      {hotelsOnly && <TravelGuide category="hotels" language={language} />}
     </main>
   );
 }

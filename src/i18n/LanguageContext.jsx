@@ -1,4 +1,6 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from 'react-router-dom';
+import { travelLanding, travelLandingPath } from '../../shared/travelSeo';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import translations from "./translations";
 
 const LanguageContext = createContext(null);
@@ -35,33 +37,46 @@ function normalizeLanguage(language) {
 }
 
 function detectInitialLanguage() {
-  const savedLanguage = localStorage.getItem("language");
+  let savedLanguage;
+  try { savedLanguage = localStorage.getItem("language"); } catch { /* Storage is optional. */ }
 
   if (supportedLanguages.includes(savedLanguage)) {
     return savedLanguage;
   }
 
-  const browserLanguage = navigator.language || "";
+  const browserLanguage = (typeof navigator !== "undefined" ? navigator.language : "") || "";
 
   return normalizeLanguage(browserLanguage);
 }
 
-export function LanguageProvider({ children }) {
-  const [language, setLanguageState] = useState(detectInitialLanguage);
+export function RoutedLanguageProvider({ children }) {
+  const { pathname, search, hash } = useLocation();
+  const navigate = useNavigate();
+  return <LanguageProvider pathname={pathname} search={search} hash={hash} navigate={navigate}>{children}</LanguageProvider>;
+}
+export function LanguageProvider({ children, pathname = '', search = '', hash = '', navigate }) {
+  const [preferredLanguage, setLanguageState] = useState(detectInitialLanguage);
+  // Public landing URLs are authoritative; saved preferences still apply to legacy/checkout routes.
+  const urlLanguage = travelLanding(pathname)?.language;
+  const language = urlLanguage || preferredLanguage;
+  useEffect(() => {
+    if (!urlLanguage) return;
+    setLanguageState(urlLanguage);
+    try { localStorage.setItem('language', urlLanguage); } catch { /* URL still determines the language. */ }
+  }, [urlLanguage]);
 
   useEffect(() => {
     document.documentElement.lang = language === "pt" ? "pt-BR" : language;
     document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
   }, [language]);
 
-  function setLanguage(nextLanguage) {
-    if (!supportedLanguages.includes(nextLanguage)) {
-      return;
-    }
-
-    localStorage.setItem("language", nextLanguage);
+  const setLanguage = useCallback((nextLanguage) => {
+    if (!supportedLanguages.includes(nextLanguage)) return;
+    try { localStorage.setItem('language', nextLanguage); } catch { /* In-memory preference still works. */ }
     setLanguageState(nextLanguage);
-  }
+    const landing = travelLanding(pathname);
+    if (landing && navigate) navigate({ pathname: travelLandingPath(landing.category, nextLanguage), search, hash });
+  }, [pathname, search, hash, navigate]);
 
   const value = useMemo(() => {
     const dictionary = translations[language] || translations.en;
@@ -78,7 +93,7 @@ export function LanguageProvider({ children }) {
       supportedLanguages,
       t,
     };
-  }, [language]);
+  }, [language, setLanguage]);
 
   return (
     <LanguageContext.Provider value={value}>

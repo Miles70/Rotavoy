@@ -1,3 +1,5 @@
+import { travelLandingPath } from '../../shared/travelSeo';
+import TravelGuide from '../components/Seo/TravelGuide';
 import { trackTravel } from '../services/analytics';
 import FlightCard from '../components/Flights/FlightCard';
 import FlightSelection from '../components/Flights/FlightSelection';
@@ -92,7 +94,7 @@ export default function Flights({ embedded = false }) {
   return <Container className={embedded ? "flightsPage flightsPage--embedded" : "flightsPage"}>
     <section className="flightsHero">
       {!embedded && <>
-      <nav className="flightTabs" aria-label="Travel"><Link to="/hotels"><Hotel size={18} />{copy.hotels}</Link><Link to="/flights" aria-current="page"><Plane size={18} />{copy.flights}</Link></nav>
+      <nav className="flightTabs" aria-label="Travel"><Link to={travelLandingPath('hotels', language)}><Hotel size={18} />{copy.hotels}</Link><Link to={travelLandingPath('flights', language)} aria-current="page"><Plane size={18} />{copy.flights}</Link></nav>
       <h1>{copy.title}</h1><p>{copy.intro}</p></>}
       {embedded && <h2 className="embeddedFlightHeading">{copy.title}</h2>}
       <form ref={formRef} className="flightSearchForm" onSubmit={submit}>
@@ -122,6 +124,7 @@ export default function Flights({ embedded = false }) {
       {results.slice(0, visible).map((result) => <FlightCard key={result.offer.offerId} result={result} copy={copy} language={language} onSelect={result => { trackTravel('flight_view', { offerId: result.offer.offerId, origin: origin?.iata, destination: destination?.iata }); setFocusedFlight({ ...result, passengers: { adults, children, infants } }); }} selected={chosenOfferId === result.offer.offerId} />)}
       {visible < results.length && <button className="flightSearchButton" onClick={() => setVisible((count) => count + 20)}>{copy.more}</button>}
     </section>}
+    {!embedded && <TravelGuide category="flights" language={language} />}
     {focusedFlight && <FlightSelection key={focusedFlight.offer.offerId} result={focusedFlight} copy={copy} language={language} passengers={focusedFlight.passengers} onVerified={handleVerified} onClose={() => setFocusedFlight(null)} />}
   </Container>;
 }

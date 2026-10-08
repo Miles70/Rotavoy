@@ -1,3 +1,6 @@
+import Seo from '../components/Seo/Seo';
+import { SITE_URL } from '../../shared/travelSeo';
+import { travelSeoCopy } from '../../shared/travelSeoCopy';
 import { extraFacilityKeys } from "../../shared/hotelPresentation.js";
 import RateConditions from "../components/RateConditions";
 import HotelFavorite from "../components/HotelFavorite";
@@ -492,6 +495,8 @@ function HotelDetails() {
       t("hotelDetail.descriptionFallback"),
     );
 
+  const seo = <Seo title={`${name} | Rotavoy`} description={`${name}${address ? ` — ${address}` : ''}. ${travelSeoCopy('hotels', language).description}`} path={`/travel/hotels/${encodeURIComponent(hotelId)}`} image={images[0] || ''} noIndex={state === 'error'} jsonLd={state === 'success' && hotel ? { '@context': 'https://schema.org', '@type': 'Hotel', name, url: `${SITE_URL}/travel/hotels/${encodeURIComponent(hotelId)}`, ...(address ? { address } : {}), ...(images[0] ? { image: images[0] } : {}) } : null} />;
+
   async function handlePrebook(offer) {
     setBookingState("loading");
     setBookingError("");
@@ -517,6 +522,7 @@ function HotelDetails() {
   if (state === "loading") {
     return (
       <main className="hotelDetailState">
+        {seo}
         <LoaderCircle className="travelSpin" size={30} />
         <p>{t("hotelDetail.loading")}</p>
       </main>
@@ -526,6 +532,7 @@ function HotelDetails() {
   if (state === "error") {
     return (
       <main className="hotelDetailState hotelDetailState--error">
+        {seo}
         <AlertCircle size={30} />
         <h1>{t("hotelDetail.loadErrorTitle")}</h1>
         <p>{error}</p>
@@ -536,6 +543,7 @@ function HotelDetails() {
 
   return (
     <main className="hotelDetailPage">
+      {seo}
       <div className="hotelDetailContainer">
         <Link className="hotelDetailBack" to="/travel">
           <ArrowLeft size={18} /> {t("hotelDetail.back")}

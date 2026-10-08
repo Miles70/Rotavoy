@@ -9,8 +9,138 @@
       "destination": "/api/sitemap"
     },
     {
+      "source": "/hotels",
+      "destination": "/hotels.html"
+    },
+    {
+      "source": "/flights",
+      "destination": "/flights.html"
+    },
+    {
+      "source": "/tr/hotels",
+      "destination": "/tr/hotels.html"
+    },
+    {
+      "source": "/tr/flights",
+      "destination": "/tr/flights.html"
+    },
+    {
+      "source": "/ru/hotels",
+      "destination": "/ru/hotels.html"
+    },
+    {
+      "source": "/ru/flights",
+      "destination": "/ru/flights.html"
+    },
+    {
+      "source": "/ar/hotels",
+      "destination": "/ar/hotels.html"
+    },
+    {
+      "source": "/ar/flights",
+      "destination": "/ar/flights.html"
+    },
+    {
+      "source": "/zh/hotels",
+      "destination": "/zh/hotels.html"
+    },
+    {
+      "source": "/zh/flights",
+      "destination": "/zh/flights.html"
+    },
+    {
+      "source": "/es/hotels",
+      "destination": "/es/hotels.html"
+    },
+    {
+      "source": "/es/flights",
+      "destination": "/es/flights.html"
+    },
+    {
+      "source": "/pt/hotels",
+      "destination": "/pt/hotels.html"
+    },
+    {
+      "source": "/pt/flights",
+      "destination": "/pt/flights.html"
+    },
+    {
+      "source": "/fr/hotels",
+      "destination": "/fr/hotels.html"
+    },
+    {
+      "source": "/fr/flights",
+      "destination": "/fr/flights.html"
+    },
+    {
+      "source": "/de/hotels",
+      "destination": "/de/hotels.html"
+    },
+    {
+      "source": "/de/flights",
+      "destination": "/de/flights.html"
+    },
+    {
+      "source": "/it/hotels",
+      "destination": "/it/hotels.html"
+    },
+    {
+      "source": "/it/flights",
+      "destination": "/it/flights.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/en/hotels",
+      "destination": "/hotels",
+      "permanent": true
+    },
+    {
+      "source": "/en/flights",
+      "destination": "/flights",
+      "permanent": true
+    }
+  ],
+  "headers": [
+    {
+      "source": "/admin/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, follow"
+        }
+      ]
+    },
+    {
+      "source": "/account/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, follow"
+        }
+      ]
+    },
+    {
+      "source": "/travel/checkout",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, follow"
+        }
+      ]
+    },
+    {
+      "source": "/flights/checkout",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, follow"
+        }
+      ]
     }
   ]
 }

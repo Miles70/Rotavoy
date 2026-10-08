@@ -1,3 +1,5 @@
+import { SITE_URL, travelLanding, travelAlternates, languageTag } from '../../shared/travelSeo';
+import { travelSeoCopy } from '../../shared/travelSeoCopy';
 import { useLayoutEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import TravelTracker from "../components/TravelTracker";
@@ -45,8 +47,11 @@ const STATIC_SEO = {
 
 function MainLayout() {
   const { pathname } = useLocation();
-  const staticSeo = STATIC_SEO[pathname] || null;
-  const shouldNoIndex = pathname === "/travel/checkout" || pathname === "/flights";
+  const landing = travelLanding(pathname);
+  const landingCopy = landing ? travelSeoCopy(landing.category, landing.language) : null;
+  const staticSeo = landingCopy || STATIC_SEO[pathname] || null;
+  const canonicalPath = landing?.path || (pathname === '/travel' ? '/' : pathname);
+  const shouldNoIndex = ['/travel/checkout', '/flights/checkout', '/account'].some(path => pathname === path || pathname.startsWith(`${path}/`));
 
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -61,14 +66,16 @@ function MainLayout() {
         <Seo
           title={staticSeo.title}
           description={staticSeo.description}
-          path={pathname}
+          path={canonicalPath}
+          alternates={landing ? travelAlternates(landing.category) : []}
+          jsonLd={landing ? { '@context': 'https://schema.org', '@type': 'WebPage', name: landingCopy.heading, description: landingCopy.description, url: `${SITE_URL}${landing.path}`, inLanguage: languageTag(landing.language), isPartOf: { '@type': 'WebSite', name: 'Rotavoy', url: SITE_URL } } : null}
         />
       ) : null}
 
       {shouldNoIndex ? (
         <Seo
-          title={pathname === "/flights" ? "Flights | Rotavoy" : "Secure Travel Checkout | Rotavoy"}
-          description={pathname === "/flights" ? "Find and compare flights with Rotavoy." : "Rotavoy secure reservation checkout."}
+          title="Secure Travel Account | Rotavoy"
+          description="Rotavoy secure reservation and account access."
           path={pathname}
           noIndex
         />

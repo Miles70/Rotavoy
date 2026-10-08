@@ -1,3 +1,5 @@
+import { useLanguage } from '../../i18n/LanguageContext';
+import { travelLandingPath } from '../../../shared/travelSeo';
 import { Link } from "react-router-dom";
 import { FaFacebookF, FaInstagram, FaXTwitter, FaYoutube } from "react-icons/fa6";
 import siteConfig from "../../config/site";
@@ -44,6 +46,7 @@ function PaymentCard({ method }) {
 }
 
 function Footer() {
+  const { language, t } = useLanguage();
   const currentYear = new Date().getFullYear();
 
   return (
@@ -66,7 +69,8 @@ function Footer() {
 
         <div className="footerColumn">
           <h3>Travel</h3>
-          <Link to="/">Hotels</Link>
+          <Link to={travelLandingPath('hotels', language)}>{t("travelPage.services.hotels.label")}</Link>
+          <Link to={travelLandingPath('flights', language)}>{t("travelPage.services.flights.label")}</Link>
           <Link to="/support">Reservation support</Link>
           <Link to="/refund">Cancellation & refunds</Link>
         </div>
