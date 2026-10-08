@@ -44,6 +44,10 @@ try {
     const pageErrors = []; page.on('pageerror', error => pageErrors.push(error.message));
     await page.goto('http://127.0.0.1:5174/travel/hotels/fixture-hotel?checkin=2099-11-06&checkout=2099-11-08&adults=2');
     await page.getByRole('button', { name: 'Bu odayı seç', exact: true }).waitFor();
+    assert.equal(await page.title(), 'Browser validation hotel | Rotavoy');
+    assert.equal(await page.locator('link[rel=canonical]').count(), 1);
+    assert.equal(await page.locator('meta[name=robots]').getAttribute('content'), 'noindex, follow');
+    assert.ok((await page.locator('meta[name=description]').getAttribute('content')).includes('Test address'));
     await page.getByRole('button', { name: 'Sonraki fotoğraf', exact: true }).click();
     const card = page.locator('.hotelOffer');
     assert.ok((await card.innerText()).includes('Kahvaltı Dahil'));

@@ -14,7 +14,7 @@ try {
   await markAnalyticsTest(context, { fixture: true });
   await context.route('**/api/**', route => route.abort());
   const page = await context.newPage();
-  for (const suffix of ['', '/hotels/antalya', '/travel/hotels/lp55de7', '/flights/ayt-fra']) {
+  for (const suffix of ['', '/hotels', '/flights', '/hotels/antalya', '/travel/hotels/lp55de7', '/flights/ayt-fra']) {
    const response = await page.goto(`${server.base}/${lang}${suffix}`);
    assert.equal(response.status(), 200);
    assert.ok((await page.locator('h1').textContent()).trim());
@@ -50,6 +50,25 @@ try {
   const airportValues = await page.locator('.flightSearchForm input[role=combobox]').evaluateAll(nodes => nodes.map(node => node.value));
   assert.ok(airportValues.some(value => value.includes('Antalya')));
   assert.ok(airportValues.some(value => value.includes('Frankfurt')));
+  // The live SPA updates query language without losing dates or airport state.
+  await page.locator('.languageButton').click();
+  await page.getByRole('option', { name: /العربية/ }).click();
+  await page.waitForURL('**/flights?**lang=ar**');
+  assert.equal(new URL(page.url()).searchParams.get('origin'), 'AYT');
+  assert.equal(new URL(page.url()).searchParams.get('destination'), 'FRA');
+  assert.equal(await page.locator('html').getAttribute('dir'), 'rtl');
+  await page.locator('.travelCategoryControl > button').click();
+  assert.equal(await page.locator('.travelCategoryDropdown a[href="/ar/hotels"]').count(), 1);
+  assert.equal(await page.locator('.travelCategoryDropdown a[href="/ar/flights"]').count(), 1);
+  await page.locator('.travelCategoryControl > button').click();
+  await page.locator('.customerHeaderAuthButton').focus();
+  await page.locator('.customerLoginPreview').waitFor({ state: 'visible' });
+  assert.equal(await page.evaluate(() => globalThis.document.documentElement.scrollWidth > globalThis.innerWidth), false, `Arabic login preview overflow at ${width}px`);
+  await page.locator('.languageButton').click();
+  await page.getByRole('option', { name: /Türkçe/ }).click();
+  await page.waitForURL('**/flights?**lang=tr**');
+  assert.equal(await page.locator('link[rel=canonical]').count(), 1);
+  assert.equal(await page.locator('meta[name=robots]').getAttribute('content'), 'noindex, follow');
   const response = await page.goto(`${server.base}/tr/hotels/does-not-exist`);
   assert.equal(response.status(), 404);
   assert.equal(response.headers()['x-robots-tag'], 'noindex, follow');

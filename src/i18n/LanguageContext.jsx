@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import translations from "./translations";
 
 const LanguageContext = createContext(null);
@@ -52,22 +53,43 @@ function detectInitialLanguage() {
   return normalizeLanguage(browserLanguage);
 }
 
-export function LanguageProvider({ children }) {
-  const [language, setLanguageState] = useState(detectInitialLanguage);
+export function RoutedLanguageProvider({ children }) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  return <LanguageProvider location={location} navigate={navigate}>{children}</LanguageProvider>;
+}
+
+export function LanguageProvider({ children, location, navigate }) {
+  const [preferredLanguage, setLanguageState] = useState(detectInitialLanguage);
+  const queryLanguage = new URLSearchParams(location?.search || "").get("lang");
+  const urlLanguage = supportedLanguages.includes(queryLanguage) ? queryLanguage : null;
+  const language = urlLanguage || preferredLanguage;
+
+  useEffect(() => {
+    if (urlLanguage) {
+      setLanguageState(urlLanguage);
+      try { localStorage.setItem("language", urlLanguage); } catch { /* Optional storage. */ }
+    }
+  }, [urlLanguage]);
 
   useEffect(() => {
     document.documentElement.lang = language;
     document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
   }, [language]);
 
-  function setLanguage(nextLanguage) {
+  const setLanguage = useCallback((nextLanguage) => {
     if (!supportedLanguages.includes(nextLanguage)) {
       return;
     }
 
     try { localStorage.setItem("language", nextLanguage); } catch { /* Optional storage. */ }
     setLanguageState(nextLanguage);
-  }
+    if (location && navigate && new URLSearchParams(location.search).has("lang")) {
+      const params = new URLSearchParams(location.search);
+      params.set("lang", nextLanguage);
+      navigate({ pathname: location.pathname, search: `?${params}`, hash: location.hash }, { replace: true });
+    }
+  }, [location, navigate]);
 
   const value = useMemo(() => {
     const dictionary = translations[language] || translations.en;
@@ -84,7 +106,7 @@ export function LanguageProvider({ children }) {
       supportedLanguages,
       t,
     };
-  }, [language]);
+  }, [language, setLanguage]);
 
   return (
     <LanguageContext.Provider value={value}>

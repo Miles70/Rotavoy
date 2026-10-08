@@ -24,12 +24,12 @@ function MainLayout() {
   return (
     <div className="app">
       <TravelTracker />
-      <Seo
+      {!/^\/travel\/hotels\/[^/]+$/.test(pathname) && <Seo
         title={policy.title}
         description={policy.description}
         path={policy.canonical?.replace("https://www.rotavoy.com", "") || pathname}
         noIndex={policy.noIndex}
-      />
+      />}
 
       <Header />
       <Outlet />

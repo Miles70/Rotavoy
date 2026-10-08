@@ -4,7 +4,8 @@ function absoluteUrl(value) {
   const raw = String(value || "").trim();
   if (!raw) return "";
   try {
-    return new URL(raw, SITE_URL).toString();
+    const url = new URL(raw, SITE_URL);
+    return ["http:", "https:"].includes(url.protocol) ? url.toString() : "";
   } catch {
     return "";
   }

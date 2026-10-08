@@ -1,7 +1,7 @@
 .customerLoginPreview {
   position: absolute;
   top: calc(100% + 10px);
-  right: 0;
+  inset-inline-end: 0;
   z-index: 145;
   width: min(292px, calc(100vw - 24px));
   padding: 9px;
@@ -24,6 +24,10 @@
     transform 150ms ease;
 }
 
+html[dir="rtl"] .customerLoginPreview {
+  transform-origin: top left;
+}
+
 .customerLoginPreview::before {
   content: "";
   position: absolute;
@@ -37,7 +41,7 @@
   content: "";
   position: absolute;
   top: -7px;
-  right: 34px;
+  inset-inline-end: 34px;
   width: 14px;
   height: 14px;
   border-top: 1px solid rgba(82, 91, 121, 0.16);

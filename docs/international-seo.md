@@ -92,3 +92,18 @@ Master’a merge veya production yayın yapılmaz; bu branch PR ile değerlendir
 - https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics
 - https://developers.google.com/search/docs/specialty/international/localized-versions
 - https://vercel.com/docs/project-configuration/vercel-json
+
+## PR #35 ile birleştirilen geliştirmeler ve Search Console
+
+8 Ekim 2026’da alternatif SEO PR #35 incelendi. #34 tek mimari olarak korunarak faydalı parçalar uyarlandı:
+
+- On dilde otel odası/yemek planı, iptal/toplam maliyet ve değişen müsaitlik rehberi; uçuşta tarih/yolcu, aktarma/bagaj ve değişen teklif rehberi. Metinler statik hub HTML’inde ve aynı hydrate bileşeninde yer alır; alternatif URL/sitemap sistemi taşınmadı.
+- Canlı otel detay başlığı/açıklaması/fotoğrafı gerçek yüklenen veriden gelir. HTTP indeksleme politikası korunur: canlı detay noindex kalır, uygun katalog profiline canonical verir. Bu ekranda metadata’nın tek sahibi otel bileşenidir; yükleme/hata durumları dahil eski etiket bırakmaz.
+- Arapça giriş önizlemesinin fiziksel sağ konumu yerine mantıksal inline-end konumu ve doğru dönüşüm merkezi kullanılır.
+- Ana uygulama kategori menüsü seçilen dildeki kalıcı otel/uçuş hub’larına gerçek bağlantı verir. Canlı aramada dil değiştirme tarih/kişi/havalimanı query’sini korur ve lang parametresini günceller; SPA gezinmesinde URL dili eşzamanlı okunur. Query olmayan eski yollar kaydedilen dili korur, İngilizceye zorlanmaz.
+- Head manager yalnızca http/https görsel/canonical URL’lerini kabul eder.
+- Master’daki Google doğrulama dosyası public/google2fd19590f23b16c5.html korunur. Site sahibi doğrulaması devam etsin diye bu dosya silinmemelidir.
+
+Search Console ekran görüntüsünde mülk https://rotavoy.com/ URL ön ekidir. Canlı kök URL 308 ile https://www.rotavoy.com/ adresine gider; canonical/sitemap www kullanır. URL ön eki mülkü farklı www hostunu kapsamaz. Mevcut mülk silinmeden https://www.rotavoy.com/ yeniden eklenebilir; eski doğrulama dosyası varsa tekrar doğrulanabilir. Tercih edilen uzun vadeli seçenek Domain mülkü rotavoy.com ve Cloudflare DNS’e Google’ın verdiği TXT kaydıdır. TXT içeriği Google’dan alınır, uydurulmaz. Domain mülkü tüm protokol/alt alan adlarını kapsar.
+
+SEO PR’ı production’a yayımlandıktan ve HTTP kontrolü tamamlandıktan sonra www mülküne sitemap.xml (tam URL: https://www.rotavoy.com/sitemap.xml) gönderilir. Domain mülkünde tam sitemap URL’si kullanılır. Şimdiki Search Console getirilemedi hatasının yalnızca host kapsamından kaynaklandığı kesinleştirilmemiştir; yayın sonrasında erişim, robots, yönlendirme ve Google okuma sonucu ayrıca doğrulanır. Search Console hesabına bu çalışma alanından giriş yapılmadı; ekran görüntüsü ve halka açık HTTP kontrolü kullanıldı.

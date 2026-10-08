@@ -1,3 +1,4 @@
+import { travelGuide } from "../../seo/guides.js";
 import { useEffect, useState } from 'react';
 import { copy, languageNames } from '../../seo/copy.js';
 import { languagePath } from '../../seo/model.js';
@@ -9,6 +10,7 @@ export default function SeoLanding({ page }) {
  }, [page.lang]);
  function toggleTheme() { setDark(value => { try { localStorage.setItem('rotavoy_seo_theme', value ? 'light' : 'dark'); } catch { /* Optional. */ } return !value; }); }
  const cards = page.cards || [];
+ const guide = ["hotels", "flights"].includes(page.kind) ? travelGuide(page.kind, page.lang) : null;
  return <div className={`seoSite${dark ? ' seoDark' : ''}`}>
   <header className="seoHeader"><a className="seoBrand" href={languagePath(page.lang)}><img src="/brand/rotavoy-favicon.png" width="36" height="36" alt="" /><strong>Rotavoy</strong></a><nav aria-label={c.home}><a href={languagePath(page.lang, 'hotels')}>{c.hotels}</a><a href={languagePath(page.lang, 'flights')}>{c.flights}</a><button type="button" onClick={toggleTheme} aria-label={c.theme}>◐</button></nav></header>
   <main className="seoMain">
@@ -17,6 +19,7 @@ export default function SeoLanding({ page }) {
    {page.hotel && <section className="seoPanel"><h2>{c.hotelInfo}</h2><dl><dt>{c.address}</dt><dd>{page.hotel.address}, {page.hotel.city}, {page.hotel.country}</dd>{Number.isFinite(page.hotel.stars) && page.hotel.stars > 0 && <><dt>{c.stars}</dt><dd>{page.hotel.stars} ★</dd></>}</dl><p>{c.sourceNote}</p><p>{c.hotelHelp}</p></section>}
    {page.route && <section className="seoPanel"><h2>{c.airports}</h2><dl><dt>{c.outbound}</dt><dd>{page.route.originName} — {page.route.originAirport} ({page.route.from}) → {page.route.destinationName} — {page.route.destinationAirport} ({page.route.to})</dd></dl><p>{c.stepsText}</p></section>}
    {cards.length > 0 && <section><h2>{page.kind === 'route' ? c.related : page.kind === 'flights' ? c.routes : c.hotels}</h2><div className="seoCards">{cards.map(card => <article className="seoCard" key={card.href}>{card.image && <a href={card.href} tabIndex={-1} aria-hidden="true"><img src={card.image} width="480" height="320" loading="lazy" alt="" /></a>}<div><h3><a href={card.href}>{card.title}</a></h3>{card.stars > 0 && <span>{card.stars} ★</span>}{card.text && <p>{card.text}</p>}</div></article>)}</div></section>}
+   {guide && <section className="seoPanel"><h2>{guide.guide}</h2><div className="seoGuideGrid">{guide.sections.map(section => <article key={section.title}><h3>{section.title}</h3><p>{section.text}</p></article>)}</div></section>}
    {page.pagination?.length > 1 && <nav className="seoLanguages" aria-label={c.hotels}>{page.pagination.map(link => <a key={link.href} href={link.href} aria-current={link.href === page.path ? "page" : undefined}>{link.title}</a>)}</nav>}
    <section className="seoPanel"><h2>{c.steps}</h2><p>{c.stepsText}</p><div className="seoLinkColumns"><div><h3>{c.destinations}</h3>{page.destinationLinks.map(link => <a key={link.href} href={link.href}>{link.title}</a>)}</div><div><h3>{c.routes}</h3>{page.routeLinks.map(link => <a key={link.href} href={link.href}>{link.title}</a>)}</div></div></section>
   </main>

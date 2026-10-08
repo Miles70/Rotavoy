@@ -1,3 +1,4 @@
+import { travelGuide } from "../seo/guides.js";
 import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
@@ -48,6 +49,9 @@ for (const page of pages) {
  }
  const withoutScripts = html.replace(/<script[\s\S]*?<\/script>/g, '');
  assert.ok(withoutScripts.includes(page.title) || page.title.includes('&'));
+ if (['hotels', 'flights'].includes(page.kind)) {
+  for (const section of travelGuide(page.kind, page.lang).sections) assert.ok(withoutScripts.includes(section.text.replaceAll('&', '&amp;').replaceAll("'", '&#x27;').replaceAll('"', '&quot;')));
+ }
  if (page.kind === 'hotel') assert.ok(withoutScripts.includes(page.hotel.address));
  if (page.kind === 'route') assert.ok(withoutScripts.includes(page.route.from) && withoutScripts.includes(page.route.to));
 }
