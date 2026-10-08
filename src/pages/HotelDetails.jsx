@@ -1,3 +1,6 @@
+import Seo from "../components/Seo/Seo";
+import { appPolicy } from "../../seo/app-policy.js";
+import { copy as seoCopy } from "../../seo/copy.js";
 import { extraFacilityKeys } from "../../shared/hotelPresentation.js";
 import RateConditions from "../components/RateConditions";
 import HotelFavorite from "../components/HotelFavorite";
@@ -492,6 +495,19 @@ function HotelDetails() {
       t("hotelDetail.descriptionFallback"),
     );
 
+  // The live detail screen keeps the same indexing policy as its HTTP response.
+  // Curated public profiles own their separate, localized canonical URLs.
+  const seoQuery = new URLSearchParams(location.search);
+  seoQuery.set("lang", language);
+  const seoPolicy = appPolicy(location.pathname, seoQuery.toString(), import.meta.env.VITE_SEO_HOTEL_IDS || []);
+  const seo = <Seo
+    title={hotel ? `${name} | Rotavoy` : seoPolicy.title}
+    description={hotel ? `${name}${address ? ` — ${address}` : ""}. ${seoCopy[language].hotelHelp}` : seoPolicy.description}
+    path={seoPolicy.canonical}
+    image={hotel ? images[0] || "" : ""}
+    noIndex={seoPolicy.noIndex}
+  />;
+
   async function handlePrebook(offer) {
     setBookingState("loading");
     setBookingError("");
@@ -517,6 +533,7 @@ function HotelDetails() {
   if (state === "loading") {
     return (
       <main className="hotelDetailState">
+        {seo}
         <LoaderCircle className="travelSpin" size={30} />
         <p>{t("hotelDetail.loading")}</p>
       </main>
@@ -526,6 +543,7 @@ function HotelDetails() {
   if (state === "error") {
     return (
       <main className="hotelDetailState hotelDetailState--error">
+        {seo}
         <AlertCircle size={30} />
         <h1>{t("hotelDetail.loadErrorTitle")}</h1>
         <p>{error}</p>
@@ -536,6 +554,7 @@ function HotelDetails() {
 
   return (
     <main className="hotelDetailPage">
+        {seo}
       <div className="hotelDetailContainer">
         <Link className="hotelDetailBack" to="/travel">
           <ArrowLeft size={18} /> {t("hotelDetail.back")}

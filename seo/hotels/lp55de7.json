@@ -1,0 +1,33 @@
+{
+  "id": "lp55de7",
+  "name": "Megasaray Westbeach Antalya",
+  "destination": "antalya",
+  "city": "Antalya",
+  "country": "TR",
+  "address": "Gursu Mah., Akdeniz Blv. 192",
+  "stars": 5,
+  "image": "https://static.cupid.travel/hotels/369544650.jpg",
+  "latitude": 36.859024,
+  "longitude": 30.634562,
+  "descriptions": {
+    "en": "Megasaray Westbeach Antalya offers rooms with flat-screen TVs, free Wi-Fi and French balconies overlooking the Mediterranean. The property description lists an outdoor pool and a location close to the beach, with access to local transport and attractions including Hadrian’s Gate and Kesik Minaret.",
+    "tr": "Megasaray Westbeach Antalya’nın tesis açıklamasında düz ekran televizyon, ücretsiz Wi-Fi ve Akdeniz manzaralı Fransız balkon bulunan odalar yer alıyor. Açık havuz, plaja yakın konum ve yerel ulaşım olanakları belirtiliyor. Hadrian Kapısı ve Kesik Minare çevredeki gezilecek yerler arasında sayılıyor.",
+    "de": "Megasaray Westbeach Antalya bietet Zimmer mit Flachbild-TV, kostenlosem WLAN und französischen Balkonen mit Blick auf das Mittelmeer. Die Unterkunftsbeschreibung nennt einen Außenpool und eine Lage nahe dem Strand mit Zugang zum Nahverkehr. Zu den genannten Sehenswürdigkeiten zählen das Hadrianstor und Kesik Minaret.",
+    "fr": "Megasaray Westbeach Antalya propose des chambres avec télévision à écran plat, Wi-Fi gratuit et balcons français donnant sur la Méditerranée. La description mentionne une piscine extérieure et un emplacement proche de la plage et des transports locaux. La porte d’Hadrien et Kesik Minaret figurent parmi les sites cités.",
+    "ru": "Megasaray Westbeach Antalya предлагает номера с телевизорами с плоским экраном, бесплатным Wi-Fi и французскими балконами с видом на Средиземное море. В описании указаны открытый бассейн, расположение рядом с пляжем и доступ к местному транспорту. Среди достопримечательностей названы ворота Адриана и Кесик Минаре.",
+    "ar": "يقدم Megasaray Westbeach Antalya غرفاً مزودة بتلفزيون بشاشة مسطحة وخدمة Wi-Fi مجانية وشرفات فرنسية تطل على البحر المتوسط. يذكر وصف الإقامة مسبحاً خارجياً وموقعاً قريباً من الشاطئ ووسائل النقل المحلية. وتشمل المعالم المذكورة بوابة هادريان ومئذنة كيسيك.",
+    "es": "Megasaray Westbeach Antalya ofrece habitaciones con televisores de pantalla plana, Wi-Fi gratuito y balcones franceses con vistas al Mediterráneo. La descripción menciona una piscina exterior y una ubicación cerca de la playa y del transporte local. Entre los lugares citados están la Puerta de Adriano y Kesik Minaret.",
+    "pt": "Megasaray Westbeach Antalya oferece quartos com TV de tela plana, Wi-Fi gratuito e sacadas francesas com vista para o Mediterrâneo. A descrição menciona piscina ao ar livre e localização próxima à praia e ao transporte local. A Porta de Adriano e Kesik Minaret estão entre as atrações citadas.",
+    "it": "Megasaray Westbeach Antalya offre camere con TV a schermo piatto, Wi-Fi gratuito e balconi alla francese con vista sul Mediterraneo. La descrizione cita una piscina all’aperto e una posizione vicino alla spiaggia e ai trasporti locali. Tra le attrazioni menzionate figurano la Porta di Adriano e Kesik Minaret.",
+    "zh": "Megasaray Westbeach Antalya提供配有平板电视、免费Wi-Fi和地中海景观法式阳台的客房。住宿介绍列有室外泳池，位置靠近海滩并可使用当地交通。介绍中提到的周边景点包括哈德良门和Kesik Minaret。"
+  },
+  "source": {
+    "provider": "Nuitee/LiteAPI",
+    "environment": "production",
+    "fetchedAt": "2026-10-08T16:42:00Z",
+    "description": "Luxurious Accommodation Indulge in spacious rooms with flat-screen TVs and free WiFi. Enjoy elegant furnishings and private French balconies with stunning Mediterranean Sea views. Leisure Facilities Relax by the outdoor pool and soak up the sun. Unwind in style and comfort at Megasaray Westbeach Antalya. Convenient Location Explore nearby attractions like Hadrian’s Gate and Kesik Minaret. With the beach just steps away and easy access to local transport, your stay will be both convenient and memorable. Book now to experience the perfect blend of luxury and relaxation at Megasaray Westbeach Antalya.",
+    "descriptionHash": "91916d5bdefccbb226d1143c2f873ea6714b861255797d0ec6166c80a2fd9945"
+  },
+  "reviewedAt": "2026-10-08",
+  "published": true
+}

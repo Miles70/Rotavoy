@@ -1,3 +1,5 @@
+import { useLanguage } from "../../i18n/LanguageContext";
+import { copy } from "../../../seo/copy.js";
 import { Link } from "react-router-dom";
 import { FaFacebookF, FaInstagram, FaXTwitter, FaYoutube } from "react-icons/fa6";
 import siteConfig from "../../config/site";
@@ -44,6 +46,8 @@ function PaymentCard({ method }) {
 }
 
 function Footer() {
+  const { language } = useLanguage();
+  const seoCopy = copy[language];
   const currentYear = new Date().getFullYear();
 
   return (
@@ -67,6 +71,8 @@ function Footer() {
         <div className="footerColumn">
           <h3>Travel</h3>
           <Link to="/">Hotels</Link>
+          <a href={`/${language}/hotels`}>{seoCopy.destinations}</a>
+          <a href={`/${language}/flights`}>{seoCopy.routes}</a>
           <Link to="/support">Reservation support</Link>
           <Link to="/refund">Cancellation & refunds</Link>
         </div>

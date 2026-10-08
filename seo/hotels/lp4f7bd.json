@@ -1,0 +1,33 @@
+{
+  "id": "lp4f7bd",
+  "name": "Sealife Family Resort Hotel",
+  "destination": "antalya",
+  "city": "Antalya",
+  "country": "TR",
+  "address": "Konyaalti Sahil Seridi",
+  "stars": 5,
+  "image": "https://static.cupid.travel/hotels/237441511.jpg",
+  "latitude": 36.861886,
+  "longitude": 30.636232,
+  "descriptions": {
+    "en": "Sealife Family Resort Hotel faces Konyaalti Beach in Antalya. The provider description lists swimming pools with slides, a spa and diving equipment. It also mentions restaurants serving Ottoman and fish specialties, bars and a disco club. Check the selected room offer for the services included and any additional charges.",
+    "tr": "Sealife Family Resort Hotel, Antalya’da Konyaaltı Plajı’nın karşısında bulunuyor. Sağlayıcı açıklamasında kaydıraklı havuzlar, spa ve dalış ekipmanları yer alıyor. Osmanlı mutfağı ve balık yemekleri sunan restoranlar, barlar ve disko da belirtiliyor. Dahil hizmetler ve ek ücretler için seçilen oda teklifini kontrol et.",
+    "de": "Sealife Family Resort Hotel liegt gegenüber dem Konyaalti-Strand in Antalya. Die Anbieterbeschreibung nennt Pools mit Rutschen, ein Spa und Tauchausrüstung. Erwähnt werden außerdem Restaurants mit osmanischen Spezialitäten und Fischgerichten, Bars und eine Diskothek. Prüfe im Zimmerangebot die enthaltenen Leistungen und Zusatzkosten.",
+    "fr": "Sealife Family Resort Hotel se trouve face à la plage de Konyaalti à Antalya. Le fournisseur mentionne des piscines avec toboggans, un spa et du matériel de plongée. Il cite aussi des restaurants de spécialités ottomanes et de poisson, des bars et une discothèque. Vérifie les services inclus et les suppléments dans l’offre choisie.",
+    "ru": "Sealife Family Resort Hotel расположен напротив пляжа Коньяалты в Анталье. В описании поставщика указаны бассейны с горками, спа и оборудование для дайвинга. Также названы рестораны османской кухни и рыбных блюд, бары и дискотека. Включённые услуги и доплаты уточняй в выбранном предложении номера.",
+    "ar": "يقع Sealife Family Resort Hotel مقابل شاطئ كونيالتي في أنطاليا. يذكر المورد مسابح مع منزلقات وسبا ومعدات للغوص. ويشير أيضاً إلى مطاعم تقدم أطباقاً عثمانية وأسماكاً وبارات ونادٍ للديسكو. راجع عرض الغرفة المختار لمعرفة الخدمات المشمولة والرسوم الإضافية.",
+    "es": "Sealife Family Resort Hotel está frente a la playa de Konyaalti en Antalya. El proveedor menciona piscinas con toboganes, un spa y equipo de buceo. También cita restaurantes con especialidades otomanas y pescado, bares y una discoteca. Consulta los servicios incluidos y los suplementos en la oferta de habitación elegida.",
+    "pt": "Sealife Family Resort Hotel fica em frente à Praia de Konyaalti, em Antalya. O fornecedor menciona piscinas com toboáguas, spa e equipamentos de mergulho. Também cita restaurantes de especialidades otomanas e peixes, bares e uma discoteca. Consulte os serviços incluídos e as taxas adicionais na oferta de quarto escolhida.",
+    "it": "Sealife Family Resort Hotel si trova di fronte alla spiaggia di Konyaalti ad Antalya. Il fornitore cita piscine con scivoli, una spa e attrezzature per immersioni. Sono menzionati anche ristoranti con specialità ottomane e di pesce, bar e una discoteca. Verifica servizi inclusi e supplementi nell’offerta scelta.",
+    "zh": "Sealife Family Resort Hotel位于安塔利亚，正对Konyaalti海滩。供应商介绍列有带滑梯的泳池、水疗中心和潜水设备，并提及提供奥斯曼风味及鱼类菜肴的餐厅、酒吧和迪斯科俱乐部。请查看所选客房报价中的包含服务和额外费用。"
+  },
+  "source": {
+    "provider": "Nuitee/LiteAPI",
+    "environment": "production",
+    "fetchedAt": "2026-10-08T16:42:00Z",
+    "description": "Beachfront Luxury: Directly facing the blue-flagged Konyaalti Beach, Sealife Family Resort is a haven for families looking for a fun and relaxing getaway. Diverse Amenities: From pools with slides to a rejuvenating spa and even diving equipment, Sealife offers a wide range of activities for guests of all ages. Culinary Delights and Entertainment: Indulge in Ottoman and Fish specialties at the on-site restaurants, unwind at the bars, or dance the night away at the disco club - there's something for everyone. Ready to experience the ultimate family vacation? Book your stay at Sealife Family Resort now and create unforgettable memories by the Mediterranean Sea.",
+    "descriptionHash": "fb71788531516fb22774efa4916e248c847f6ed046278e6b77aef9eef20ba74e"
+  },
+  "reviewedAt": "2026-10-08",
+  "published": true
+}
