@@ -3,6 +3,8 @@ import { Outlet, useLocation } from "react-router-dom";
 import TravelTracker from "../components/TravelTracker";
 import Header from "../components/Header/Header";
 import Footer from "../components/Footer/Footer";
+import { appPolicy } from "../../seo/app-policy.js";
+import { useLanguage } from "../i18n/LanguageContext";
 import Seo from "../components/Seo/Seo";
 
 const STATIC_SEO = {
@@ -44,9 +46,13 @@ const STATIC_SEO = {
 };
 
 function MainLayout() {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
+  const { language } = useLanguage();
+  const query = new URLSearchParams(search);
+  query.set("lang", language);
+  const policy = appPolicy(pathname, query.toString());
   const staticSeo = STATIC_SEO[pathname] || null;
-  const shouldNoIndex = pathname === "/travel/checkout" || pathname === "/flights";
+
 
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -57,22 +63,12 @@ function MainLayout() {
   return (
     <div className="app">
       <TravelTracker />
-      {staticSeo ? (
-        <Seo
-          title={staticSeo.title}
-          description={staticSeo.description}
-          path={pathname}
-        />
-      ) : null}
-
-      {shouldNoIndex ? (
-        <Seo
-          title={pathname === "/flights" ? "Flights | Rotavoy" : "Secure Travel Checkout | Rotavoy"}
-          description={pathname === "/flights" ? "Find and compare flights with Rotavoy." : "Rotavoy secure reservation checkout."}
-          path={pathname}
-          noIndex
-        />
-      ) : null}
+      <Seo
+        title={language === "en" && staticSeo ? staticSeo.title : policy.title}
+        description={language === "en" && staticSeo ? staticSeo.description : policy.description}
+        path={policy.canonical?.replace("https://www.rotavoy.com", "") || pathname}
+        noIndex={policy.noIndex}
+      />
 
       <Header />
       <Outlet />

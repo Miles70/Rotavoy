@@ -1,6 +1,7 @@
 User-agent: *
 Allow: /
 Disallow: /api/
-Disallow: /travel/checkout
+Disallow: /assets/*.map
 
-Sitemap: https://rotavoy.com/sitemap.xml
+# Checkout, account and search pages must remain crawlable to expose noindex.
+Sitemap: https://www.rotavoy.com/sitemap.xml

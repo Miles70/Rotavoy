@@ -35,13 +35,19 @@ function normalizeLanguage(language) {
 }
 
 function detectInitialLanguage() {
-  const savedLanguage = localStorage.getItem("language");
+  const urlLanguage = new URLSearchParams(globalThis.window?.location?.search || "").get("lang");
+  if (supportedLanguages.includes(urlLanguage)) {
+    try { localStorage.setItem("language", urlLanguage); } catch { /* Optional storage. */ }
+    return urlLanguage;
+  }
+  let savedLanguage;
+  try { savedLanguage = localStorage.getItem("language"); } catch { /* Optional storage. */ }
 
   if (supportedLanguages.includes(savedLanguage)) {
     return savedLanguage;
   }
 
-  const browserLanguage = navigator.language || "";
+  const browserLanguage = globalThis.navigator?.language || "";
 
   return normalizeLanguage(browserLanguage);
 }
@@ -50,7 +56,7 @@ export function LanguageProvider({ children }) {
   const [language, setLanguageState] = useState(detectInitialLanguage);
 
   useEffect(() => {
-    document.documentElement.lang = language === "pt" ? "pt-BR" : language;
+    document.documentElement.lang = language;
     document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
   }, [language]);
 
@@ -59,7 +65,7 @@ export function LanguageProvider({ children }) {
       return;
     }
 
-    localStorage.setItem("language", nextLanguage);
+    try { localStorage.setItem("language", nextLanguage); } catch { /* Optional storage. */ }
     setLanguageState(nextLanguage);
   }
 

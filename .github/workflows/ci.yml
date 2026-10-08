@@ -43,6 +43,11 @@ jobs:
 
       - name: Build frontend
         run: npm run lint && npm run build
+        env:
+          VITE_REOWN_PROJECT_ID: "00000000000000000000000000000000"
+
+      - name: Validate all SEO HTML and sitemap relationships
+        run: npm run test:seo
 
       - name: Test hotel UI
         run: npm run test:hotel-ui
@@ -59,6 +64,9 @@ jobs:
 
       - name: Install browser for hotel regression tests
         run: npx playwright install --with-deps chromium
+
+      - name: Test multilingual SEO in browser
+        run: npm run test:seo-e2e
 
       - name: Test desktop and mobile hotel flow
         run: npm run test:hotel-e2e

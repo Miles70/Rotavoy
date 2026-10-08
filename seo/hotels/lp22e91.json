@@ -1,0 +1,33 @@
+{
+  "id": "lp22e91",
+  "name": "Rixos Downtown Antalya - The Land Of Legends Access",
+  "destination": "antalya",
+  "city": "Antalya",
+  "country": "TR",
+  "address": "Sakip Sabanci Boulevard, Konyaalti Beach",
+  "stars": 5,
+  "image": "https://static.cupid.travel/hotels/579989812.jpg",
+  "latitude": 36.887069,
+  "longitude": 30.674622,
+  "descriptions": {
+    "en": "Rixos Downtown Antalya is located in Ataturk Culture Park. The provider describes views of the sea and Taurus Mountains, rooms with balconies, a lagoon-style pool, dining outlets, a gym and tennis courts. A Turkish bath, spa massages and a shuttle to the private beach and Land of Legends Theme Park are also mentioned. Confirm inclusions and access conditions in your room offer.",
+    "tr": "Rixos Downtown Antalya, Atatürk Kültür Parkı’nda yer alıyor. Sağlayıcı açıklamasında deniz ve Toros Dağları manzarası, balkonlu odalar, lagün tarzı havuz, yemek mekanları, spor salonu ve tenis kortları bulunuyor. Hamam, spa masajları, özel plaja ve Land of Legends tema parkına servis de belirtiliyor. Dahil hizmetleri ve erişim koşullarını oda teklifinde doğrula.",
+    "de": "Rixos Downtown Antalya liegt im Atatürk-Kulturpark. Der Anbieter beschreibt Meer- und Taurusblick, Zimmer mit Balkon, einen Lagunenpool, gastronomische Angebote, ein Fitnessstudio und Tennisplätze. Genannt werden auch ein türkisches Bad, Spa-Massagen und ein Shuttle zum Privatstrand und zum Themenpark Land of Legends. Prüfe Leistungen und Zugangsbedingungen im Zimmerangebot.",
+    "fr": "Rixos Downtown Antalya se situe dans le parc culturel Atatürk. Le fournisseur décrit des vues sur la mer et le Taurus, des chambres avec balcon, une piscine lagon, des restaurants, une salle de sport et des courts de tennis. Il mentionne aussi un hammam, des massages et une navette vers la plage privée et Land of Legends. Vérifie les inclusions et conditions d’accès dans l’offre.",
+    "ru": "Rixos Downtown Antalya находится в парке культуры Ататюрка. Поставщик описывает виды на море и Таврские горы, номера с балконами, бассейн в стиле лагуны, рестораны, тренажёрный зал и теннисные корты. Также указаны турецкая баня, массаж в спа и трансфер к частному пляжу и парку Land of Legends. Уточняй включённые услуги и условия доступа в предложении номера.",
+    "ar": "يقع Rixos Downtown Antalya في منتزه أتاتورك الثقافي. يصف المورد إطلالات على البحر وجبال طوروس وغرفاً بشرفات ومسبحاً على طراز البحيرة ومطاعم وصالة رياضية وملاعب تنس. ويذكر حماماً تركياً وتدليكاً في السبا وخدمة نقل إلى الشاطئ الخاص ومنتزه Land of Legends. تحقق من الخدمات المشمولة وشروط الدخول في عرض الغرفة.",
+    "es": "Rixos Downtown Antalya está en el parque cultural Atatürk. El proveedor describe vistas al mar y a los montes Tauro, habitaciones con balcón, piscina tipo laguna, restaurantes, gimnasio y pistas de tenis. También menciona baño turco, masajes y traslado a la playa privada y al parque Land of Legends. Confirma servicios y condiciones de acceso en la oferta.",
+    "pt": "Rixos Downtown Antalya fica no Parque Cultural Atatürk. O fornecedor descreve vistas para o mar e os Montes Taurus, quartos com sacada, piscina em estilo lagoa, restaurantes, academia e quadras de tênis. Também menciona banho turco, massagens e transporte para a praia privativa e o parque Land of Legends. Confirme serviços incluídos e condições de acesso na oferta.",
+    "it": "Rixos Downtown Antalya si trova nel parco culturale Atatürk. Il fornitore descrive viste sul mare e sui monti Tauro, camere con balcone, piscina a laguna, ristoranti, palestra e campi da tennis. Cita anche bagno turco, massaggi e navetta per la spiaggia privata e il parco Land of Legends. Conferma servizi inclusi e condizioni di accesso nell’offerta.",
+    "zh": "Rixos Downtown Antalya位于阿塔图尔克文化公园。供应商介绍包括海景和托罗斯山景、带阳台的客房、泻湖风格泳池、餐饮场所、健身房和网球场，另提到土耳其浴、水疗按摩及前往私人海滩和Land of Legends主题公园的班车。请在客房报价中核实包含项目及使用条件。"
+  },
+  "source": {
+    "provider": "Nuitee/LiteAPI",
+    "environment": "production",
+    "fetchedAt": "2026-10-08T16:42:00Z",
+    "description": "Luxurious Accommodation in Ataturk Culture Park Exotic Dining and Recreation Fitness and Wellness Amenities Experience 5-star luxury at our hotel nestled in Ataturk Culture Park, offering stunning views of the sea and Taurus Mountains. Indulge in exquisite dining at our multiple outlets and unwind by the lagoon-style pool. Stay active at our modern gym and tennis courts, then relax in the Turkish bath or with a massage at the spa. Don't miss out on our shuttle service to the private beach and the Land of Legends Theme Park. With elegant rooms featuring balconies and upscale amenities, your stay with us will be unforgettable. Book now for a truly exceptional experience.",
+    "descriptionHash": "9f056de0d2ae6ae31d5ccd75f6800c0b12c6481fc927fa21c6b7aa5ddb76611d"
+  },
+  "reviewedAt": "2026-10-08",
+  "published": true
+}
