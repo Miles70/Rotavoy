@@ -56,6 +56,7 @@ try {
   await page.locator('.languageButton').click();
   await page.getByRole('option', { name: /العربية/ }).click();
   await page.waitForURL('**/flights?**lang=ar**');
+  await page.waitForFunction(() => globalThis.document.documentElement.dir === 'rtl' && globalThis.document.documentElement.lang === 'ar');
   assert.equal(new URL(page.url()).searchParams.get('origin'), 'AYT');
   assert.equal(new URL(page.url()).searchParams.get('destination'), 'FRA');
   assert.equal(await page.locator('html').getAttribute('dir'), 'rtl');
@@ -69,6 +70,7 @@ try {
   await page.locator('.languageButton').click();
   await page.getByRole('option', { name: /Türkçe/ }).click();
   await page.waitForURL('**/flights?**lang=tr**');
+  await page.waitForFunction(() => globalThis.document.documentElement.dir === 'ltr' && globalThis.document.documentElement.lang === 'tr');
   assert.equal(await page.locator('link[rel=canonical]').count(), 1);
   assert.equal(await page.locator('meta[name=robots]').getAttribute('content'), 'noindex, follow');
   const response = await page.goto(`${server.base}/tr/hotels/does-not-exist`);
