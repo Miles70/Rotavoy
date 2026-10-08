@@ -1,3 +1,4 @@
+import { markAnalyticsTest } from './analytics-test-context.mjs';
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { createServer } from 'vite';
@@ -18,10 +19,11 @@ const server = await createServer({ server: { host: '127.0.0.1', port: 5174, str
 let browser;
 try {
   await server.listen();
-  browser = await chromium.launch({ headless: true });
+  browser = await chromium.launch({ headless: true, ...(process.env.CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.CHROMIUM_EXECUTABLE_PATH } : {}) });
   await mkdir('test-results/hotel-ui', { recursive: true });
   for (const width of [320, 390, 1280]) {
     const context = await browser.newContext({ viewport: { width, height: 900 }, locale: 'tr-TR' });
+    await markAnalyticsTest(context, { fixture: true });
     await context.addInitScript(() => globalThis.localStorage.setItem('language', 'tr'));
     await context.route('https://fixture.test/**', route => route.fulfill({ contentType: 'image/svg+xml', body: imageSvg }));
     let paymentAttempts = 0;

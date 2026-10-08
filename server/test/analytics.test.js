@@ -22,9 +22,9 @@ test('analytics ingestion persists anonymous and authenticated events, deduplica
   try {
     const post = (body, token) => fetch(`${base}/api/visits/events`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer verified' } : {}) }, body: JSON.stringify(body) });
     assert.equal((await post(event)).status, 204); assert.equal((await post(event)).status, 204); assert.equal(writes.size, 1);
-    const saved = writes.get(event.eventId); assert.equal(saved.identity, ''); assert.equal(saved.ip, '127.0.0.1'); assert.equal(saved.city, '');
+    const saved = writes.get(event.eventId); assert.equal(saved.identity, ''); assert.equal(saved.ip, undefined); assert.equal(saved.city, undefined);
     assert.equal((await post({ ...event, eventId: 'authenticated-123', identity: 'spoofed' }, true)).status, 204);
-    assert.equal(writes.get('authenticated-123').identity, 'traveler@example.com');
+    assert.equal(writes.get('authenticated-123').identity, '');
     assert.equal((await post({ ...event, type: 'invalid' })).status, 400);
     assert.equal((await fetch(`${base}/api/admin/analytics`)).status, 401);
     assert.equal((await fetch(`${base}/api/admin/analytics`, { headers: { Authorization: 'Bearer verified' } })).status, 401);
