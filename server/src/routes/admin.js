@@ -1,3 +1,5 @@
+import { createAnalyticsProof } from '../services/analyticsTraffic.js';
+import { analyticsV2 } from '../services/analyticsReport.js';
 import { reservationSummary } from '../services/bookingState.js';
 import { TravelAnalytics } from '../models/TravelAnalytics.js';
 import { analyticsTypes } from './analytics.js';
@@ -129,6 +131,12 @@ adminRouter.get('/audit', async (request, response) => {
   const [items, total] = await Promise.all([TravelAdminAudit.find().sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(), TravelAdminAudit.countDocuments()]);
   response.json({ items, total, page, limit });
 });
+
+adminRouter.post('/analytics/context', (request, response) => {
+  const kind = request.body?.kind === 'test' ? 'test' : 'admin';
+  response.json({ proof: createAnalyticsProof(kind), kind, expiresAt: new Date(Date.now() + 8 * 3600000).toISOString() });
+});
+adminRouter.get('/analytics/v2', analyticsV2);
 
 adminRouter.get('/analytics', async (request, response) => {
   const { page, limit } = pagination(request.query);

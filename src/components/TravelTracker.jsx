@@ -11,6 +11,10 @@ export default function TravelTracker() {
     if (pathname === '/travel/checkout') trackTravel('checkout_view');
   }, [pathname, key]);
   useEffect(() => {
+    const heartbeat = setInterval(() => { if (document.visibilityState === 'visible') trackTravel('heartbeat'); }, 45000);
+    return () => clearInterval(heartbeat);
+  }, []);
+  useEffect(() => {
     function click(event) {
       const link = event.target?.closest?.('a[href]');
       if (!link) return;

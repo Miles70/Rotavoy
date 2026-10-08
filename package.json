@@ -16,7 +16,8 @@
     "security:check": "node scripts/audit-high.mjs",
     "check:readiness": "npm --prefix server run check:readiness",
     "test:hotel-ui": "node scripts/test-hotel-ui.mjs",
-    "test:hotel-e2e": "node scripts/test-hotel-e2e.mjs"
+    "test:hotel-e2e": "node scripts/test-hotel-e2e.mjs",
+    "test:analytics-e2e": "node scripts/test-analytics-e2e.mjs"
   },
   "dependencies": {
     "@reown/appkit": "^1.8.23",

@@ -1,3 +1,4 @@
+import { trackTravel } from '../services/analytics';
 import RateConditions from "../components/RateConditions";
 import { useLanguage } from "../i18n/LanguageContext";
 import { useCustomerAuth } from "../context/CustomerAuthContext";
@@ -81,6 +82,7 @@ function TravelCheckout() {
           : await getTravelReservation(cardReturnReference);
         if (!active) return;
         setReturnBooking(booking);
+        if (booking.status === 'confirmed') trackTravel('booking_confirmation_view');
         setReturnState(booking.status === "confirmed" ? "success" : "processing");
         if (booking.status === "processing" && ++polls < 30) timer = setTimeout(() => check(), 6000);
       } catch (e) { if (active) { setReturnState("error"); setReturnError(e.message); } }
@@ -195,6 +197,7 @@ function TravelCheckout() {
         },
       ];
 
+      trackTravel('payment_start', { paymentMethod });
       const stay = { hotelId: confirmedHotelId, hotelName, checkin: state.checkin, checkout: state.checkout, adults: state.adults };
       if (paymentMethod === "card") {
         const result = await createCardPaymentSession({
@@ -206,6 +209,7 @@ function TravelCheckout() {
         });
         setCardSession(result.paymentSession);
         setSubmitState("success");
+        trackTravel('payment_ready', { paymentMethod }, result.paymentSession?.clientReference);
         return;
       }
 
@@ -220,7 +224,9 @@ function TravelCheckout() {
       });
       setCryptoBooking(result);
       setSubmitState("success");
+      trackTravel('payment_ready', { paymentMethod }, result.clientReference);
     } catch (bookingError) {
+      trackTravel('payment_error', { paymentMethod });
       if (bookingError.code === 'HOTEL_TERMS_CHANGED' && bookingError.prebook) {
         const next = bookingError.prebook;
         const changes = [];
