@@ -65,7 +65,8 @@ try {
   assert.equal(await page.locator('.travelCategoryDropdown a[href="/ar/flights"]').count(), 1);
   await page.locator('.travelCategoryControl > button').click();
   await page.locator('.customerHeaderAuthButton').focus();
-  await page.locator('.customerLoginPreview').waitFor({ state: 'visible' });
+  // The existing mobile UI intentionally hides this desktop hover preview.
+  await page.locator('.customerLoginPreview').waitFor({ state: width > 620 ? 'visible' : 'hidden' });
   assert.equal(await page.evaluate(() => globalThis.document.documentElement.scrollWidth > globalThis.innerWidth), false, `Arabic login preview overflow at ${width}px`);
   await page.locator('.languageButton').click();
   await page.getByRole('option', { name: /Türkçe/ }).click();
