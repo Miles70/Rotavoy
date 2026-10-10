@@ -804,11 +804,11 @@ function Travel({ hotelsOnly = false }) {
           playsInline
           preload="auto"
           onCanPlay={(event) => event.currentTarget.play().catch(() => {})}
-          poster="/images/rotavoy-travel-beach-poster.webp"
+          poster="/images/voyhaven-travel-beach-poster.webp"
           aria-hidden="true"
           tabIndex={-1}
         >
-          <source src="/images/rotavoy-travel-beach.mp4" type="video/mp4" />
+          <source src="/images/voyhaven-travel-beach.mp4" type="video/mp4" />
         </video>
 
         <div className="travelHeroGlow travelHeroGlow--one" />

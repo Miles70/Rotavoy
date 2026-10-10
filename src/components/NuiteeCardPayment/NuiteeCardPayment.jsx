@@ -43,7 +43,7 @@ function loadPaymentSdk() {
     if (!existing) {
       script.src = PAYMENT_SDK_SRC;
       script.async = true;
-      script.dataset.rotavoyNuiteePaymentSdk = "true";
+      script.dataset.voyhavenNuiteePaymentSdk = "true";
       document.head.appendChild(script);
     }
   });
