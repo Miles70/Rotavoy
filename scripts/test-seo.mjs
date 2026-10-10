@@ -90,7 +90,7 @@ for (const host of ['rotavoy.com', 'www.rotavoy.com']) {
  for (const path of ['/about','/contact','/support','/privacy','/terms','/refund']) assert.equal(migrationRedirect(host, path)?.destination, SITE_URL + path);
  assert.equal(migrationRedirect(host, '/')?.destination, SITE_URL + '/');
  for (const path of ['/travel/checkout','/flights/checkout','/account','/admin','/not-a-page','/google2fd19590f23b16c5.html']) assert.equal(migrationRedirect(host, path), undefined);
- for (const key of [...searchKeys, 'payment_intent_client_secret', 'transactionId', 'token']) assert.equal(migrationRedirect(host, '/en', `${key}=private`), undefined);
+ for (const key of ['reference','bookingReference','prebookId','payment_intent','payment_intent_client_secret','redirect_status','transactionId','secretKey','token','sessionId','bookingId','clientSecret','lang','checkin','departure','offerId']) assert.equal(migrationRedirect(host, '/en', `${key}=private`), undefined);
 }
 for (const host of ['voyhaven.com','www.voyhaven.com','example.vercel.app']) for (const path of paths) assert.equal(migrationRedirect(host, path), undefined);
 for (const key of searchKeys) {

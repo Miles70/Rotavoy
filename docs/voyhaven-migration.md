@@ -60,6 +60,6 @@ Do not delete the old deployment or change provider credentials. Before retireme
 
 ## SEO migration redirects
 
-`vercel.json` includes host-scoped permanent redirects for every published multilingual SEO path and the six general sitemap pages. Old public hotel links map to their new canonical path. Only requests on `rotavoy.com` / `www.rotavoy.com` match; VoyHaven and previews cannot loop. Checkout, account, admin, unknown paths and requests carrying booking/payment/search parameters are excluded so ongoing old-origin payment finalization remains available. The old backend origins and Railway service remain in place.
+`vercel.json` includes host-scoped permanent redirects for every published multilingual SEO path and the six general sitemap pages. Old public hotel links map to their new canonical path. Only requests on `rotavoy.com` / `www.rotavoy.com` match; VoyHaven and previews cannot loop. Checkout, account, admin, unknown paths and requests carrying booking/payment parameters or active checkout/offer/language parameters are excluded so ongoing old-origin payment finalization remains available. The old backend origins and Railway service remain in place.
 
 Deploy and verify these redirects on the old hostname before submitting Search Console Change of Address. Retain redirects for at least one year. Do not replace the old app with the static retirement deployment until outstanding booking-flow checks and old-origin sessions are resolved.
