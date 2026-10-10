@@ -4,7 +4,7 @@ const tr = {
   travelPage: {
     nearby: {"distance": "Konumuna uzaklık", "straightLine": "Kuş uçuşu", "button": "Yakınımdaki konaklamaları bul", "locating": "Konumun alınıyor…", "title": "Yakınımdaki konaklamalar", "radius": "Arama mesafesi", "denied": "Konum izni verilmedi. Tarayıcı ayarlarından izin ver veya şehir adıyla ara.", "unavailable": "Konum alınamadı. Tekrar dene veya şehir adıyla ara.", "timeout": "Konum isteği zaman aşımına uğradı. Tekrar dene.", "unsupported": "Bu tarayıcı konum aramasını desteklemiyor. Şehir adıyla arayabilirsin.", "insecure": "Konum için siteyi HTTPS üzerinden açmalısın.", "empty": "Bu çevrede konaklama bulunamadı. Mesafeyi genişletmeyi dene."},
     "onlineTravelAgency": "ONLINE TRAVEL AGENCY",
-    "pill": "Rotavoy Travel",
+    "pill": "VoyHaven Travel",
     "heroTitle": "Tatil rotanı tek yerde",
     "heroAccent": "oluştur.",
     "heroText": "Otelini bul, uçuşunu planla, aracını kirala ve deneyimlerini yolculuğuna ekle. Yakında kart veya kripto ile her şeyi tek platformdan yönet.",
@@ -58,7 +58,7 @@ const tr = {
     "prototypeNote": "Arama ekranı hazır. Gerçek fiyat ve müsaitlik sonuçları travel API bağlantısıyla burada açılacak.",
     "routesEyebrow": "SEYAHAT İLHAMı",
     "routesTitle": "Sıradaki konaklamanı seç, yolculuğunu onun etrafında oluştur.",
-    "routesText": "Rotavoy deneyiminin merkezinde oteller, odalar ve canlı müsaitlik var.",
+    "routesText": "VoyHaven deneyiminin merkezinde oteller, odalar ve canlı müsaitlik var.",
     "cards": {
       "antalya": {
         "badge": "Popüler",

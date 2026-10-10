@@ -1,6 +1,6 @@
 const siteConfig = {
-  brandName: "Rotavoy",
-  shortName: "R",
+  brandName: "VoyHaven",
+  shortName: "V",
   description: "Travel farther. Stay better.",
 };
 

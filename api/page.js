@@ -1,3 +1,4 @@
+import { SITE_URL } from '../seo/model.js';
 import { readFile } from 'node:fs/promises';
 import { appPolicy } from '../seo/app-policy.js';
 import { escapeHtml } from '../seo/html.js';
@@ -7,7 +8,7 @@ async function loadAssets() {
  return assets;
 }
 export default async function handler(request, response) {
- const url = new URL(request.url, 'https://www.rotavoy.com');
+ const url = new URL(request.url, SITE_URL);
  const rawPath = request.query?.path ?? url.searchParams.get('path') ?? url.pathname.replace(/^\//, '');
  const path = '/' + (Array.isArray(rawPath) ? rawPath.join('/') : rawPath);
  url.searchParams.delete('path');

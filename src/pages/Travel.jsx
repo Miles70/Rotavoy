@@ -1,7 +1,7 @@
 import { trackTravel } from '../services/analytics';
 import Flights from "./Flights";
 import CategoryPage from "./CategoryPage";
-import RotavoyLogo from "../components/Brand/RotavoyLogo";
+import VoyHavenLogo from "../components/Brand/VoyHavenLogo";
 import { withHotelDistances } from "../services/hotelDistance.js";
 import { getCurrentCoordinates } from "../services/geolocation.js";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -818,7 +818,7 @@ function Travel({ hotelsOnly = false }) {
           <div className="travelIntro">
             <div className="travelBrandBlock">
               <div>
-                <RotavoyLogo className="heroRotavoyLogo" />
+                <VoyHavenLogo className="heroVoyHavenLogo" />
                 <small>{t("travelPage.onlineTravelAgency")}</small>
               </div>
             </div>

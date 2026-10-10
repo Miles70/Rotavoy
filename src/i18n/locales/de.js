@@ -4,7 +4,7 @@ const de = {
   travelPage: {
     nearby: {"distance": "Entfernung von dir", "straightLine": "Luftlinie", "button": "Unterkünfte in meiner Nähe", "locating": "Standort wird ermittelt…", "title": "Unterkünfte in meiner Nähe", "radius": "Suchradius", "denied": "Standortzugriff verweigert. Im Browser erlauben oder nach Stadt suchen.", "unavailable": "Standort nicht verfügbar. Erneut versuchen oder nach Stadt suchen.", "timeout": "Standortanfrage abgelaufen. Erneut versuchen.", "unsupported": "Dieser Browser unterstützt keine Standortsuche. Suche nach einer Stadt.", "insecure": "Für den Standort die Website über HTTPS öffnen.", "empty": "Keine Unterkünfte in diesem Umkreis. Radius vergrößern."},
     onlineTravelAgency: "ONLINE-REISEBÜRO",
-    pill: "Rotavoy Reisen",
+    pill: "VoyHaven Reisen",
     heroTitle: "Plane deine Urlaubsroute",
     heroAccent: "an einem Ort.",
     heroText: "Finde dein Hotel, plane deinen Flug, miete ein Auto und ergänze Erlebnisse. Bald verwaltest du alles auf einer Plattform mit Karte oder Kryptowährungen.",
@@ -56,9 +56,9 @@ const de = {
       people5: "5+ Personen",
     },
     prototypeNote: "Die Suchoberfläche ist bereit. Live-Preise und Verfügbarkeiten erscheinen hier nach der Anbindung der Reise-API.",
-    routesEyebrow: "ROTAVOY ROUTEN",
+    routesEyebrow: "VOYHAVEN ROUTEN",
     routesTitle: "Von deiner Einkaufsroute zu deiner Urlaubsroute.",
-    routesText: "Reisen funktioniert getrennt vom Shop, während Konto, Sprache und Zahlungserlebnis unter dem Rotavoy-Dach bleiben.",
+    routesText: "Reisen funktioniert getrennt vom Shop, während Konto, Sprache und Zahlungserlebnis unter dem VoyHaven-Dach bleiben.",
     cards: {
       antalya: {
         badge: "Beliebt",

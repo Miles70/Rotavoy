@@ -4,7 +4,7 @@ const it = {
   travelPage: {
     nearby: {"distance": "Distanza dalla tua posizione", "straightLine": "In linea d’aria", "button": "Trova alloggi vicino a me", "locating": "Rilevamento posizione…", "title": "Alloggi vicino a me", "radius": "Raggio di ricerca", "denied": "Accesso alla posizione negato. Consenti nel browser o cerca una città.", "unavailable": "Posizione non disponibile. Riprova o cerca una città.", "timeout": "Richiesta di posizione scaduta. Riprova.", "unsupported": "Questo browser non supporta la geolocalizzazione. Cerca una città.", "insecure": "Apri il sito tramite HTTPS per usare la posizione.", "empty": "Nessun alloggio in questa zona. Amplia il raggio."},
     onlineTravelAgency: "AGENZIA DI VIAGGI ONLINE",
-    pill: "Rotavoy Viaggi",
+    pill: "VoyHaven Viaggi",
     heroTitle: "Crea il tuo itinerario di vacanza",
     heroAccent: "in un unico posto.",
     heroText: "Trova l'hotel, pianifica il volo, noleggia un'auto e aggiungi esperienze al viaggio. Presto potrai gestire tutto su un'unica piattaforma con carta o criptovalute.",
@@ -56,9 +56,9 @@ const it = {
       people5: "5+ persone",
     },
     prototypeNote: "L'interfaccia di ricerca è pronta. Prezzi e disponibilità in tempo reale appariranno qui dopo l'integrazione dell'API viaggi.",
-    routesEyebrow: "ITINERARI ROTAVOY",
+    routesEyebrow: "ITINERARI VOYHAVEN",
     routesTitle: "Dal percorso dello shopping all'itinerario della vacanza.",
-    routesText: "La sezione Viaggi funziona separatamente dal negozio, mentre account, lingua e pagamenti restano sotto il tetto Rotavoy.",
+    routesText: "La sezione Viaggi funziona separatamente dal negozio, mentre account, lingua e pagamenti restano sotto il tetto VoyHaven.",
     cards: {
       antalya: {
         badge: "Popolare",

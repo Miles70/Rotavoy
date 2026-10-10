@@ -406,7 +406,7 @@ function TravelCheckout() {
                     <CreditCard size={21} />
                     <span>
                       <strong>Kart / Cüzdan</strong>
-                      <small>Rotavoy · 3D Secure destekli</small>
+                      <small>VoyHaven · 3D Secure destekli</small>
                     </span>
                   </button>
 
@@ -546,7 +546,7 @@ function TravelCheckout() {
                 <p className="travelCheckoutSecurity">
                   <ShieldCheck size={16} />
                   {paymentMethod === "card"
-                    ? "Kart bilgileri Rotavoy sunucusuna girmez; güvenli ödeme altyapısında işlenir."
+                    ? "Kart bilgileri VoyHaven sunucusuna girmez; güvenli ödeme altyapısında işlenir."
                     : `Rezervasyon yalnızca ${cryptoAsset} transferi ${selectedNetwork} ağında zincirde doğrulandıktan sonra oluşturulur.`}
                 </p>
               </form>
@@ -572,7 +572,7 @@ function TravelCheckout() {
               {cardSession && (
                 <div>
                   <dt>Ödeme</dt>
-                  <dd>Kart · Rotavoy</dd>
+                  <dd>Kart · VoyHaven</dd>
                 </div>
               )}
               {!cardSession &&

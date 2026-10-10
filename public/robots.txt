@@ -4,4 +4,4 @@ Disallow: /api/
 Disallow: /assets/*.map
 
 # Checkout, account and search pages must remain crawlable to expose noindex.
-Sitemap: https://www.rotavoy.com/sitemap.xml
+Sitemap: https://voyhaven.com/sitemap.xml

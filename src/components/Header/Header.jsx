@@ -15,7 +15,7 @@ import { useLanguage } from "../../i18n/LanguageContext";
 import { useCustomerAuth } from "../../context/CustomerAuthContext";
 import CustomerAvatar from "../CustomerAvatar/CustomerAvatar";
 import LanguageSwitcher from "../LanguageSwitcher";
-import RotavoyLogo from "../Brand/RotavoyLogo";
+import VoyHavenLogo from "../Brand/VoyHavenLogo";
 import siteConfig from "../../config/site";
 
 import "./Header.css";
@@ -109,8 +109,8 @@ function Header() {
             className="logo"
             aria-label={`${siteConfig.brandName} Travel home`}
           >
-            <RotavoyLogo
-              className="headerRotavoyLogo"
+            <VoyHavenLogo
+              className="headerVoyHavenLogo"
               alt={`${siteConfig.brandName} Travel`}
             />
           </Link>

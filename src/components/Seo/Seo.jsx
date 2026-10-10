@@ -16,8 +16,8 @@ function safeJson(data) {
 }
 
 export default function Seo({
-  title = "Rotavoy Travel | Hotels & Global Stays",
-  description = "Search hotels, compare live room offers and book global stays with Rotavoy Travel.",
+  title = "VoyHaven Travel | Hotels & Global Stays",
+  description = "Search hotels, compare live room offers and book global stays with VoyHaven Travel.",
   path = "/",
   image = "",
   type = "website",
@@ -53,7 +53,7 @@ export default function Seo({
     add('meta', { name: 'robots', content: robots });
     add('link', { rel: 'canonical', href: canonicalUrl });
     alternates.forEach(a => add('link', { rel: 'alternate', hreflang: a.language, href: absoluteUrl(a.path) }));
-    for (const [property, content] of Object.entries({ 'og:site_name': 'Rotavoy', 'og:type': type, 'og:title': title, 'og:description': description, 'og:url': canonicalUrl, ...(imageUrl ? { 'og:image': imageUrl } : {}) })) add('meta', { property, content });
+    for (const [property, content] of Object.entries({ 'og:site_name': 'VoyHaven', 'og:type': type, 'og:title': title, 'og:description': description, 'og:url': canonicalUrl, ...(imageUrl ? { 'og:image': imageUrl } : {}) })) add('meta', { property, content });
     add('meta', { name: 'twitter:card', content: imageUrl ? 'summary_large_image' : 'summary' });
     add('meta', { name: 'twitter:title', content: title });
     add('meta', { name: 'twitter:description', content: description });

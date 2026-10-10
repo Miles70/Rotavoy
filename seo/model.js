@@ -1,6 +1,6 @@
 import { copy, languages, interpolate } from './copy.js';
 import { destinations, airports, routes } from './destinations.js';
-export const SITE_URL = 'https://www.rotavoy.com';
+export const SITE_URL = 'https://voyhaven.com';
 export const languagePath = (lang, suffix = '') => `/${lang}${suffix ? `/${suffix}` : ''}`;
 export const routeSlug = route => `${route.from.toLowerCase()}-${route.to.toLowerCase()}`;
 export const eligibleHotel = h => h.published === true && h.source?.provider === 'Nuitee/LiteAPI' && h.source?.environment === 'production' && /^lp[a-z0-9]+$/.test(h.id) && h.name && h.address && h.image && h.source.descriptionHash && !h.deletedAt && languages.every(lang => typeof h.descriptions?.[lang] === 'string' && h.descriptions[lang].trim().length >= 60);
