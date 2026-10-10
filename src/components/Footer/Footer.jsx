@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { FaFacebookF, FaInstagram, FaXTwitter, FaYoutube } from "react-icons/fa6";
 import siteConfig from "../../config/site";
 import "./Footer.css";
-import RotavoyLogo from "../Brand/RotavoyLogo";
+import VoyHavenLogo from "../Brand/VoyHavenLogo";
 
 const cardPaymentMethods = [
   { id: "visa", label: "Visa", display: "VISA" },
@@ -55,12 +55,12 @@ function Footer() {
       <div className="container footerInner">
         <div className="footerBrand">
           <Link to="/" className="footerLogo">
-            <RotavoyLogo className="footerRotavoyLogo" alt={siteConfig.brandName} />
+            <VoyHavenLogo className="footerVoyHavenLogo" alt={siteConfig.brandName} />
           </Link>
 
           <p>{siteConfig.description}</p>
 
-          <div className="socialLinks" aria-label="Rotavoy social channels">
+          <div className="socialLinks" aria-label="VoyHaven social channels">
             <span aria-label="Facebook"><FaFacebookF /></span>
             <span aria-label="Instagram"><FaInstagram /></span>
             <span aria-label="X"><FaXTwitter /></span>
@@ -78,7 +78,7 @@ function Footer() {
         </div>
 
         <div className="footerColumn">
-          <h3>Rotavoy</h3>
+          <h3>VoyHaven</h3>
           <Link to="/about">About</Link>
           <Link to="/contact">Contact</Link>
           <Link to="/support">Support</Link>
@@ -99,7 +99,7 @@ function Footer() {
               <strong id="footer-card-payments-title">Payment Methods</strong>
               <span>Kart ve dijital cüzdan</span>
             </div>
-            <div className="footerPaymentCards" aria-label="Rotavoy accepted card and wallet payment methods">
+            <div className="footerPaymentCards" aria-label="VoyHaven accepted card and wallet payment methods">
               {cardPaymentMethods.map((method) => (
                 <PaymentCard key={method.id} method={method} />
               ))}
@@ -111,7 +111,7 @@ function Footer() {
               <strong id="footer-crypto-payments-title">Crypto Payments</strong>
               <span>BNB Chain & Ethereum</span>
             </div>
-            <div className="footerPaymentCards footerCryptoPaymentCards" aria-label="Rotavoy accepted crypto payment methods">
+            <div className="footerPaymentCards footerCryptoPaymentCards" aria-label="VoyHaven accepted crypto payment methods">
               {cryptoPaymentMethods.map((method) => (
                 <PaymentCard key={method.id} method={method} />
               ))}

@@ -1,8 +1,10 @@
-# Rotavoy Travel
+# VoyHaven Travel
 
-Rotavoy is a multilingual travel platform focused on hotel discovery, live Nuitee room availability, hotel details, prebooking, reservation checkout and travel payments.
+Migration from Rotavoy is prepared on `feat/voyhaven-migration`. See [the migration runbook](docs/voyhaven-migration.md) for domain/provider gates and the static retirement deployment.
 
-The former shopping / dropshipping catalog has been moved out of Rotavoy. Rotavoy now has one job: travel.
+VoyHaven is a multilingual travel platform focused on hotel discovery, live Nuitee room availability, hotel details, prebooking, reservation checkout and travel payments.
+
+The former shopping / dropshipping catalog has been moved out of VoyHaven. VoyHaven now has one job: travel.
 
 ## Local development
 
@@ -61,7 +63,7 @@ Production needs `NODE_ENV=production`, a production `NUITEE_API_KEY`, `NUITEE_E
 
 Hotel cards use Nuitee Payment SDK. Flights use Nuitee flight prebooks with Payment SDK and Stripe Payment Element; Nuitee must enable production flights for the account. Checkout revalidates flight price, passenger counts, birth dates and travel documents. A successful payment alone never marks a reservation confirmed: upstream `CONFIRMED` and a booking ID are required.
 
-Crypto hotel payments are verified on the selected mainnet, including transfer receipts, amount, recipient, block timestamp and duplicate transaction protection. The hotel cost is then settled using `NUITEE_ACCOUNT_PAYMENT_METHOD` (`ACC_CREDIT_CARD`, `WALLET` or `CREDIT`). A funded/approved provider payment method is required. Real crypto cannot be accepted for sandbox hotel bookings. Rotavoy does not automatically refund blockchain transfers when a provider cannot confirm; resolve paid but unconfirmed records through admin/support.
+Crypto hotel payments are verified on the selected mainnet, including transfer receipts, amount, recipient, block timestamp and duplicate transaction protection. The hotel cost is then settled using `NUITEE_ACCOUNT_PAYMENT_METHOD` (`ACC_CREDIT_CARD`, `WALLET` or `CREDIT`). A funded/approved provider payment method is required. Real crypto cannot be accepted for sandbox hotel bookings. VoyHaven does not automatically refund blockchain transfers when a provider cannot confirm; resolve paid but unconfirmed records through admin/support.
 
 Reservation capability tokens protect guest checkout records; signed-in customers can also access their own records. Interrupted hotel booking calls are reconciled by client reference, without blindly resubmitting. A backend worker reconciles processing records after browser closure. Unpaid card sessions are not automatically charged; payment-return finalization is required. Unknown provider outcomes remain processing for follow-up instead of showing fabricated success.
 

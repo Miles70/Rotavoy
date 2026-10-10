@@ -43,7 +43,7 @@ function loadPaymentSdk() {
     if (!existing) {
       script.src = PAYMENT_SDK_SRC;
       script.async = true;
-      script.dataset.rotavoyNuiteePaymentSdk = "true";
+      script.dataset.voyhavenNuiteePaymentSdk = "true";
       document.head.appendChild(script);
     }
   });
@@ -85,7 +85,7 @@ function NuiteeCardPayment({ session, returnUrl }) {
           },
           options: {
             business: {
-              name: "Rotavoy",
+              name: "VoyHaven",
             },
           },
           targetElement: `#${targetId}`,
@@ -123,14 +123,14 @@ function NuiteeCardPayment({ session, returnUrl }) {
       <div className="nuiteeCardPanelHeader">
         <div className="nuiteeCardIcon"><CreditCard size={22} /></div>
         <div>
-          <span>Rotavoy Secure Payment</span>
+          <span>VoyHaven Secure Payment</span>
           <h2>Kartla güvenli ödeme</h2>
         </div>
 
       </div>
 
       <p className="nuiteeCardIntro">
-        Kart bilgilerin Rotavoy sunucusuna gönderilmez. Güvenli ödeme altyapısı kart bilgilerini işler; gerekiyorsa 3D Secure doğrulaması açılır.
+        Kart bilgilerin VoyHaven sunucusuna gönderilmez. Güvenli ödeme altyapısı kart bilgilerini işler; gerekiyorsa 3D Secure doğrulaması açılır.
       </p>
 
       {status === "loading" && (
@@ -144,7 +144,7 @@ function NuiteeCardPayment({ session, returnUrl }) {
 
 
       <p className="nuiteeCardSecurity">
-        <ShieldCheck size={17} /> Ödeme başarılı olduğunda Rotavoy&apos;a dönüp rezervasyonu otomatik olarak tamamlayacağız.
+        <ShieldCheck size={17} /> Ödeme başarılı olduğunda VoyHaven&apos;a dönüp rezervasyonu otomatik olarak tamamlayacağız.
       </p>
     </section>
   );

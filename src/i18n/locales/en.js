@@ -4,7 +4,7 @@ const en = {
   travelPage: {
     nearby: {"distance": "Distance from you", "straightLine": "Straight-line distance", "button": "Find stays near me", "locating": "Finding your location…", "title": "Stays near me", "radius": "Search radius", "denied": "Location permission denied. Allow it in browser settings or search by city.", "unavailable": "Location unavailable. Try again or search by city.", "timeout": "Location request timed out. Try again.", "unsupported": "This browser does not support location search. Search by city instead.", "insecure": "Open the site over HTTPS to use location.", "empty": "No stays found in this area. Try a wider radius."},
     "onlineTravelAgency": "ONLINE TRAVEL AGENCY",
-    "pill": "Rotavoy Travel",
+    "pill": "VoyHaven Travel",
     "heroTitle": "Build your holiday route",
     "heroAccent": "in one place.",
     "heroText": "Find your hotel, plan your flight, rent a car and add experiences to your journey. Soon, manage everything on one platform with card or crypto payments.",
@@ -58,7 +58,7 @@ const en = {
     "prototypeNote": "The search interface is ready. Live prices and availability will appear here after the travel API integration.",
     "routesEyebrow": "TRAVEL INSPIRATION",
     "routesTitle": "Choose your next stay and build the trip around it.",
-    "routesText": "Hotels, rooms and live availability stay at the center of the Rotavoy experience.",
+    "routesText": "Hotels, rooms and live availability stay at the center of the VoyHaven experience.",
     "cards": {
       "antalya": {
         "badge": "Popular",

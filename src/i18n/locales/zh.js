@@ -4,7 +4,7 @@ const zh = {
   travelPage: {
     nearby: {"distance": "距你的位置", "straightLine": "直线距离", "button": "查找附近住宿", "locating": "正在获取位置…", "title": "附近住宿", "radius": "搜索半径", "denied": "位置权限被拒绝。请在浏览器中允许，或按城市搜索。", "unavailable": "无法获取位置。请重试或按城市搜索。", "timeout": "位置请求超时。请重试。", "unsupported": "此浏览器不支持定位。请按城市搜索。", "insecure": "请通过 HTTPS 打开网站以使用定位。", "empty": "附近没有找到住宿。请扩大搜索范围。"},
     "onlineTravelAgency": "在线旅行社",
-    "pill": "Rotavoy Travel",
+    "pill": "VoyHaven Travel",
     "heroTitle": "在一个平台",
     "heroAccent": "规划整段旅程。",
     "heroText": "查找酒店、规划航班、租赁汽车并添加旅行体验。未来可在同一平台使用银行卡或加密货币完成全部安排。",
@@ -58,7 +58,7 @@ const zh = {
     "prototypeNote": "搜索界面已准备完成。接入旅行 API 后，实时价格和可订状态将在这里显示。",
     "routesEyebrow": "旅行灵感",
     "routesTitle": "选择下一次住宿，并围绕它规划旅程。",
-    "routesText": "酒店、房型和实时房态是 Rotavoy 体验的核心。",
+    "routesText": "酒店、房型和实时房态是 VoyHaven 体验的核心。",
     "cards": {
       "antalya": {
         "badge": "热门",

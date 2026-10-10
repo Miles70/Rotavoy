@@ -4,7 +4,7 @@ const pt = {
   travelPage: {
     nearby: {"distance": "Distância da sua localização", "straightLine": "Em linha reta", "button": "Encontrar hospedagens perto de mim", "locating": "Obtendo localização…", "title": "Hospedagens perto de mim", "radius": "Raio de busca", "denied": "Permissão de localização negada. Autorize no navegador ou busque uma cidade.", "unavailable": "Localização indisponível. Tente novamente ou busque uma cidade.", "timeout": "A solicitação de localização expirou. Tente novamente.", "unsupported": "Este navegador não suporta geolocalização. Busque uma cidade.", "insecure": "Abra o site via HTTPS para usar sua localização.", "empty": "Nenhuma hospedagem nesta área. Aumente o raio."},
     onlineTravelAgency: "AGÊNCIA DE VIAGENS ONLINE",
-    pill: "Rotavoy Viagens",
+    pill: "VoyHaven Viagens",
     heroTitle: "Monte a rota das suas férias",
     heroAccent: "em um só lugar.",
     heroText: "Encontre seu hotel, planeje seu voo, alugue um carro e adicione experiências à viagem. Em breve, gerencie tudo em uma única plataforma com cartão ou criptomoedas.",
@@ -56,9 +56,9 @@ const pt = {
       people5: "5+ pessoas",
     },
     prototypeNote: "A interface de busca está pronta. Preços e disponibilidade em tempo real aparecerão aqui após a integração da API de viagens.",
-    routesEyebrow: "ROTAS ROTAVOY",
+    routesEyebrow: "ROTAS VOYHAVEN",
     routesTitle: "Da sua rota de compras à sua rota de férias.",
-    routesText: "Viagens funciona separadamente da loja, enquanto conta, idioma e pagamentos continuam dentro do ecossistema Rotavoy.",
+    routesText: "Viagens funciona separadamente da loja, enquanto conta, idioma e pagamentos continuam dentro do ecossistema VoyHaven.",
     cards: {
       antalya: {
         badge: "Popular",

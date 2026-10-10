@@ -3,6 +3,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import TravelTracker from "../components/TravelTracker";
 import Header from "../components/Header/Header";
 import Footer from "../components/Footer/Footer";
+import { SITE_URL } from "../../seo/model.js";
 import { appPolicy } from "../../seo/app-policy.js";
 import { useLanguage } from "../i18n/LanguageContext";
 import Seo from "../components/Seo/Seo";
@@ -27,7 +28,7 @@ function MainLayout() {
       {!/^\/travel\/hotels\/[^/]+$/.test(pathname) && <Seo
         title={policy.title}
         description={policy.description}
-        path={policy.canonical?.replace("https://www.rotavoy.com", "") || pathname}
+        path={policy.canonical?.replace(SITE_URL, "") || pathname}
         noIndex={policy.noIndex}
       />}
 

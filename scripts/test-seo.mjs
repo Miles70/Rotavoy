@@ -69,6 +69,30 @@ for (const path of paths) assert.ok(locations.includes(SITE_URL + path));
 assert.ok(locations.every(url => !url.includes('?') && !/checkout|account|admin/.test(url)));
 const published = hotels.map(h => h.id);
 const config = JSON.parse(await readFile('vercel.json', 'utf8'));
+// Migration must cover every published URL without redirecting new-domain
+// traffic or interrupting old-origin checkout callbacks.
+const migrationRedirect = (host, path, query = '') => {
+ for (const rule of config.redirects) {
+  if (!rule.has.some(condition => condition.type === 'host' && condition.value === host) || !rule.missing.every(condition => !new URLSearchParams(query).has(condition.key))) continue;
+  if (rule.source === path) return rule;
+  const locale = path.match(/^\/(tr|en|de|fr|ru|ar|es|pt|it|zh)(?:\/(.*))?$/);
+  if (locale && rule.source.startsWith('/:lang(')) return { ...rule, destination: rule.destination.replace(':lang', locale[1]).replace('/:path*', locale[2] ? '/' + locale[2] : '') };
+  const hotel = path.match(/^\/travel\/hotels\/(lp[a-z0-9]+)$/);
+  if (hotel && rule.source.startsWith('/travel/hotels/:hotelId(')) return { ...rule, destination: rule.destination.replace(':hotelId', hotel[1]) };
+ }
+};
+for (const host of ['rotavoy.com', 'www.rotavoy.com']) {
+ for (const path of paths) {
+  const rule = migrationRedirect(host, path);
+  assert.equal(rule?.destination, SITE_URL + path, `Missing migration ${host}${path}`);
+  assert.equal(rule.permanent, true);
+ }
+ for (const path of ['/about','/contact','/support','/privacy','/terms','/refund']) assert.equal(migrationRedirect(host, path)?.destination, SITE_URL + path);
+ assert.equal(migrationRedirect(host, '/')?.destination, SITE_URL + '/');
+ for (const path of ['/travel/checkout','/flights/checkout','/account','/admin','/not-a-page','/google2fd19590f23b16c5.html']) assert.equal(migrationRedirect(host, path), undefined);
+ for (const key of ['reference','bookingReference','prebookId','payment_intent','payment_intent_client_secret','redirect_status','transactionId','secretKey','token','sessionId','bookingId','clientSecret','lang','checkin','departure','offerId']) assert.equal(migrationRedirect(host, '/en', `${key}=private`), undefined);
+}
+for (const host of ['voyhaven.com','www.voyhaven.com','example.vercel.app']) for (const path of paths) assert.equal(migrationRedirect(host, path), undefined);
 for (const key of searchKeys) {
  assert.ok(config.headers.some(rule => rule.has.some(match => match.type === 'query' && match.key === key) && rule.headers.some(header => header.key === 'X-Robots-Tag' && header.value.includes('noindex'))));
  assert.ok(appPolicy('/hotels', `${key}=example`, published).noIndex);

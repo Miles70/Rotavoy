@@ -1,7 +1,7 @@
 import { trackTravel } from '../services/analytics';
 import Flights from "./Flights";
 import CategoryPage from "./CategoryPage";
-import RotavoyLogo from "../components/Brand/RotavoyLogo";
+import VoyHavenLogo from "../components/Brand/VoyHavenLogo";
 import { withHotelDistances } from "../services/hotelDistance.js";
 import { getCurrentCoordinates } from "../services/geolocation.js";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -804,11 +804,11 @@ function Travel({ hotelsOnly = false }) {
           playsInline
           preload="auto"
           onCanPlay={(event) => event.currentTarget.play().catch(() => {})}
-          poster="/images/rotavoy-travel-beach-poster.webp"
+          poster="/images/voyhaven-travel-beach-poster.webp"
           aria-hidden="true"
           tabIndex={-1}
         >
-          <source src="/images/rotavoy-travel-beach.mp4" type="video/mp4" />
+          <source src="/images/voyhaven-travel-beach.mp4" type="video/mp4" />
         </video>
 
         <div className="travelHeroGlow travelHeroGlow--one" />
@@ -818,7 +818,7 @@ function Travel({ hotelsOnly = false }) {
           <div className="travelIntro">
             <div className="travelBrandBlock">
               <div>
-                <RotavoyLogo className="heroRotavoyLogo" />
+                <VoyHavenLogo className="heroVoyHavenLogo" />
                 <small>{t("travelPage.onlineTravelAgency")}</small>
               </div>
             </div>

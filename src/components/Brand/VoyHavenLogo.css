@@ -1,23 +1,23 @@
-.rotavoyLogoImage {
+.voyhavenLogoImage {
   display: block;
   width: auto;
   height: auto;
-  aspect-ratio: 1942 / 809;
+  aspect-ratio: 310 / 72;
   object-fit: contain;
   flex-shrink: 0;
 }
 
-.headerRotavoyLogo {
+.headerVoyHavenLogo {
   width: 130px;
   max-width: min(32vw, 130px);
 }
 
-.heroRotavoyLogo {
+.heroVoyHavenLogo {
   width: 290px;
   max-width: 100%;
 }
 
-.footerRotavoyLogo {
+.footerVoyHavenLogo {
   background: #fff;
   padding: 8px 12px;
   border-radius: 12px;
@@ -27,16 +27,16 @@
 }
 
 @media (max-width: 620px) {
-  .headerRotavoyLogo {
+  .headerVoyHavenLogo {
     width: 125px;
     max-width: min(38vw, 125px);
   }
 
-  .heroRotavoyLogo {
+  .heroVoyHavenLogo {
     width: 235px;
   }
 
-  .footerRotavoyLogo {
+  .footerVoyHavenLogo {
     width: 205px;
   }
 }

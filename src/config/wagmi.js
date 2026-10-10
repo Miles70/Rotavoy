@@ -19,8 +19,8 @@ if (!projectId) {
 export const networks = [mainnet, bsc, polygon, arbitrum, base];
 
 const metadata = {
-  name: "Rotavoy",
-  description: "Shop, travel and discover with Web3.",
+  name: "VoyHaven",
+  description: "Travel farther. Stay better.",
   url: window.location.origin,
   icons: [],
 };

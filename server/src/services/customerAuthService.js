@@ -153,13 +153,13 @@ export async function createWalletChallenge(addressValue) {
     issuedAt.getTime() + WALLET_CHALLENGE_MINUTES * 60 * 1000,
   );
   const appName = cleanText(
-    process.env.CUSTOMER_AUTH_APP_NAME || "Rotavoy",
+    process.env.CUSTOMER_AUTH_APP_NAME || "VoyHaven",
     80,
   );
   const message = [
     `${appName} wallet sign-in`,
     "",
-    "Sign this message to securely access your Rotavoy Travel account.",
+    "Sign this message to securely access your VoyHaven Travel account.",
     "This request does not trigger a blockchain transaction or gas fee.",
     "",
     `Wallet: ${address}`,

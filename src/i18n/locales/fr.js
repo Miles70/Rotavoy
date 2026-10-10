@@ -4,7 +4,7 @@ const fr = {
   travelPage: {
     nearby: {"distance": "Distance depuis votre position", "straightLine": "À vol d’oiseau", "button": "Trouver des hébergements près de moi", "locating": "Localisation en cours…", "title": "Hébergements près de moi", "radius": "Rayon de recherche", "denied": "Accès à la position refusé. Autorisez-le dans le navigateur ou cherchez une ville.", "unavailable": "Position indisponible. Réessayez ou cherchez une ville.", "timeout": "La demande de position a expiré. Réessayez.", "unsupported": "Ce navigateur ne prend pas en charge la géolocalisation. Cherchez une ville.", "insecure": "Ouvrez le site en HTTPS pour utiliser votre position.", "empty": "Aucun hébergement dans cette zone. Essayez un rayon plus large."},
     onlineTravelAgency: "AGENCE DE VOYAGES EN LIGNE",
-    pill: "Rotavoy Voyages",
+    pill: "VoyHaven Voyages",
     heroTitle: "Créez votre itinéraire de vacances",
     heroAccent: "au même endroit.",
     heroText: "Trouvez votre hôtel, planifiez votre vol, louez une voiture et ajoutez des expériences à votre voyage. Bientôt, gérez tout sur une seule plateforme avec une carte ou des cryptomonnaies.",
@@ -56,9 +56,9 @@ const fr = {
       people5: "5+ personnes",
     },
     prototypeNote: "L’interface de recherche est prête. Les prix et disponibilités en temps réel apparaîtront ici après l’intégration de l’API de voyage.",
-    routesEyebrow: "ITINÉRAIRES ROTAVOY",
+    routesEyebrow: "ITINÉRAIRES VOYHAVEN",
     routesTitle: "De votre parcours d’achat à votre itinéraire de vacances.",
-    routesText: "Voyages fonctionne séparément de la boutique, tandis que le compte, la langue et les paiements restent réunis sous l’écosystème Rotavoy.",
+    routesText: "Voyages fonctionne séparément de la boutique, tandis que le compte, la langue et les paiements restent réunis sous l’écosystème VoyHaven.",
     cards: {
       antalya: {
         badge: "Populaire",

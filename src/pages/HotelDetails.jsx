@@ -501,7 +501,7 @@ function HotelDetails() {
   seoQuery.set("lang", language);
   const seoPolicy = appPolicy(location.pathname, seoQuery.toString(), import.meta.env.VITE_SEO_HOTEL_IDS || []);
   const seo = <Seo
-    title={hotel ? `${name} | Rotavoy` : seoPolicy.title}
+    title={hotel ? `${name} | VoyHaven` : seoPolicy.title}
     description={hotel ? `${name}${address ? ` — ${address}` : ""}. ${seoCopy[language].hotelHelp}` : seoPolicy.description}
     path={seoPolicy.canonical}
     image={hotel ? images[0] || "" : ""}
