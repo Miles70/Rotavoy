@@ -28,7 +28,7 @@ Support continues to use the existing `VITE_SUPPORT_EMAIL` mailbox. Do not publi
 - Hotel showcase, city search, pagination, room details and prebook conditions work on VoyHaven against the existing production API.
 - Flight search and selected-offer verification work; establish live flight booking entitlement explicitly.
 - Customer and admin authentication, reservations/account records, analytics and all ten languages work on VoyHaven.
-- Nuitee approves the new domain; the correct production payment session, 3DS and return/reconciliation work on it. Provider test environments validate charge flows; do not charge or create a real booking without separate transaction authorization.
+- The correct production payment session, 3DS and return/reconciliation work on the new domain. No documented domain pre-approval requirement was found; support ticket LAS-3030 requests account branding updates and confirmation of account-specific requirements. Provider test environments validate charge flows; do not charge or create a real booking without separate transaction authorization.
 - Reown connects a wallet; crypto checkout preserves the existing receiving address, network validation, replay protection and account-backed booking.
 - Support email delivery and DNS records are confirmed.
 
@@ -51,4 +51,15 @@ Do not delete the old deployment or change provider credentials. Before retireme
 - Hotel UI checks passed in ten languages.
 - All 46 backend tests passed.
 - Lint passed with two pre-existing Travel.jsx hook dependency warnings.
-- Live DNS, provider-domain approval, login and payment verification are pending account access; they are not established by local tests.
+- VoyHaven DNS/TLS is valid in Vercel; the user opened the site and admin on the new domain.
+- Firebase authorized domains now include both VoyHaven domains; the user successfully tested customer Google sign-in.
+- The shared OpenTheSMM Reown project includes both VoyHaven domains; the user successfully connected MetaMask.
+- Nuitee production rates/prebook and the card form loaded on VoyHaven; payment completion, 3DS and confirmed bookings are not yet verified.
+- VoyHaven Search Console domain ownership was verified and its sitemap submitted. Google processing is pending.
+- Production support ticket LAS-3030 is open. No support reply or approval has been assumed.
+
+## SEO migration redirects
+
+`vercel.json` includes host-scoped permanent redirects for every published multilingual SEO path and the six general sitemap pages. Old public hotel links map to their new canonical path. Only requests on `rotavoy.com` / `www.rotavoy.com` match; VoyHaven and previews cannot loop. Checkout, account, admin, unknown paths and requests carrying booking/payment/search parameters are excluded so ongoing old-origin payment finalization remains available. The old backend origins and Railway service remain in place.
+
+Deploy and verify these redirects on the old hostname before submitting Search Console Change of Address. Retain redirects for at least one year. Do not replace the old app with the static retirement deployment until outstanding booking-flow checks and old-origin sessions are resolved.
