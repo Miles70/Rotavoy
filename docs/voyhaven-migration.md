@@ -6,7 +6,7 @@ Canonical origin: `https://voyhaven.com`. `www.voyhaven.com` redirects to the ap
 
 Keep `Miles70/Rotavoy`, all Git history, the existing Railway service and MongoDB database. Do not rename the database, Firebase project, provider credentials, wallet address or existing `ROTAVOY_*` environment variables. These identifiers are compatibility contracts, not customer branding. Existing booking records and payment reconciliation must remain available.
 
-The Vercel project remains `rotavoy`; infrastructure names do not require another deployment or another backend. During validation the new apex domain targets `feat/voyhaven-migration`, while Rotavoy continues to serve master.
+The Vercel project remains `rotavoy`; infrastructure names do not require another deployment or another backend. The new apex domain targets `feat/voyhaven-migration`. On 2026-10-10, both Rotavoy aliases were assigned to validated deployment `dpl_DTELu3CiW5YaG6gLTtaPWQCkg2ZP` to enable public SEO redirects. Private booking routes remain on the application and existing backend. The branch is not merged: a later master production deployment can reassign the old aliases, so preserve these redirects during production cutover.
 
 The migration updates customer-visible names in all ten language dictionaries, reservation summaries, admin, checkout, wallet metadata, SEO, HTML titles and Open Graph tags. It adds a lightweight vector VoyHaven wordmark and favicon. Hotel IDs, hotel content provenance hashes and booking routes stay intact. Both hotel and flight card-return URLs already derive from `window.location.origin`.
 
@@ -63,3 +63,11 @@ Do not delete the old deployment or change provider credentials. Before retireme
 `vercel.json` includes host-scoped permanent redirects for every published multilingual SEO path and the six general sitemap pages. Old public hotel links map to their new canonical path. Only requests on `rotavoy.com` / `www.rotavoy.com` match; VoyHaven and previews cannot loop. Checkout, account, admin, unknown paths and requests carrying booking/payment parameters or active checkout/offer/language parameters are excluded so ongoing old-origin payment finalization remains available. The old backend origins and Railway service remain in place.
 
 Deploy and verify these redirects on the old hostname before submitting Search Console Change of Address. Retain redirects for at least one year. Do not replace the old app with the static retirement deployment until outstanding booking-flow checks and old-origin sessions are resolved.
+
+## Public SEO cutover recorded on 2026-10-10
+
+- Deployment commit `3901a5928befda5824bdc6c1b4cc909b45ee73fa` passed GitHub Build Validation and Vercel deployment validation.
+- `voyhaven.com` has a domain-specific `alias-protection-override` because its temporary preview branch assignment otherwise required Vercel sign-in. Other preview deployments remain protected. Review this exception when switching the domain to production.
+- Anonymous requests returned 200 XML for the sitemap and its page sitemap, 200 text for robots.txt, and 200 HTML for `/en/hotels`.
+- Anonymous requests on `www.rotavoy.com/en/hotels` returned 308 to the same VoyHaven path. Both old aliases now use the validated redirect deployment; `www.voyhaven.com` retains its redirect to the apex.
+- Search Console Change of Address has not yet been submitted. Search ranking and indexing changes are not assumed complete.
